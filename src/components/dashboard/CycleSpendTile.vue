@@ -1,0 +1,33 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useTransactionsStore } from '@/stores/transactions'
+import { useUiStore } from '@/stores/ui'
+import { useFamilyStore } from '@/stores/family'
+import { computeCycleRange } from '@/composables/useBillingCycle'
+import { formatCurrency } from '@/composables/useFormatters'
+import { format, startOfDay } from 'date-fns'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+const txnStore = useTransactionsStore()
+const uiStore = useUiStore()
+const familyStore = useFamilyStore()
+
+const cycleRange = computed(() => {
+  const today = startOfDay(new Date())
+  return computeCycleRange(today, familyStore.familySettings.cycleStartDay, uiStore.cycleOffset)
+})
+
+const dateRange = computed(() => {
+  const range = cycleRange.value
+  return `${format(range.start, 'MMM dd')} – ${format(range.end, 'MMM dd')}`
+})
+</script>
+
+<template>
+  <div class="bg-purple-50 dark:bg-purple-900/30 rounded-xl shadow p-5">
+    <h3 class="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">{{ t('home.cycleSpending') }}</h3>
+    <div class="text-3xl font-bold text-purple-900 dark:text-purple-100">{{ formatCurrency(txnStore.cycleSpend) }}</div>
+    <p class="text-sm text-purple-600 dark:text-purple-400 mt-1">{{ dateRange }}</p>
+  </div>
+</template>
