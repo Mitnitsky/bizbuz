@@ -108,10 +108,6 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       <div class="text-center py-16">
         <p class="text-gray-500 dark:text-gray-400 text-lg">{{ t('investments.noInvestments') }}</p>
         <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">{{ t('investments.addInvestmentToTrack') }}</p>
-        <button
-          class="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-          @click="addDialogOpen = true"
-        >{{ t('investments.addInvestment') }}</button>
       </div>
     </template>
 
