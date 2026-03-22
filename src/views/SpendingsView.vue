@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, provide, onMounted, onUnmounted, watchEffect, nextTick, onUpdated } from 'vue'
+import { ref, computed, provide, onMounted, onUnmounted, watchEffect, nextTick } from 'vue'
 import type { Transaction, CategorySortMode } from '@/types'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useFamilyStore } from '@/stores/family'
