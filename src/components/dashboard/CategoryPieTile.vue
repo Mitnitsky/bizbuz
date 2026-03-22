@@ -79,7 +79,7 @@ const chartOptions = {
       <div class="w-36 h-36 shrink-0">
         <Doughnut :data="chartData" :options="chartOptions" />
       </div>
-      <div class="category-pie-list flex-1 min-w-0 space-y-1.5 max-h-48 overflow-y-auto pr-4">
+      <div class="category-pie-list flex-1 min-w-0 space-y-1.5 max-h-48 overflow-y-auto pe-4">
         <div
           v-for="(item, idx) in categoryData"
           :key="item.category"
@@ -87,7 +87,7 @@ const chartOptions = {
         >
           <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: COLORS[idx % COLORS.length] }"></span>
           <span class="truncate text-gray-700 dark:text-gray-300">{{ categoryDisplayName(item.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}</span>
-          <span class="ml-auto text-gray-500 dark:text-gray-400 shrink-0">
+          <span class="ms-auto text-gray-500 dark:text-gray-400 shrink-0">
             {{ totalSpend > 0 ? ((item.amount / totalSpend) * 100).toFixed(0) : 0 }}%
           </span>
           <span class="text-gray-600 dark:text-gray-300 font-medium shrink-0">{{ formatCurrency(item.amount) }}</span>

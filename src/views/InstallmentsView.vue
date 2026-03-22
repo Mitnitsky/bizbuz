@@ -115,7 +115,7 @@ function cardLabel(txn: Transaction) {
             <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
               <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
               <span v-if="cardLabel(item.transaction)" class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">{{ cardLabel(item.transaction) }}</span>
-              <span>{{ formatDateShort(item.transaction.date) }}</span>
+              <span>{{ formatDateShort(item.transaction.date, locale) }}</span>
             </div>
           </div>
           <div class="text-right shrink-0">
@@ -137,7 +137,7 @@ function cardLabel(txn: Transaction) {
           </div>
           <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
             <span>{{ t('installments.total') }}: {{ formatCurrency(item.transaction.installments!.total * item.monthlyAmount) }}</span>
-            <span>{{ t('installments.endsBy') }} {{ formatDateShort(item.estimatedEndDate) }}</span>
+            <span>{{ t('installments.endsBy') }} {{ formatDateShort(item.estimatedEndDate, locale) }}</span>
           </div>
         </div>
       </div>

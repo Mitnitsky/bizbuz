@@ -124,7 +124,7 @@ function onLongPress() {
         ><component :is="icon('scissors')" class="w-2.5 h-2.5" /> {{ t('spendings.split') }}</span>
       </div>
       <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-        <span>{{ formatDateShort(transaction.date) }}</span>
+        <span>{{ formatDateShort(transaction.date, prefsStore.locale) }}</span>
         <span
           v-if="transaction.installments && transaction.installments.total > 1"
           class="px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"

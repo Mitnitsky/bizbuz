@@ -231,11 +231,11 @@ const categoryBarOptions = {
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
           {{ t('statistics.yearlyDistribution') }} – {{ selectedYear }}
         </h3>
-        <div class="flex flex-col md:flex-row gap-6 items-start">
+        <div class="flex flex-col md:flex-row gap-8 items-start">
           <div class="w-56 h-56 shrink-0 mx-auto md:mx-0">
             <Doughnut :data="pieData" :options="pieOptions" />
           </div>
-          <div class="category-breakdown-list flex-1 min-w-0 space-y-1 max-h-64 overflow-y-auto pr-4">
+          <div class="category-breakdown-list flex-1 min-w-0 space-y-1 max-h-64 overflow-y-auto pe-4">
             <div
               v-for="(item, idx) in yearlyByCategory"
               :key="item.category"
@@ -245,14 +245,14 @@ const categoryBarOptions = {
               <span class="truncate text-gray-700 dark:text-gray-300">
                 {{ categoryDisplayName(item.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
               </span>
-              <span class="ml-auto text-gray-500 dark:text-gray-400 shrink-0">
+              <span class="ms-auto text-gray-500 dark:text-gray-400 shrink-0">
                 {{ yearlyTotal > 0 ? ((item.amount / yearlyTotal) * 100).toFixed(1) : 0 }}%
               </span>
               <span class="text-gray-600 dark:text-gray-300 font-medium shrink-0">{{ formatCurrency(item.amount) }}</span>
             </div>
             <div class="flex items-center gap-2 text-sm font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
               <span class="text-gray-900 dark:text-gray-100">{{ t('statistics.total') }}</span>
-              <span class="ml-auto text-gray-900 dark:text-gray-100">{{ formatCurrency(yearlyTotal) }}</span>
+              <span class="ms-auto text-gray-900 dark:text-gray-100">{{ formatCurrency(yearlyTotal) }}</span>
             </div>
           </div>
         </div>

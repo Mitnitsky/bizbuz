@@ -2,11 +2,15 @@
 import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useFamilyStore } from '@/stores/family'
+import { usePreferencesStore } from '@/stores/preferences'
 import { computeCycleRange } from '@/composables/useBillingCycle'
-import { format, startOfDay } from 'date-fns'
+import { format } from 'date-fns'
+import { he } from 'date-fns/locale'
+import { startOfDay } from 'date-fns'
 
 const uiStore = useUiStore()
 const familyStore = useFamilyStore()
+const prefsStore = usePreferencesStore()
 
 const cycleRange = computed(() => {
   const today = startOfDay(new Date())
@@ -15,7 +19,8 @@ const cycleRange = computed(() => {
 
 const cycleLabel = computed(() => {
   const range = cycleRange.value
-  return `${format(range.start, 'MMM dd')} – ${format(range.end, 'MMM dd')}`
+  const loc = prefsStore.locale === 'he' ? { locale: he } : {}
+  return `${format(range.start, 'dd MMM', loc)} – ${format(range.end, 'dd MMM', loc)}`
 })
 
 const isCurrent = computed(() => uiStore.cycleOffset === 0)
@@ -29,7 +34,7 @@ function reset() { uiStore.cycleOffset = 0 }
   <div class="flex items-center justify-center gap-2">
     <button
       @click="prev"
-      class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition"
+      class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition rtl:rotate-180"
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
@@ -55,7 +60,7 @@ function reset() { uiStore.cycleOffset = 0 }
 
     <button
       @click="next"
-      class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition"
+      class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition rtl:rotate-180"
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />

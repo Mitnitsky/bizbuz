@@ -170,10 +170,10 @@ async function onCategorize() {
         <!-- Detail grid -->
         <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-6">
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.date') }}</div>
-          <div class="text-gray-900 dark:text-gray-100">{{ formatDate(transaction.date) }}</div>
+          <div class="text-gray-900 dark:text-gray-100">{{ formatDate(transaction.date, locale) }}</div>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.processedDate') }}</div>
-          <div class="text-gray-900 dark:text-gray-100">{{ formatDate(transaction.processedDate) }}</div>
+          <div class="text-gray-900 dark:text-gray-100">{{ formatDate(transaction.processedDate, locale) }}</div>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.category') }}</div>
           <div class="text-gray-900 dark:text-gray-100">{{ categoryDisplayName(transaction.category, locale, effectiveCategories, overrides) }}</div>

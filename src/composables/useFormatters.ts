@@ -15,14 +15,17 @@ export function formatCurrencySpending(amount: number): string {
   return formatted
 }
 
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
+export function formatDate(date: Date, locale = 'en'): string {
+  const loc = locale === 'he' ? 'he-IL' : 'en-GB'
+  return new Intl.DateTimeFormat(loc, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
 
-export function formatDateShort(date: Date): string {
-  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)
+export function formatDateShort(date: Date, locale = 'en'): string {
+  const loc = locale === 'he' ? 'he-IL' : 'en-GB'
+  return new Intl.DateTimeFormat(loc, { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)
 }
 
-export function formatDateHeader(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(date)
+export function formatDateHeader(date: Date, locale = 'en'): string {
+  const loc = locale === 'he' ? 'he-IL' : 'en-US'
+  return new Intl.DateTimeFormat(loc, { month: 'short', day: '2-digit', year: 'numeric' }).format(date)
 }
