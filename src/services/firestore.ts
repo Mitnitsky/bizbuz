@@ -496,6 +496,18 @@ export async function addLoan(
   })
 }
 
+export async function updateLoan(
+  familyId: string,
+  id: string,
+  fields: { name?: string; principal?: number; remaining?: number },
+): Promise<void> {
+  const ref = doc(db, 'families', familyId, 'loans', id)
+  await updateDoc(ref, {
+    ...fields,
+    last_updated: serverTimestamp(),
+  })
+}
+
 export async function updateLoanTracker(
   familyId: string,
   docId: string,

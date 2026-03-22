@@ -23,6 +23,7 @@ export default {
     transfer: 'העברה',
     confirmDelete: 'האם אתה בטוח שברצונך למחוק?',
     delete: 'מחק',
+    edit: 'עריכה',
   },
   home: {
     cycleSpending: 'הוצאות בתקופה',
@@ -86,6 +87,7 @@ export default {
     addLoanOrMortgageToTrack: 'הוסף הלוואה או משכנתא למעקב',
     addLoan: 'הוסף הלוואה',
     addLoanMortgage: 'הוסף הלוואה / משכנתא',
+    editLoan: 'עריכת הלוואה',
     originalAmountIls: 'סכום מקורי (₪)',
     remainingAmountIls: 'יתרה (₪)',
   },

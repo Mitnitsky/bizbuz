@@ -10,7 +10,7 @@ import {
   ChevronUp as LChevronUp, ChevronLeft as LChevronLeft, ChevronRight as LChevronRight,
   Lock as LLock, Unlock as LUnlock, Trash2 as LTrash2, Split as LSplit,
   BookOpen as LBookOpen, Plus as LPlus, Scissors as LScissors, Inbox as LInbox,
-  Pin as LPin,
+  Pin as LPin, Pencil as LPencil,
 } from 'lucide-vue-next'
 
 // Phosphor
@@ -21,7 +21,7 @@ import {
   PhDotsSixVertical, PhInfo, PhCaretDown, PhCaretUp,
   PhCaretLeft, PhCaretRight, PhLock, PhLockOpen,
   PhTrash, PhScissors, PhBookOpen, PhPlus, PhSplitVertical,
-  PhTray, PhPushPin,
+  PhTray, PhPushPin, PhPencilSimple,
 } from '@phosphor-icons/vue'
 
 // Tabler
@@ -32,7 +32,7 @@ import {
   IconGripVertical, IconInfoCircle, IconChevronDown, IconChevronUp,
   IconChevronLeft, IconChevronRight, IconLock, IconLockOpen,
   IconTrash, IconScissors, IconBook, IconPlus, IconArrowsSplit2,
-  IconInbox, IconPin,
+  IconInbox, IconPin, IconPencil,
 } from '@tabler/icons-vue'
 
 export type IconSetName = 'lucide' | 'phosphor' | 'tabler'
@@ -41,7 +41,7 @@ export type AppIconName =
   | 'loans' | 'statistics' | 'settings' | 'more' | 'menu' | 'loader'
   | 'coins' | 'bot' | 'grip' | 'info' | 'chevronDown' | 'chevronUp'
   | 'chevronLeft' | 'chevronRight' | 'lock' | 'unlock' | 'trash'
-  | 'split' | 'rules' | 'plus' | 'scissors' | 'inbox' | 'pin'
+  | 'split' | 'rules' | 'plus' | 'scissors' | 'inbox' | 'pin' | 'edit'
 
 type IconMap = Record<AppIconName, Component>
 
@@ -74,6 +74,7 @@ const lucideIcons: IconMap = {
   scissors: markRaw(LScissors),
   inbox: markRaw(LInbox),
   pin: markRaw(LPin),
+  edit: markRaw(LPencil),
 }
 
 const phosphorIcons: IconMap = {
@@ -105,6 +106,7 @@ const phosphorIcons: IconMap = {
   scissors: markRaw(PhScissors),
   inbox: markRaw(PhTray),
   pin: markRaw(PhPushPin),
+  edit: markRaw(PhPencilSimple),
 }
 
 const tablerIcons: IconMap = {
@@ -136,6 +138,7 @@ const tablerIcons: IconMap = {
   scissors: markRaw(IconScissors),
   inbox: markRaw(IconInbox),
   pin: markRaw(IconPin),
+  edit: markRaw(IconPencil),
 }
 
 const ICON_SETS: Record<IconSetName, IconMap> = {

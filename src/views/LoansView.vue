@@ -21,6 +21,7 @@ const loans = ref<LoanItem[]>([])
 let unsub: Unsubscribe | null = null
 
 const addDialogOpen = ref(false)
+const editingLoan = ref<LoanItem | null>(null)
 const trackerDialogOpen = ref(false)
 const trackerTarget = ref<LoanItem | null>(null)
 
@@ -60,6 +61,11 @@ function openTracker(item: LoanItem) {
   trackerDialogOpen.value = true
 }
 
+function openEdit(item: LoanItem) {
+  editingLoan.value = item
+  addDialogOpen.value = true
+}
+
 async function saveTracker(payload: { trackerType: TrackerType | null; trackerDate: Date | null; trackerIntervalDays: number | null }) {
   if (!trackerTarget.value || !authStore.familyId) return
   try {
@@ -83,7 +89,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('loans.loansAndMortgages') }}</h1>
       <button
         class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
-        @click="addDialogOpen = true"
+        @click="editingLoan = null; addDialogOpen = true"
       >{{ t('loans.addLoan') }}</button>
     </div>
 
@@ -98,6 +104,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           :key="loan.id"
           :loan="loan"
           @open-tracker="openTracker"
+          @edit="openEdit"
         />
       </div>
     </template>
@@ -108,12 +115,12 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
         <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">{{ t('loans.addLoanOrMortgageToTrack') }}</p>
         <button
           class="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-          @click="addDialogOpen = true"
+          @click="editingLoan = null; addDialogOpen = true"
         >{{ t('loans.addLoan') }}</button>
       </div>
     </template>
 
-    <AddLoanDialog :open="addDialogOpen" @close="addDialogOpen = false" />
+    <AddLoanDialog :open="addDialogOpen" :loan="editingLoan" @close="addDialogOpen = false; editingLoan = null" />
     <TrackerDialog
       :open="trackerDialogOpen"
       :tracker-type="trackerTarget?.trackerType"

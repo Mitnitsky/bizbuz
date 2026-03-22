@@ -23,6 +23,7 @@ export default {
     transfer: 'Transfer',
     confirmDelete: 'Are you sure you want to delete this?',
     delete: 'Delete',
+    edit: 'Edit',
   },
   home: {
     cycleSpending: 'Cycle Expenses',
@@ -86,6 +87,7 @@ export default {
     addLoanOrMortgageToTrack: 'Add a loan or mortgage to track',
     addLoan: 'Add Loan',
     addLoanMortgage: 'Add Loan / Mortgage',
+    editLoan: 'Edit Loan',
     originalAmountIls: 'Original Amount (₪)',
     remainingAmountIls: 'Remaining Amount (₪)',
   },
