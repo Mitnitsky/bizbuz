@@ -28,6 +28,7 @@ const familyStore = useFamilyStore()
 const { icon } = useIcons()
 
 const inboxSort = ref<InboxSort>('date')
+const inboxSortDir = ref<'asc' | 'desc'>('desc')
 const rules = ref<Rule[]>([])
 const rerunning = ref(false)
 const rerunResult = ref<{ matched: number; total: number } | null>(null)
@@ -152,14 +153,19 @@ async function rerunRules() {
 
 const inboxTransactions = computed(() => {
   const txns = [...txnStore.inboxTransactions]
+  const flip = inboxSortDir.value === 'asc' ? 1 : -1
   switch (inboxSort.value) {
     case 'name':
-      return txns.sort((a, b) => a.description.localeCompare(b.description))
+      return txns.sort((a, b) => flip * a.description.localeCompare(b.description))
     case 'amount':
-      return txns.sort((a, b) => Math.abs(b.chargedAmount) - Math.abs(a.chargedAmount))
+      return txns.sort((a, b) => flip * (Math.abs(b.chargedAmount) - Math.abs(a.chargedAmount)))
     case 'date':
     default:
-      return txns
+      return txns.sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0
+        const db = b.date ? new Date(b.date).getTime() : 0
+        return flip * (db - da)
+      })
   }
 })
 const inboxCount = computed(() => txnStore.inboxCount)
@@ -242,6 +248,11 @@ function onLeave(el: Element, done: () => void) {
           <option value="name">{{ t('spendings.description') }}</option>
           <option value="amount">{{ t('spendings.amount') }}</option>
         </select>
+        <button
+          class="px-1.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          @click="inboxSortDir = inboxSortDir === 'desc' ? 'asc' : 'desc'"
+          :title="inboxSortDir === 'desc' ? 'Descending' : 'Ascending'"
+        >{{ inboxSortDir === 'desc' ? '▼' : '▲' }}</button>
         <button
           v-if="inboxCount > 0"
           class="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
