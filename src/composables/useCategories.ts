@@ -96,9 +96,8 @@ export function categoryTooltip(key: string, locale: string): string | undefined
  * If familyCategories is empty/undefined, returns DEFAULT_CATEGORIES.
  */
 export function getEffectiveCategories(familyCategories: CategoryDef[] = []): CategoryDef[] {
-  if (familyCategories.length === 0) return DEFAULT_CATEGORIES
-  // Family categories are the source of truth (includes defaults + custom)
-  return familyCategories
+  const cats = familyCategories.length === 0 ? DEFAULT_CATEGORIES : familyCategories
+  return [...cats].sort((a, b) => a.name.localeCompare(b.name, 'he'))
 }
 
 export const LIQUID_ACCOUNT_TYPES = ['עו"ש (חשבון עובר ושב)', 'חיסכון נזיל', 'פיקדון', 'מזומן'] as const
