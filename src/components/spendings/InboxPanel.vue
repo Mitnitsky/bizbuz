@@ -240,19 +240,29 @@ function onLeave(el: Element, done: () => void) {
       </div>
       <!-- Header row 2: controls -->
       <div class="px-3 pb-2 flex items-center gap-1.5 flex-wrap border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <select
-          v-model="inboxSort"
-          class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 text-xs"
-        >
-          <option value="date">{{ t('spendings.date') }}</option>
-          <option value="name">{{ t('spendings.description') }}</option>
-          <option value="amount">{{ t('spendings.amount') }}</option>
-        </select>
-        <button
-          class="px-1.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          @click="inboxSortDir = inboxSortDir === 'desc' ? 'asc' : 'desc'"
-          :title="inboxSortDir === 'desc' ? 'Descending' : 'Ascending'"
-        >{{ inboxSortDir === 'desc' ? '▼' : '▲' }}</button>
+        <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-xs font-medium">
+          <button
+            class="px-2 py-1 transition-colors flex items-center gap-1"
+            :class="inboxSort === 'date'
+              ? 'bg-purple-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            @click="inboxSort === 'date' ? (inboxSortDir = inboxSortDir === 'desc' ? 'asc' : 'desc') : (inboxSort = 'date', inboxSortDir = 'desc')"
+          >{{ t('spendings.date') }}<span v-if="inboxSort === 'date'" class="text-[10px]">{{ inboxSortDir === 'desc' ? '▼' : '▲' }}</span></button>
+          <button
+            class="px-2 py-1 border-x border-gray-300 dark:border-gray-600 transition-colors flex items-center gap-1"
+            :class="inboxSort === 'name'
+              ? 'bg-purple-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            @click="inboxSort === 'name' ? (inboxSortDir = inboxSortDir === 'desc' ? 'asc' : 'desc') : (inboxSort = 'name', inboxSortDir = 'asc')"
+          >{{ t('spendings.description') }}<span v-if="inboxSort === 'name'" class="text-[10px]">{{ inboxSortDir === 'desc' ? '▼' : '▲' }}</span></button>
+          <button
+            class="px-2 py-1 transition-colors flex items-center gap-1"
+            :class="inboxSort === 'amount'
+              ? 'bg-purple-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            @click="inboxSort === 'amount' ? (inboxSortDir = inboxSortDir === 'desc' ? 'asc' : 'desc') : (inboxSort = 'amount', inboxSortDir = 'desc')"
+          >{{ t('spendings.amount') }}<span v-if="inboxSort === 'amount'" class="text-[10px]">{{ inboxSortDir === 'desc' ? '▼' : '▲' }}</span></button>
+        </div>
         <button
           v-if="inboxCount > 0"
           class="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
