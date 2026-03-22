@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, provide, onMounted, onUnmounted, watchEffect, nextTick } from 'vue'
+import { ref, computed, provide, onMounted, onUnmounted, watchEffect } from 'vue'
 import type { Transaction, CategorySortMode } from '@/types'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useFamilyStore } from '@/stores/family'
@@ -225,41 +225,6 @@ function openAddTransaction() {
   showAddDialog.value = true
 }
 
-// --- Column last-item margin removal ---
-const cardsRef = ref<InstanceType<typeof draggable> | null>(null)
-let resizeObserver: ResizeObserver | null = null
-
-function stripLastColumnMargins() {
-  const el = cardsRef.value?.$el as HTMLElement | undefined
-  if (!el) return
-  const children = Array.from(el.children) as HTMLElement[]
-  children.forEach(c => c.classList.remove('last-in-col'))
-  let prevX = -1
-  for (let i = 0; i < children.length; i++) {
-    const x = children[i].offsetLeft
-    if (prevX !== -1 && x !== prevX && i > 0) {
-      children[i - 1].classList.add('last-in-col')
-    }
-    prevX = x
-  }
-  if (children.length > 0) {
-    children[children.length - 1].classList.add('last-in-col')
-  }
-}
-
-onMounted(() => {
-  nextTick(stripLastColumnMargins)
-  resizeObserver = new ResizeObserver(() => stripLastColumnMargins())
-  const el = cardsRef.value?.$el as HTMLElement | undefined
-  if (el) resizeObserver.observe(el)
-})
-watchEffect(() => {
-  // Re-run when category list changes
-  categoryItems.value.length
-  nextTick(stripLastColumnMargins)
-})
-onUnmounted(() => resizeObserver?.disconnect())
-
 // --- Preferences ---
 const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilter ?? true)
 </script>
@@ -334,7 +299,6 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
 
         <!-- Cards view -->
         <draggable
-          ref="cardsRef"
           v-else-if="viewMode === 'cards'"
           v-model="categoryItems"
           item-key="key"
@@ -493,11 +457,5 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
 .dragging-drag {
   transform: rotate(1.5deg) scale(1.03);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-}
-</style>
-
-<style>
-.last-in-col {
-  margin-bottom: 0 !important;
 }
 </style>
