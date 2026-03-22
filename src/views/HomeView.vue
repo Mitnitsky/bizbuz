@@ -80,9 +80,13 @@ watch(() => prefsStore.userPreferences, (prefs) => {
   const order = prefs?.dashboardTileOrder
   let ids: string[]
   if (order && order.length > 0) {
-    // Append any new tiles not in saved order
+    // Prepend any new tiles not in saved order so they appear first
     const missing = ([...ALL_TILES] as string[]).filter(t => !order.includes(t))
-    ids = [...order, ...missing]
+    ids = [...missing, ...order]
+    // Persist updated order if new tiles were added
+    if (missing.length > 0 && authStore.familyId && authStore.user) {
+      updateDashboardTileOrder(authStore.familyId, authStore.user.uid, ids)
+    }
   } else {
     ids = [...ALL_TILES]
   }
