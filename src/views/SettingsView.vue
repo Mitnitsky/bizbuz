@@ -132,6 +132,9 @@ async function saveDisplayName() {
 }
 
 // --- Family Name ---
+function copyFamilyId() {
+  if (familyId.value) navigator.clipboard.writeText(familyId.value)
+}
 function openEditFamilyName() {
   editFamilyNameValue.value = familyName.value
   editFamilyNameOpen.value = true
@@ -304,6 +307,14 @@ function cycleLabel(day: number): string {
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.familyName') }}</span><span class="text-gray-900 dark:text-white">{{ familyName }}</span></div>
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Members</span><span class="text-gray-900 dark:text-white">{{ memberCount }}</span></div>
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('home.inviteCode') }}</span><span class="font-mono text-gray-900 dark:text-white">{{ inviteCode }}</span></div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 dark:text-gray-400">Family ID</span>
+            <button
+              class="font-mono text-xs text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              @click="copyFamilyId"
+              :title="'Copy'"
+            >{{ familyId }} 📋</button>
+          </div>
         </div>
 
         <div class="mt-4 space-y-2">
