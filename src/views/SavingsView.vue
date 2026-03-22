@@ -73,7 +73,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
             </div>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ formatCurrency(savingsStore.liquidTotal) }}</div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(savingsStore.liquidTotal) }}</div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-3">
@@ -112,7 +112,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
             </div>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ formatCurrency(savingsStore.lockedTotal) }}</div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(savingsStore.lockedTotal) }}</div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-3">
