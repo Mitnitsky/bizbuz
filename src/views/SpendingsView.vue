@@ -105,21 +105,23 @@ const ownerFilteredTransactions = computed(() => {
 })
 
 // Total spending for filtered transactions (expenses only, excludes transfers)
-// When filtered by a specific user, also exclude shared categories
 const filteredTotalSpending = computed(() => {
-  const isUserFilter = uiStore.ownerFilter !== 'all'
-  const cats = familyStore.familySettings.categories
   return categorizedTransactions.value
     .filter(t => t.chargedAmount < 0
       && t.category !== TRANSFER_CATEGORY
-      && t.category !== NON_BUDGET_CATEGORY
-      && !(isUserFilter && isSharedCategory(t.category, cats)))
+      && t.category !== NON_BUDGET_CATEGORY)
     .reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
 })
 
 // --- Category grouping ---
 const categorizedTransactions = computed(() => {
-  return ownerFilteredTransactions.value.filter(t => t.status !== 'pending_categorization')
+  const isUserFilter = uiStore.ownerFilter !== 'all'
+  const cats = familyStore.familySettings.categories
+  return ownerFilteredTransactions.value.filter(t => {
+    if (t.status === 'pending_categorization') return false
+    if (isUserFilter && isSharedCategory(t.category, cats)) return false
+    return true
+  })
 })
 
 const transactionsByCategory = computed(() => {
