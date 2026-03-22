@@ -305,6 +305,10 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           handle=".category-drag-handle"
           :disabled="sortMode !== 'custom'"
           :group="{ name: 'categories', pull: true, put: false }"
+          :animation="300"
+          ghost-class="dragging-ghost"
+          chosen-class="dragging-chosen"
+          drag-class="dragging-drag"
           class="columns-1 gap-2 min-[1000px]:columns-2 min-[1600px]:columns-3 [&>*]:mb-2 [&>*]:break-inside-avoid"
           @end="onCategoryReorder"
         >
@@ -440,3 +444,18 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
     />
   </div>
 </template>
+
+<style scoped>
+.dragging-ghost {
+  opacity: 0.4;
+}
+.dragging-chosen {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: scale(1.02);
+  z-index: 50;
+}
+.dragging-drag {
+  transform: rotate(1.5deg) scale(1.03);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+}
+</style>
