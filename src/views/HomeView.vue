@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useTransactionsStore } from '@/stores/transactions'
 import { updateDashboardTileOrder, updateHiddenDashboardTiles } from '@/services/firestore'
 import { useIcons } from '@/composables/useIcons'
 import CycleSelector from '@/components/CycleSelector.vue'
@@ -39,6 +40,7 @@ const TILE_LABELS: Record<string, string> = {
 const authStore = useAuthStore()
 const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
+const txnStore = useTransactionsStore()
 
 const tileComponents: Record<string, Component> = {
   cycle_spend: CycleSpendTile,
@@ -61,12 +63,15 @@ const hasBudgets = computed(() => {
   return b && Object.keys(b).length > 0
 })
 
-// Auto-hide budget tiles when no budgets configured
+// Auto-hide tiles when their data is empty
 const autoHidden = computed(() => {
   const set = new Set<string>()
   if (!hasBudgets.value) {
     set.add('budget_remaining')
     set.add('budgets')
+  }
+  if (txnStore.inboxCount === 0) {
+    set.add('uncategorized')
   }
   return set
 })

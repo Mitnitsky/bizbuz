@@ -19,7 +19,6 @@ const totalAmount = computed(() =>
 
 <template>
   <div
-    v-if="count > 0"
     class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 cursor-pointer hover:shadow-md transition-shadow"
     @click="router.push('/spendings')"
   >
