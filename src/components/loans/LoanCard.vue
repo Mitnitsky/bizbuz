@@ -4,10 +4,15 @@ import { useI18n } from 'vue-i18n'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
 import { useIcons } from '@/composables/useIcons'
+import { useConfirm } from '@/composables/useConfirm'
+import { useFamilyStore } from '@/stores/family'
+import { deleteLoan } from '@/services/firestore'
 import type { TrackerType } from '@/types'
 
 const { t } = useI18n()
 const { icon } = useIcons()
+const { confirm } = useConfirm()
+const familyStore = useFamilyStore()
 
 export interface LoanItem {
   id: string
@@ -48,6 +53,13 @@ const trackerColor = computed(() => {
     ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
     : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
 })
+
+async function onDelete() {
+  const familyId = familyStore.family?.id
+  if (!familyId) return
+  if (!(await confirm(t('common.confirmDelete')))) return
+  await deleteLoan(familyId, props.loan.id)
+}
 </script>
 
 <template>
@@ -58,6 +70,12 @@ const trackerColor = computed(() => {
     <div class="flex items-center gap-2 mb-2">
       <span class="text-lg font-bold text-gray-900 dark:text-white">{{ loan.name }}</span>
       <component :is="icon('loans')" class="w-4 h-4 text-gray-500" />
+      <div class="flex-1" />
+      <button
+        class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+        @click.stop="onDelete"
+        :title="t('common.delete')"
+      ><component :is="icon('trash')" class="w-4 h-4" /></button>
     </div>
 
     <span

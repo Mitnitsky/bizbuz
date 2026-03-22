@@ -425,6 +425,11 @@ export async function deleteSavingsEntry(familyId: string, id: string): Promise<
   await firestoreDeleteDoc(doc(db, 'families', familyId, 'savings', id))
 }
 
+export async function deleteLoan(familyId: string, id: string): Promise<void> {
+  const { deleteDoc: firestoreDeleteDoc } = await import('firebase/firestore')
+  await firestoreDeleteDoc(doc(db, 'families', familyId, 'loans', id))
+}
+
 export async function updateSavingsTracker(
   familyId: string,
   docId: string,
