@@ -3,15 +3,18 @@ import { computed } from 'vue'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useUiStore } from '@/stores/ui'
 import { useFamilyStore } from '@/stores/family'
+import { usePreferencesStore } from '@/stores/preferences'
 import { computeCycleRange } from '@/composables/useBillingCycle'
 import { formatCurrency } from '@/composables/useFormatters'
 import { format, startOfDay } from 'date-fns'
+import { he } from 'date-fns/locale'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const txnStore = useTransactionsStore()
 const uiStore = useUiStore()
 const familyStore = useFamilyStore()
+const prefsStore = usePreferencesStore()
 
 const cycleRange = computed(() => {
   const today = startOfDay(new Date())
@@ -20,7 +23,8 @@ const cycleRange = computed(() => {
 
 const dateRange = computed(() => {
   const range = cycleRange.value
-  return `${format(range.start, 'MMM dd')} – ${format(range.end, 'MMM dd')}`
+  const loc = prefsStore.locale === 'he' ? { locale: he } : {}
+  return `${format(range.start, 'dd MMM', loc)} – ${format(range.end, 'dd MMM', loc)}`
 })
 </script>
 

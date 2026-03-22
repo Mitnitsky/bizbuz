@@ -75,11 +75,11 @@ const chartOptions = {
       {{ t('spendings.noTransactionsYet') }}
     </div>
 
-    <div v-else class="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-      <div class="w-36 h-36 shrink-0">
+    <div v-else class="flex flex-col sm:flex-row gap-4 items-center sm:items-start overflow-hidden">
+      <div class="w-36 h-36 shrink-0 relative">
         <Doughnut :data="chartData" :options="chartOptions" />
       </div>
-      <div class="category-pie-list flex-1 min-w-0 w-full space-y-1.5 max-h-48 overflow-y-auto">
+      <div class="category-pie-list flex-1 min-w-0 w-full space-y-1.5 max-h-48 overflow-y-auto overflow-x-hidden">
         <div
           v-for="(item, idx) in categoryData"
           :key="item.category"
