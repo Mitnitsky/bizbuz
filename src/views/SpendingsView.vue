@@ -104,6 +104,13 @@ const ownerFilteredTransactions = computed(() => {
   return txnStore.cycleTransactions.filter(t => t.ownerTag === filter)
 })
 
+// Total spending for filtered transactions (expenses only, excludes transfers)
+const filteredTotalSpending = computed(() => {
+  return categorizedTransactions.value
+    .filter(t => t.chargedAmount < 0 && t.category !== TRANSFER_CATEGORY && t.category !== NON_BUDGET_CATEGORY)
+    .reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
+})
+
 // --- Category grouping ---
 const categorizedTransactions = computed(() => {
   return ownerFilteredTransactions.value.filter(t => t.status !== 'pending_categorization')
@@ -254,6 +261,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
       <h1 class="text-lg font-bold text-gray-900 dark:text-gray-100 mr-2">{{ t('nav.spendings') }}</h1>
       <CycleSelector />
       <OwnerFilterChip v-if="showOwnerFilter && familyStore.family && familyStore.family.memberUids.length > 1" />
+      <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ formatCurrency(filteredTotalSpending) }}</span>
       <div class="flex-1" />
       <!-- Sort mode toggle -->
       <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-xs font-medium">
