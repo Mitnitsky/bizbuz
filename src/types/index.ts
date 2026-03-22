@@ -28,6 +28,7 @@ export interface Transaction {
   isSplit: boolean
   hiddenFromUi: boolean
   memo?: string
+  categoryHint?: string
   account?: string
   companyId?: string
   originalCurrency: string
@@ -74,6 +75,7 @@ export interface UserPreferences {
   locale: string
   showOwnerFilter: boolean
   showPaymentSource: boolean
+  showCategoryHints: boolean
   themeMode: string
   categoryOrder: string[]
   pinnedCategories: string[]

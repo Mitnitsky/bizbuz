@@ -51,6 +51,12 @@ const showPaymentSource = computed(() => {
   return prefsStore.userPreferences?.showPaymentSource && paymentLabel.value
 })
 
+const showCategoryHint = computed(() => {
+  return prefsStore.userPreferences?.showCategoryHints
+    && props.transaction.categoryHint
+    && props.transaction.status === 'pending_categorization'
+})
+
 const amountClass = computed(() => {
   if (props.mutedAmount) return 'text-gray-400 dark:text-gray-500'
   return props.transaction.chargedAmount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
@@ -123,6 +129,10 @@ function onLongPress() {
           v-if="transaction.installments && transaction.installments.total > 1"
           class="px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
         >{{ t('installments.payment', { n: transaction.installments.number, total: transaction.installments.total }) }}</span>
+        <span
+          v-if="showCategoryHint"
+          class="px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300"
+        >{{ transaction.categoryHint }}</span>
         <span
           v-if="showPaymentSource"
           class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300"

@@ -199,6 +199,18 @@ async function onCategorize() {
             <div class="text-gray-900 dark:text-gray-100">{{ transaction.account }}<span v-if="accountAlias" class="text-purple-600 dark:text-purple-400 ml-1">({{ accountAlias }})</span></div>
           </template>
 
+          <template v-if="transaction.memo">
+            <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.memo') }}</div>
+            <div class="text-gray-900 dark:text-gray-100">{{ transaction.memo }}</div>
+          </template>
+
+          <template v-if="transaction.categoryHint">
+            <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.categoryHint') }}</div>
+            <div class="text-gray-900 dark:text-gray-100">
+              <span class="px-2 py-0.5 rounded-full text-xs bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300">{{ transaction.categoryHint }}</span>
+            </div>
+          </template>
+
           <template v-if="matchedRule">
             <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.appliedRule') }}</div>
             <div class="text-gray-900 dark:text-gray-100">

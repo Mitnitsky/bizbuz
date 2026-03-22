@@ -185,6 +185,9 @@ export const ingest = functions.https.onRequest(async (req, res) => {
       if (txn.memo) {
         docData.memo = txn.memo;
       }
+      if (txn.category) {
+        docData.categoryHint = txn.category;
+      }
       if (txn.account) {
         docData.account = txn.account;
       }

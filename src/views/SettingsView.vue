@@ -69,6 +69,7 @@ const locale = computed(() => prefsStore.locale)
 const themeMode = computed(() => prefsStore.themeMode)
 const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilter ?? true)
 const showPaymentSource = computed(() => prefsStore.userPreferences?.showPaymentSource ?? false)
+const showCategoryHints = computed(() => prefsStore.userPreferences?.showCategoryHints ?? false)
 const cycleStartDay = computed(() => familyStore.familySettings.cycleStartDay)
 const incomeAnchorDay = computed(() => familyStore.familySettings.incomeAnchorDay)
 const incomeAnchorGraceDays = computed(() => familyStore.familySettings.incomeAnchorGraceDays)
@@ -114,6 +115,11 @@ async function toggleOwnerFilter() {
 async function togglePaymentSource() {
   if (!familyId.value || !uid.value) return
   try { await updateUserPreferences(familyId.value, uid.value, { show_payment_source: !showPaymentSource.value }) } catch { /* silent */ }
+}
+
+async function toggleCategoryHints() {
+  if (!familyId.value || !uid.value) return
+  try { await updateUserPreferences(familyId.value, uid.value, { show_category_hints: !showCategoryHints.value }) } catch { /* silent */ }
 }
 
 // --- Display Name ---
@@ -473,6 +479,23 @@ function cycleLabel(day: number): string {
               <div
                 class="w-11 h-6 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
                 :class="showPaymentSource
+                  ? 'bg-purple-600 after:translate-x-full after:border-white'
+                  : 'bg-gray-300 dark:bg-gray-600 after:border-gray-300'"
+              ></div>
+            </label>
+          </div>
+
+          <!-- Show Category Hints -->
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.showCategoryHints') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.showCategoryHintsDesc') }}</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" :checked="showCategoryHints" class="sr-only peer" @change="toggleCategoryHints" />
+              <div
+                class="w-11 h-6 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
+                :class="showCategoryHints
                   ? 'bg-purple-600 after:translate-x-full after:border-white'
                   : 'bg-gray-300 dark:bg-gray-600 after:border-gray-300'"
               ></div>
