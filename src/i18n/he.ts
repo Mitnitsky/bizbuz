@@ -61,6 +61,8 @@ export default {
     noBudgets: 'לא הוגדרו תקציבים',
     income: 'הכנסה',
     incomeThisCycle: 'הכנסה במחזור הנוכחי',
+    uncategorized: 'ללא קטגוריה',
+    uncategorizedDesc: 'ממתינים לסיווג',
   },
   savings: {
     liquidMoney: 'כסף נזיל',

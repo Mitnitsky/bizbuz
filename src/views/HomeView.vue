@@ -16,16 +16,18 @@ import BudgetsTile from '@/components/dashboard/BudgetsTile.vue'
 import TrackersTile from '@/components/dashboard/TrackersTile.vue'
 import ExceptionalTile from '@/components/dashboard/ExceptionalTile.vue'
 import IncomeTile from '@/components/dashboard/IncomeTile.vue'
+import UncategorizedTile from '@/components/dashboard/UncategorizedTile.vue'
 
 const { t } = useI18n()
 const { icon } = useIcons()
 
-const ALL_TILES = ['cycle_spend', 'income', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+const ALL_TILES = ['cycle_spend', 'income', 'uncategorized', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
 const ALWAYS_VISIBLE = ['cycle_spend']
 
 const TILE_LABELS: Record<string, string> = {
   cycle_spend: 'home.cycleExpenses',
   income: 'home.income',
+  uncategorized: 'home.uncategorized',
   category_pie: 'home.categoryPie',
   budget_remaining: 'home.budgetRemaining',
   exceptional: 'home.exceptional',
@@ -41,6 +43,7 @@ const prefsStore = usePreferencesStore()
 const tileComponents: Record<string, Component> = {
   cycle_spend: CycleSpendTile,
   income: IncomeTile,
+  uncategorized: UncategorizedTile,
   category_pie: CategoryPieTile,
   budget_remaining: BudgetRemainingTile,
   exceptional: ExceptionalTile,

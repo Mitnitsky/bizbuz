@@ -29,6 +29,7 @@ const categoryData = computed(() => {
   for (const txn of txnStore.cycleTransactions) {
     if (EXCLUDED.includes(txn.category)) continue
     if (txn.chargedAmount >= 0) continue
+    if (txn.status === 'pending_categorization') continue
     const cat = txn.category || DEFAULT_CATEGORY
     grouped[cat] = (grouped[cat] ?? 0) + Math.abs(txn.chargedAmount)
   }

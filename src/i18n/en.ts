@@ -61,6 +61,8 @@ export default {
     noBudgets: 'no budgets set',
     income: 'Income',
     incomeThisCycle: 'Income this cycle',
+    uncategorized: 'Uncategorized',
+    uncategorizedDesc: 'pending categorization',
   },
   savings: {
     liquidMoney: 'Liquid Money',
