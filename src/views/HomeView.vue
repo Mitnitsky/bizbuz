@@ -90,6 +90,19 @@ watch(() => prefsStore.userPreferences, (prefs) => {
   hiddenTiles.value = new Set(prefs?.hiddenDashboardTiles ?? [])
 }, { immediate: true })
 
+// Visible tiles for draggable — filtered to exclude hidden/autoHidden
+const visibleTiles = computed({
+  get() {
+    return tiles.value.filter(t => !hiddenTiles.value.has(t.id) && !autoHidden.value.has(t.id))
+  },
+  set(newVisible: Array<{ id: string }>) {
+    // Rebuild full list: visible tiles in new order + hidden tiles preserving relative order
+    const visibleIds = new Set(newVisible.map(t => t.id))
+    const hidden = tiles.value.filter(t => !visibleIds.has(t.id))
+    tiles.value = [...newVisible, ...hidden]
+  }
+})
+
 function onDragEnd() {
   const order = tiles.value.map(t => t.id)
   if (authStore.familyId && authStore.user) {
@@ -160,14 +173,14 @@ const familyName = computed(() => familyStore.family?.name ?? 'BizBuz')
 
     <!-- Draggable Tiles -->
     <draggable
-      v-model="tiles"
+      v-model="visibleTiles"
       item-key="id"
       handle=".drag-handle"
       :animation="200"
       @end="onDragEnd"
     >
       <template #item="{ element }">
-        <div v-if="!hiddenTiles.has(element.id) && !autoHidden.has(element.id)" class="mb-4 relative group">
+        <div class="mb-4 relative group">
           <div class="drag-handle absolute top-3 right-3 z-10 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
