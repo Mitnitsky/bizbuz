@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { format, startOfDay } from 'date-fns'
+import { he } from 'date-fns/locale'
 import { useUiStore } from '@/stores/ui'
 import { useFamilyStore } from '@/stores/family'
+import { usePreferencesStore } from '@/stores/preferences'
 import { computeCycleRange } from '@/composables/useBillingCycle'
 
 const ui = useUiStore()
 const familyStore = useFamilyStore()
+const prefsStore = usePreferencesStore()
 
 const cycleLabel = computed(() => {
   const today = startOfDay(new Date())
   const range = computeCycleRange(today, familyStore.familySettings.cycleStartDay, ui.cycleOffset)
-  return `${format(range.start, 'MMM dd')} – ${format(range.end, 'MMM dd, yyyy')}`
+  const loc = prefsStore.locale === 'he' ? { locale: he } : {}
+  return `${format(range.start, 'dd MMM', loc)} – ${format(range.end, 'dd MMM, yyyy', loc)}`
 })
 
 function prev() { ui.cycleOffset-- }

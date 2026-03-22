@@ -263,7 +263,7 @@ const categoryBarOptions = {
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
           {{ t('statistics.monthlyByCategory') }} – {{ selectedYear }}
         </h3>
-        <div class="h-80">
+        <div class="h-80 w-full relative">
           <Bar :data="barData" :options="barOptions" />
         </div>
       </div>
@@ -278,9 +278,9 @@ const categoryBarOptions = {
           <div class="flex items-center gap-2 mb-2">
             <span class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: cat.color }"></span>
             <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ cat.displayName }}</span>
-            <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">{{ formatCurrency(cat.total) }}</span>
+            <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">{{ formatCurrency(cat.total) }}</span>
           </div>
-          <div class="h-32">
+          <div class="h-32 relative">
             <Bar :data="cat.chartData" :options="categoryBarOptions" />
           </div>
         </div>
