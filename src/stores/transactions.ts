@@ -25,18 +25,10 @@ export const useTransactionsStore = defineStore('transactions', () => {
     const familyStore = useFamilyStore()
     const today = startOfDay(new Date())
     const range = computeCycleRange(today, familyStore.familySettings.cycleStartDay, ui.cycleOffset)
-    console.log('[transactions store] cycle range:', range.start.toISOString(), '→', range.end.toISOString(), 'cycleStartDay:', familyStore.familySettings.cycleStartDay, 'offset:', ui.cycleOffset)
-    console.log('[transactions store] visible count:', visibleTransactions.value.length)
-    const filtered = visibleTransactions.value.filter((t) => {
+    return visibleTransactions.value.filter((t) => {
       const d = t.date
       return d >= range.start && d <= range.end
     })
-    console.log('[transactions store] cycle filtered count:', filtered.length)
-    if (filtered.length === 0 && visibleTransactions.value.length > 0) {
-      const sample = visibleTransactions.value.slice(0, 3).map(t => t.date.toISOString())
-      console.log('[transactions store] sample dates:', sample)
-    }
-    return filtered
   })
 
   const inboxTransactions = computed(() => {
