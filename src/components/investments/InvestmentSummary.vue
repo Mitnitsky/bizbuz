@@ -14,7 +14,7 @@ defineProps<{
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 mb-4">
     <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('investments.totalPortfolio') }}</div>
-    <div class="text-3xl font-bold mt-1" style="color: var(--color-accent, #7c3aed)">{{ formatCurrency(totalCurrentValue) }}</div>
+    <div class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ formatCurrency(totalCurrentValue) }}</div>
     <div class="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
       <span>{{ t('investments.nAssets', { n: assetCount }) }}</span>
       <span v-if="totalInvested > 0">
