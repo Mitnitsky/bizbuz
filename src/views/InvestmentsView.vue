@@ -83,7 +83,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('nav.investments') }}</h1>
       <button
-        class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
+        class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
         @click="addDialogOpen = true"
       >{{ t('investments.addInvestment') }}</button>
     </div>

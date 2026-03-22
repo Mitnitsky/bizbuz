@@ -373,8 +373,8 @@ function cycleLabel(day: number): string {
           <div>
             <div class="text-sm text-gray-700 dark:text-gray-300 mb-2">{{ t('settings.language') }}</div>
             <div class="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
-              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="locale === 'en' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setLocale('en')">English</button>
-              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="locale === 'he' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setLocale('he')">עברית</button>
+              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="locale === 'en' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setLocale('en')">English</button>
+              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="locale === 'he' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setLocale('he')">עברית</button>
             </div>
           </div>
 
@@ -382,9 +382,9 @@ function cycleLabel(day: number): string {
           <div>
             <div class="text-sm text-gray-700 dark:text-gray-300 mb-2">{{ t('settings.themeMode') }}</div>
             <div class="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
-              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'system' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('system')">{{ t('settings.themeSystem') }}</button>
-              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'light' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('light')">{{ t('settings.themeLight') }}</button>
-              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'dark' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('dark')">{{ t('settings.themeDark') }}</button>
+              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'system' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('system')">{{ t('settings.themeSystem') }}</button>
+              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'light' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('light')">{{ t('settings.themeLight') }}</button>
+              <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'dark' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('dark')">{{ t('settings.themeDark') }}</button>
             </div>
           </div>
 
@@ -396,7 +396,7 @@ function cycleLabel(day: number): string {
                 v-for="(label, key) in iconSetLabels"
                 :key="key"
                 class="flex-1 py-2 text-sm font-medium transition-colors"
-                :class="activeIconSet === key ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                :class="activeIconSet === key ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
                 @click="setIconSet(key as any)"
               >{{ label }}</button>
             </div>
@@ -465,7 +465,7 @@ function cycleLabel(day: number): string {
           <input v-model="editNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 mb-4" />
           <div class="flex gap-3 justify-end">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="editNameOpen = false">{{ t('common.cancel') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" :disabled="saving" @click="saveDisplayName">{{ t('common.save') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveDisplayName">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -479,7 +479,7 @@ function cycleLabel(day: number): string {
           <input v-model="editFamilyNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 mb-4" />
           <div class="flex gap-3 justify-end">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="editFamilyNameOpen = false">{{ t('common.cancel') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" :disabled="saving" @click="saveFamilyName">{{ t('common.save') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveFamilyName">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -496,7 +496,7 @@ function cycleLabel(day: number): string {
               v-for="day in [...Array.from({ length: 28 }, (_, i) => i + 1), -1]"
               :key="day"
               class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
-              :class="day === cycleStartDay ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              :class="day === cycleStartDay ? 'bg-purple-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
               @click="saveBillingCycle(day)"
             >{{ cycleLabel(day) }}</button>
           </div>
@@ -540,7 +540,7 @@ function cycleLabel(day: number): string {
 
           <div class="flex gap-2 justify-end mt-6">
             <button class="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm" @click="incomeAnchorOpen = false">{{ t('common.cancel') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50" :disabled="saving" @click="saveIncomeAnchor">{{ t('common.save') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveIncomeAnchor">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -559,7 +559,7 @@ function cycleLabel(day: number): string {
           </div>
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="budgetsOpen = false">{{ t('common.cancel') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" :disabled="saving" @click="saveBudgets">{{ t('common.save') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveBudgets">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -587,7 +587,7 @@ function cycleLabel(day: number): string {
           </div>
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="paymentMethodsOpen = false">{{ t('common.cancel') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" :disabled="saving" @click="savePaymentMethods">{{ t('common.save') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="savePaymentMethods">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -606,7 +606,7 @@ function cycleLabel(day: number): string {
           </div>
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="categoryAliasesOpen = false">{{ t('common.cancel') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" :disabled="saving" @click="saveCategoryAliases">{{ t('common.save') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveCategoryAliases">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -620,7 +620,7 @@ function cycleLabel(day: number): string {
           <textarea readonly :value="csvContent" class="w-full h-48 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-xs font-mono"></textarea>
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="csvDialogOpen = false">{{ t('common.close') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700" @click="copyCsv">Copy</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700" @click="copyCsv">Copy</button>
           </div>
         </div>
       </div>

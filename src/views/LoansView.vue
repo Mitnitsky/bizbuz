@@ -88,7 +88,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('loans.loansAndMortgages') }}</h1>
       <button
-        class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
+        class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
         @click="editingLoan = null; addDialogOpen = true"
       >{{ t('loans.addLoan') }}</button>
     </div>
@@ -114,7 +114,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
         <p class="text-gray-500 dark:text-gray-400 text-lg">{{ t('loans.noLoans') }}</p>
         <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">{{ t('loans.addLoanOrMortgageToTrack') }}</p>
         <button
-          class="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          class="mt-4 px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
           @click="editingLoan = null; addDialogOpen = true"
         >{{ t('loans.addLoan') }}</button>
       </div>

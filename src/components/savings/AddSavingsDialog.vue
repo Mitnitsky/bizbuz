@@ -131,14 +131,14 @@ async function handleDelete() {
           <button
             class="flex-1 py-2 text-sm font-medium transition-colors"
             :class="savingsType === 'liquid'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-purple-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
             @click="savingsType = 'liquid'"
           >{{ t('savings.liquidLabel') }}</button>
           <button
             class="flex-1 py-2 text-sm font-medium transition-colors"
             :class="savingsType === 'locked'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-purple-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
             @click="savingsType = 'locked'"
           >{{ t('savings.lockedLabel') }}</button>
@@ -151,7 +151,7 @@ async function handleDelete() {
             :key="chip.key"
             class="px-3 py-1 rounded-full text-sm border transition-colors"
             :class="selectedChip === chip.key
-              ? 'bg-blue-600 text-white border-blue-600'
+              ? 'bg-purple-600 text-white border-purple-600'
               : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             @click="selectChip(chip.key)"
           >{{ chip.label }}</button>
@@ -225,7 +225,7 @@ async function handleDelete() {
               @click="emit('close')"
             >{{ t('common.cancel') }}</button>
             <button
-              class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
               :disabled="saving"
               @click="handleSave"
             >{{ saving ? '...' : t('common.save') }}</button>

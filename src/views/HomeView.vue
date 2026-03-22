@@ -119,12 +119,12 @@ const familyName = computed(() => familyStore.family?.name ?? 'BizBuz')
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm cursor-pointer transition"
           :class="[
             ALWAYS_VISIBLE.includes(tileId)
-              ? 'border-blue-300 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-700 text-blue-700 dark:text-blue-300 opacity-60 cursor-not-allowed'
+              ? 'border-purple-300 bg-purple-50 dark:bg-purple-900/30 dark:border-purple-700 text-purple-700 dark:text-purple-300 opacity-60 cursor-not-allowed'
               : autoHidden.has(tileId)
                 ? 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 opacity-50 cursor-not-allowed'
                 : hiddenTiles.has(tileId)
                   ? 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500'
-                  : 'border-blue-300 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-700 text-blue-700 dark:text-blue-300'
+                  : 'border-purple-300 bg-purple-50 dark:bg-purple-900/30 dark:border-purple-700 text-purple-700 dark:text-purple-300'
           ]"
         >
           <input

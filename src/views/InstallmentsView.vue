@@ -82,7 +82,7 @@ function cardLabel(txn: Transaction) {
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('installments.monthlyTotal') }}</div>
-        <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ formatCurrency(totalMonthly) }}</div>
+        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ formatCurrency(totalMonthly) }}</div>
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('installments.totalRemaining') }}</div>
@@ -114,13 +114,13 @@ function cardLabel(txn: Transaction) {
             <div class="font-medium text-gray-900 dark:text-white truncate">{{ item.transaction.overrideDescription || item.transaction.description }}</div>
             <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
               <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale) }}</span>
-              <span v-if="cardLabel(item.transaction)" class="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">{{ cardLabel(item.transaction) }}</span>
+              <span v-if="cardLabel(item.transaction)" class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">{{ cardLabel(item.transaction) }}</span>
               <span>{{ formatDateShort(item.transaction.date) }}</span>
             </div>
           </div>
           <div class="text-right shrink-0">
             <div class="text-lg font-bold text-gray-900 dark:text-white">{{ formatCurrency(item.monthlyAmount) }}<span class="text-xs text-gray-500 dark:text-gray-400">/{{ t('installments.month') }}</span></div>
-            <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+            <div class="text-sm font-semibold text-purple-600 dark:text-purple-400">
               {{ item.transaction.installments!.number }}/{{ item.transaction.installments!.total }}
             </div>
           </div>
@@ -133,7 +133,7 @@ function cardLabel(txn: Transaction) {
             <span>{{ t('installments.remaining') }}: {{ formatCurrency(item.remainingAmount) }}</span>
           </div>
           <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div class="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all" :style="{ width: item.progress + '%' }"></div>
+            <div class="bg-purple-600 dark:bg-purple-500 h-2 rounded-full transition-all" :style="{ width: item.progress + '%' }"></div>
           </div>
           <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
             <span>{{ t('installments.total') }}: {{ formatCurrency(item.transaction.installments!.total * item.monthlyAmount) }}</span>

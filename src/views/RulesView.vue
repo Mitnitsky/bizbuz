@@ -113,13 +113,13 @@ async function removeRule(id: string) {
         <span class="text-sm text-gray-500 dark:text-gray-400">({{ rules.length }})</span>
       </div>
       <button
-        class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+        class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors"
         @click="startNewRule"
       >+ {{ t('settings.addRule') }}</button>
     </div>
 
     <!-- Edit / New form -->
-    <div v-if="editingRule" class="border border-blue-300 dark:border-blue-700 rounded-xl p-5 mb-6 bg-blue-50/50 dark:bg-blue-900/20">
+    <div v-if="editingRule" class="border border-purple-300 dark:border-purple-700 rounded-xl p-5 mb-6 bg-purple-50/50 dark:bg-purple-900/20">
       <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
         {{ editingRuleIsNew ? t('settings.newRule') : t('settings.editRule') }}
       </h3>
@@ -154,7 +154,7 @@ async function removeRule(id: string) {
           >✕</button>
         </div>
       </div>
-      <button class="text-sm text-blue-600 dark:text-blue-400 hover:underline mb-4 block" @click="addCondition">+ {{ t('settings.addCondition') }}</button>
+      <button class="text-sm text-purple-600 dark:text-purple-400 hover:underline mb-4 block" @click="addCondition">+ {{ t('settings.addCondition') }}</button>
 
       <!-- Action -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -179,7 +179,7 @@ async function removeRule(id: string) {
       <div class="flex gap-2 justify-end">
         <button class="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm" @click="editingRule = null">{{ t('common.cancel') }}</button>
         <button
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
+          class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 disabled:opacity-50"
           :disabled="saving || !editingRule.actionCategory || editingRule.conditions.some(c => !c.value)"
           @click="saveRule"
         >{{ t('common.save') }}</button>
@@ -218,13 +218,13 @@ async function removeRule(id: string) {
                   :key="i"
                   class="inline-flex items-center px-2.5 py-1 rounded-md text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono"
                 >
-                  {{ cond.field }} <span class="text-blue-600 dark:text-blue-400 mx-1">{{ cond.operator }}</span> "{{ cond.value }}"
+                  {{ cond.field }} <span class="text-purple-600 dark:text-purple-400 mx-1">{{ cond.operator }}</span> "{{ cond.value }}"
                 </span>
               </div>
             </div>
             <div class="flex gap-1 shrink-0">
               <button
-                class="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                class="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
                 :title="t('settings.editRule')"
                 @click="startEditRule(rule)"
               >✏️</button>

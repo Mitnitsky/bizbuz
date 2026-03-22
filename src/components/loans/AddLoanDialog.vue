@@ -126,7 +126,7 @@ async function handleDelete() {
               @click="emit('close')"
             >{{ t('common.cancel') }}</button>
             <button
-              class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
               :disabled="saving"
               @click="handleSave"
             >{{ saving ? '...' : t('common.save') }}</button>

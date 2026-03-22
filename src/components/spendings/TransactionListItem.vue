@@ -82,7 +82,7 @@ function onClick() {
         <span>{{ formatDateShort(transaction.date) }}</span>
         <span
           v-if="transaction.installments && transaction.installments.total > 1"
-          class="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+          class="px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
         >{{ t('installments.payment', { n: transaction.installments.number, total: transaction.installments.total }) }}</span>
         <span
           v-if="showPaymentSource"

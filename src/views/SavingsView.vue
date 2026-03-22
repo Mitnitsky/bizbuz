@@ -78,7 +78,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
         </div>
         <div class="flex items-center justify-between mt-3">
           <button
-            class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            class="text-sm text-purple-600 dark:text-purple-400 hover:underline"
             @click="liquidOpen = !liquidOpen"
           >
             <component :is="liquidOpen ? icon('chevronUp') : icon('chevronDown')" class="w-3.5 h-3.5 inline" />
@@ -105,25 +105,25 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       <div class="p-5">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <component :is="icon('lock')" class="w-8 h-8 text-blue-500" />
+            <component :is="icon('lock')" class="w-8 h-8 text-purple-500" />
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('savings.lockedFunds') }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('savings.lockedFundsSubtitle') }}</p>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ formatCurrency(savingsStore.lockedTotal) }}</div>
+            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ formatCurrency(savingsStore.lockedTotal) }}</div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-3">
           <button
-            class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            class="text-sm text-purple-600 dark:text-purple-400 hover:underline"
             @click="lockedOpen = !lockedOpen"
           >
             <component :is="lockedOpen ? icon('chevronUp') : icon('chevronDown')" class="w-3.5 h-3.5 inline" />
             {{ savingsStore.lockedEntries.length }} items</button>
           <button
-            class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
+            class="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
             @click="openAddDialog('locked')"
           >{{ t('savings.addFund') }}</button>
         </div>
