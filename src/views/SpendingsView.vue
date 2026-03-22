@@ -253,7 +253,11 @@ onMounted(() => {
   const el = cardsRef.value?.$el as HTMLElement | undefined
   if (el) resizeObserver.observe(el)
 })
-onUpdated(() => nextTick(stripLastColumnMargins))
+watchEffect(() => {
+  // Re-run when category list changes
+  categoryItems.value.length
+  nextTick(stripLastColumnMargins)
+})
 onUnmounted(() => resizeObserver?.disconnect())
 
 // --- Preferences ---
