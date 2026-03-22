@@ -32,6 +32,7 @@ import type {
   LoanEntry,
 } from '@/types'
 import { extractTrackerFields } from '@/composables/useTracker'
+import { SCRAPER_CATEGORY_MAP } from '@/composables/useCategories'
 
 // ---------- Converter helpers ----------
 
@@ -46,7 +47,7 @@ export function transactionFromFirestore(docSnap: QueryDocumentSnapshot<Document
     description: d.description ?? '',
     overrideDescription: d.override_description ?? '',
     status: d.status ?? 'pending_categorization',
-    category: d.category ?? '',
+    category: SCRAPER_CATEGORY_MAP[d.category] ?? d.category ?? '',
     ownerTag: d.owner_tag ?? 'shared',
     type: d.type ?? 'normal',
     installments: d.installments
@@ -55,7 +56,7 @@ export function transactionFromFirestore(docSnap: QueryDocumentSnapshot<Document
     appliedRuleId: d.applied_rule_id ?? '',
     source: d.source ?? '',
     userLocked: d.user_locked ?? false,
-    isSplit: d.is_split ?? false,
+    isSplit: !!(d.is_split || d.parent_id),
     hiddenFromUi: d.hidden_from_ui ?? false,
     memo: d.memo,
     account: d.account,
@@ -195,6 +196,18 @@ export async function categorizeTransaction(
     category,
     user_locked: true,
     status: 'categorized',
+  })
+}
+
+export async function uncategorizeTransaction(
+  familyId: string,
+  txnId: string,
+): Promise<void> {
+  await updateDoc(doc(db, 'families', familyId, 'transactions', txnId), {
+    category: '',
+    user_locked: false,
+    status: 'pending_categorization',
+    applied_rule_id: '',
   })
 }
 
@@ -671,6 +684,7 @@ export function onUserPreferences(
       showPaymentSource: d.show_payment_source ?? false,
       themeMode: d.theme_mode ?? 'system',
       categoryOrder: d.category_order ?? [],
+      pinnedCategories: d.pinned_categories ?? [],
     })
   }, (error) => {
     console.error('[onUserPreferences] Firestore error:', error.message)

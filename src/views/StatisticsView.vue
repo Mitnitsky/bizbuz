@@ -207,7 +207,7 @@ const categoryBarOptions = {
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-6">
+  <div class="max-w-7xl mx-auto w-full px-4 py-6">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('statistics.title') }}</h1>
@@ -233,7 +233,7 @@ const categoryBarOptions = {
           <div class="w-56 h-56 shrink-0 mx-auto md:mx-0">
             <Doughnut :data="pieData" :options="pieOptions" />
           </div>
-          <div class="flex-1 min-w-0 space-y-1 max-h-64 overflow-y-auto">
+          <div class="category-breakdown-list flex-1 min-w-0 space-y-1 max-h-64 overflow-y-auto pr-4">
             <div
               v-for="(item, idx) in yearlyByCategory"
               :key="item.category"
@@ -286,3 +286,23 @@ const categoryBarOptions = {
     </template>
   </div>
 </template>
+
+<style scoped>
+.category-breakdown-list {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.category-breakdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+.category-breakdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.category-breakdown-list::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 3px;
+}
+.category-breakdown-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+</style>

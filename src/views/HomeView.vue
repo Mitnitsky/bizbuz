@@ -96,7 +96,7 @@ const familyName = computed(() => familyStore.family?.name ?? 'BizBuz')
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto px-4 py-6">
+  <div class="max-w-7xl mx-auto w-full px-4 py-6">
     <!-- App Bar -->
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ familyName }}</h1>

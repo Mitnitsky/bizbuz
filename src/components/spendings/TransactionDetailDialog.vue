@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import type { Transaction } from '@/types'
+import { ref, watch, computed, onUnmounted } from 'vue'
+import type { Transaction, Rule } from '@/types'
 import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
 import {
@@ -9,10 +9,13 @@ import {
   updateTransactionOverride,
   setTransactionLock,
   deleteTransaction,
+  onRules,
 } from '@/services/firestore'
 import { CATEGORIES, categoryDisplayName } from '@/composables/useCategories'
 import { formatCurrency, formatDate } from '@/composables/useFormatters'
 import { useIcons } from '@/composables/useIcons'
+import { useConfirm } from '@/composables/useConfirm'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
@@ -28,6 +31,7 @@ const emit = defineEmits<{
 const show = defineModel<boolean>({ default: false })
 
 const { t } = useI18n()
+const router = useRouter()
 const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const { icon } = useIcons()
@@ -35,6 +39,28 @@ const { icon } = useIcons()
 const editCategory = ref('')
 const editOwner = ref('')
 const editOverrideDesc = ref('')
+
+const rules = ref<Rule[]>([])
+let unsubRules: (() => void) | null = null
+
+watch(() => familyStore.family?.id, (fid) => {
+  unsubRules?.()
+  if (fid) {
+    unsubRules = onRules(fid, (r) => { rules.value = r })
+  }
+}, { immediate: true })
+
+onUnmounted(() => { unsubRules?.() })
+
+const matchedRule = computed(() => {
+  const ruleId = props.transaction?.appliedRuleId
+  if (!ruleId) return null
+  return rules.value.find(r => r.id === ruleId) ?? null
+})
+
+function formatRuleConditions(rule: Rule): string {
+  return rule.conditions.map(c => `${c.field} ${c.operator} "${c.value}"`).join(' & ')
+}
 
 watch(show, (val) => {
   if (val && props.transaction) {
@@ -46,6 +72,15 @@ watch(show, (val) => {
 
 const locale = computed(() => prefsStore.locale)
 const overrides = computed(() => familyStore.familySettings.categoryNameOverrides)
+
+const accountAlias = computed(() => {
+  const labels = familyStore.familySettings.paymentMethodLabels
+  const txn = props.transaction
+  if (!txn) return ''
+  if (txn.companyId && labels[txn.companyId]) return labels[txn.companyId]
+  if (txn.account && labels[txn.account]) return labels[txn.account]
+  return ''
+})
 
 async function saveCategory(txn: Transaction) {
   const familyId = familyStore.family?.id
@@ -71,10 +106,12 @@ async function toggleLock(txn: Transaction) {
   await setTransactionLock(familyId, txn.id, !txn.userLocked)
 }
 
+const { confirm } = useConfirm()
+
 async function onDelete(txn: Transaction) {
   const familyId = familyStore.family?.id
   if (!familyId) return
-  if (!window.confirm(t('common.confirmDelete'))) return
+  if (!(await confirm(t('common.confirmDelete')))) return
   await deleteTransaction(familyId, txn.id)
   show.value = false
   emit('close')
@@ -143,8 +180,10 @@ async function onCategorize() {
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.owner') }}</div>
           <div class="text-gray-900 dark:text-gray-100">{{ familyStore.resolveOwnerName(transaction.ownerTag) }}</div>
 
-          <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.source') }}</div>
-          <div class="text-gray-900 dark:text-gray-100">{{ transaction.source || '—' }}</div>
+          <template v-if="prefsStore.userPreferences?.showPaymentSource">
+            <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.source') }}</div>
+            <div class="text-gray-900 dark:text-gray-100">{{ transaction.source || '—' }}</div>
+          </template>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.originalAmount') }}</div>
           <div class="text-gray-900 dark:text-gray-100">{{ formatCurrency(transaction.originalAmount) }}</div>
@@ -156,12 +195,19 @@ async function onCategorize() {
 
           <template v-if="transaction.account">
             <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.account') }}</div>
-            <div class="text-gray-900 dark:text-gray-100">{{ transaction.account }}</div>
+            <div class="text-gray-900 dark:text-gray-100">{{ transaction.account }}<span v-if="accountAlias" class="text-purple-600 dark:text-purple-400 ml-1">({{ accountAlias }})</span></div>
           </template>
 
-          <template v-if="transaction.appliedRuleId">
+          <template v-if="matchedRule">
             <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.appliedRule') }}</div>
-            <div class="text-gray-900 dark:text-gray-100">{{ transaction.appliedRuleId }}</div>
+            <div class="text-gray-900 dark:text-gray-100">
+              <button
+                class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-mono hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors cursor-pointer"
+                @click="show = false; router.push({ path: '/settings/rules', query: { edit: transaction.appliedRuleId } })"
+              >
+                {{ formatRuleConditions(matchedRule) }}
+              </button>
+            </div>
           </template>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.locked') }}</div>

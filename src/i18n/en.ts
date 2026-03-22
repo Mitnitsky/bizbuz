@@ -22,6 +22,7 @@ export default {
     other: 'Other',
     transfer: 'Transfer',
     confirmDelete: 'Are you sure you want to delete this?',
+    delete: 'Delete',
   },
   home: {
     cycleSpending: 'Cycle Expenses',
@@ -167,6 +168,7 @@ export default {
     inboxZero: 'All categorized! 🎉',
     allCategorized: 'All transactions are categorized',
     noTransactionsYet: 'No transactions yet',
+    dropHere: 'Drop here',
     description: 'Description',
     category: 'Category',
     shared: 'Shared',

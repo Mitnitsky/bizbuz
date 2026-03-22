@@ -53,6 +53,7 @@ function onDragStart(e: DragEvent) {
   if (!props.draggable || !e.dataTransfer) return
   e.dataTransfer.setData('text/x-transaction-id', props.transaction.id)
   e.dataTransfer.effectAllowed = 'move'
+  console.log('[DND] dragstart', props.transaction.id, props.transaction.description)
 }
 
 function onClick() {

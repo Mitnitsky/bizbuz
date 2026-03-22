@@ -61,13 +61,16 @@ const sortedItems = computed(() => {
 const totalMonthly = computed(() => installmentItems.value.reduce((s, i) => s + i.monthlyAmount, 0))
 const totalRemaining = computed(() => installmentItems.value.reduce((s, i) => s + i.remainingAmount, 0))
 
-function paymentLabel(src: string) {
-  return familyStore.familySettings.paymentMethodLabels?.[src] || src
+function cardLabel(txn: Transaction) {
+  const labels = familyStore.familySettings.paymentMethodLabels
+  if (txn.companyId && labels[txn.companyId]) return labels[txn.companyId]
+  if (txn.account && labels[txn.account]) return labels[txn.account]
+  return txn.account || ''
 }
 </script>
 
 <template>
-  <div class="p-4 max-w-5xl mx-auto">
+  <div class="max-w-7xl mx-auto w-full p-4">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ t('installments.title') }}</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ t('installments.subtitle') }}</p>
 
@@ -111,7 +114,7 @@ function paymentLabel(src: string) {
             <div class="font-medium text-gray-900 dark:text-white truncate">{{ item.transaction.overrideDescription || item.transaction.description }}</div>
             <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
               <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale) }}</span>
-              <span>{{ paymentLabel(item.transaction.source) }}</span>
+              <span v-if="cardLabel(item.transaction)" class="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">{{ cardLabel(item.transaction) }}</span>
               <span>{{ formatDateShort(item.transaction.date) }}</span>
             </div>
           </div>

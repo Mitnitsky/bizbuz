@@ -78,7 +78,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
 </script>
 
 <template>
-  <div class="p-4 max-w-3xl mx-auto">
+  <div class="max-w-7xl mx-auto w-full p-4">
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('loans.loansAndMortgages') }}</h1>
       <button

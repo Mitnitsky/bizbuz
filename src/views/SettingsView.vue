@@ -289,7 +289,7 @@ function cycleLabel(day: number): string {
 </script>
 
 <template>
-  <div class="p-4 max-w-5xl mx-auto">
+  <div class="max-w-7xl mx-auto w-full p-4">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ t('nav.settings') }}</h1>
 
     <div class="grid grid-cols-1 min-[800px]:grid-cols-3 gap-6">

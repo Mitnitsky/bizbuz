@@ -9,7 +9,8 @@ import {
   GripVertical as LGripVertical, Info as LInfo, ChevronDown as LChevronDown,
   ChevronUp as LChevronUp, ChevronLeft as LChevronLeft, ChevronRight as LChevronRight,
   Lock as LLock, Unlock as LUnlock, Trash2 as LTrash2, Split as LSplit,
-  BookOpen as LBookOpen, Plus as LPlus, Scissors as LScissors,
+  BookOpen as LBookOpen, Plus as LPlus, Scissors as LScissors, Inbox as LInbox,
+  Pin as LPin,
 } from 'lucide-vue-next'
 
 // Phosphor
@@ -20,6 +21,7 @@ import {
   PhDotsSixVertical, PhInfo, PhCaretDown, PhCaretUp,
   PhCaretLeft, PhCaretRight, PhLock, PhLockOpen,
   PhTrash, PhScissors, PhBookOpen, PhPlus, PhSplitVertical,
+  PhTray, PhPushPin,
 } from '@phosphor-icons/vue'
 
 // Tabler
@@ -30,6 +32,7 @@ import {
   IconGripVertical, IconInfoCircle, IconChevronDown, IconChevronUp,
   IconChevronLeft, IconChevronRight, IconLock, IconLockOpen,
   IconTrash, IconScissors, IconBook, IconPlus, IconArrowsSplit2,
+  IconInbox, IconPin,
 } from '@tabler/icons-vue'
 
 export type IconSetName = 'lucide' | 'phosphor' | 'tabler'
@@ -38,7 +41,7 @@ export type AppIconName =
   | 'loans' | 'statistics' | 'settings' | 'more' | 'menu' | 'loader'
   | 'coins' | 'bot' | 'grip' | 'info' | 'chevronDown' | 'chevronUp'
   | 'chevronLeft' | 'chevronRight' | 'lock' | 'unlock' | 'trash'
-  | 'split' | 'rules' | 'plus' | 'scissors'
+  | 'split' | 'rules' | 'plus' | 'scissors' | 'inbox' | 'pin'
 
 type IconMap = Record<AppIconName, Component>
 
@@ -69,6 +72,8 @@ const lucideIcons: IconMap = {
   rules: markRaw(LBookOpen),
   plus: markRaw(LPlus),
   scissors: markRaw(LScissors),
+  inbox: markRaw(LInbox),
+  pin: markRaw(LPin),
 }
 
 const phosphorIcons: IconMap = {
@@ -98,6 +103,8 @@ const phosphorIcons: IconMap = {
   rules: markRaw(PhBookOpen),
   plus: markRaw(PhPlus),
   scissors: markRaw(PhScissors),
+  inbox: markRaw(PhTray),
+  pin: markRaw(PhPushPin),
 }
 
 const tablerIcons: IconMap = {
@@ -127,6 +134,8 @@ const tablerIcons: IconMap = {
   rules: markRaw(IconBook),
   plus: markRaw(IconPlus),
   scissors: markRaw(IconScissors),
+  inbox: markRaw(IconInbox),
+  pin: markRaw(IconPin),
 }
 
 const ICON_SETS: Record<IconSetName, IconMap> = {

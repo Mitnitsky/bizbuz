@@ -4,6 +4,7 @@ import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { useTransactionsStore } from '@/stores/transactions'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useFamilyStore } from '@/stores/family'
 import { TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY, categoryDisplayName } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useI18n } from 'vue-i18n'
@@ -13,6 +14,7 @@ ChartJS.register(ArcElement, Tooltip, Legend)
 const { t } = useI18n()
 const txnStore = useTransactionsStore()
 const prefsStore = usePreferencesStore()
+const familyStore = useFamilyStore()
 
 const COLORS = [
   '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6',
@@ -38,7 +40,7 @@ const categoryData = computed(() => {
 const totalSpend = computed(() => categoryData.value.reduce((sum, d) => sum + d.amount, 0))
 
 const chartData = computed(() => ({
-  labels: categoryData.value.map(d => categoryDisplayName(d.category, prefsStore.locale)),
+  labels: categoryData.value.map(d => categoryDisplayName(d.category, prefsStore.locale, familyStore.familySettings.categoryNameOverrides)),
   datasets: [{
     data: categoryData.value.map(d => d.amount),
     backgroundColor: categoryData.value.map((_d, i) => COLORS[i % COLORS.length]),
@@ -76,14 +78,14 @@ const chartOptions = {
       <div class="w-36 h-36 shrink-0">
         <Doughnut :data="chartData" :options="chartOptions" />
       </div>
-      <div class="flex-1 min-w-0 space-y-1.5 max-h-48 overflow-y-auto">
+      <div class="category-pie-list flex-1 min-w-0 space-y-1.5 max-h-48 overflow-y-auto pr-4">
         <div
           v-for="(item, idx) in categoryData"
           :key="item.category"
           class="flex items-center gap-2 text-sm"
         >
           <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: COLORS[idx % COLORS.length] }"></span>
-          <span class="truncate text-gray-700 dark:text-gray-300">{{ categoryDisplayName(item.category, prefsStore.locale) }}</span>
+          <span class="truncate text-gray-700 dark:text-gray-300">{{ categoryDisplayName(item.category, prefsStore.locale, familyStore.familySettings.categoryNameOverrides) }}</span>
           <span class="ml-auto text-gray-500 dark:text-gray-400 shrink-0">
             {{ totalSpend > 0 ? ((item.amount / totalSpend) * 100).toFixed(0) : 0 }}%
           </span>
@@ -93,3 +95,23 @@ const chartOptions = {
     </div>
   </div>
 </template>
+
+<style scoped>
+.category-pie-list {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.category-pie-list::-webkit-scrollbar {
+  width: 6px;
+}
+.category-pie-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.category-pie-list::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 3px;
+}
+.category-pie-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+</style>

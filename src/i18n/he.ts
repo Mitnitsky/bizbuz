@@ -22,6 +22,7 @@ export default {
     other: 'אחר',
     transfer: 'העברה',
     confirmDelete: 'האם אתה בטוח שברצונך למחוק?',
+    delete: 'מחק',
   },
   home: {
     cycleSpending: 'הוצאות בתקופה',
@@ -167,6 +168,7 @@ export default {
     inboxZero: 'הכל מסווג! 🎉',
     allCategorized: 'כל העסקאות מסווגות',
     noTransactionsYet: 'אין עסקאות עדיין',
+    dropHere: 'שחרר כאן',
     description: 'תיאור',
     category: 'קטגוריה',
     shared: 'משותף',

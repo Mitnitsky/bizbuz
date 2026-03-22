@@ -9,7 +9,7 @@ import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import { CATEGORIES, TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
-import { updateCategoryOrder } from '@/services/firestore'
+import { updateCategoryOrder, updateUserPreferences } from '@/services/firestore'
 import draggable from 'vuedraggable'
 import CycleSelector from '@/components/spendings/CycleSelector.vue'
 import OwnerFilterChip from '@/components/OwnerFilterChip.vue'
@@ -126,10 +126,27 @@ function categorySpending(cat: string): number {
   return txns.reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
 }
 
+// --- Pinned categories ---
+const pinnedCategories = computed(() => prefsStore.userPreferences?.pinnedCategories ?? [])
+
+async function togglePin(category: string) {
+  console.log('[PIN] togglePin called for', category)
+  const familyId = familyStore.family?.id
+  const uid = authStore.user?.uid
+  if (!familyId || !uid) { console.log('[PIN] no familyId or uid'); return }
+  const current = [...pinnedCategories.value]
+  const idx = current.indexOf(category)
+  if (idx >= 0) current.splice(idx, 1)
+  else current.push(category)
+  console.log('[PIN] saving', current)
+  await updateUserPreferences(familyId, uid, { pinned_categories: current })
+}
+
 watchEffect(() => {
   const allCats = collectAllCategories()
   const locale = prefsStore.locale
   const overrides = familyStore.familySettings.categoryNameOverrides
+  const pinned = pinnedCategories.value
 
   let sorted: string[]
 
@@ -156,6 +173,14 @@ watchEffect(() => {
       }
       break
     }
+  }
+
+  // Pinned always first, preserving their relative order
+  if (pinned.length > 0) {
+    const pinnedItems = sorted.filter(c => pinned.includes(c))
+    const unpinned = sorted.filter(c => !pinned.includes(c))
+    pinnedItems.sort((a, b) => pinned.indexOf(a) - pinned.indexOf(b))
+    sorted = [...pinnedItems, ...unpinned]
   }
 
   categoryItems.value = sorted.map(key => ({ key }))
@@ -205,7 +230,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
 </script>
 
 <template>
-  <div class="flex flex-col h-full min-h-0">
+  <div class="flex flex-col h-full min-h-0 overflow-hidden">
     <!-- App Bar -->
     <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
       <h1 class="text-lg font-bold text-gray-900 dark:text-gray-100 mr-2">{{ t('nav.spendings') }}</h1>
@@ -279,13 +304,16 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           item-key="key"
           handle=".category-drag-handle"
           :disabled="sortMode !== 'custom'"
-          class="grid grid-cols-1 gap-4 items-start min-[1000px]:grid-cols-2 min-[1600px]:grid-cols-3"
+          :group="{ name: 'categories', pull: true, put: false }"
+          class="columns-1 gap-2 min-[1000px]:columns-2 min-[1600px]:columns-3 [&>*]:mb-2 [&>*]:break-inside-avoid"
           @end="onCategoryReorder"
         >
           <template #item="{ element }">
             <CategoryCard
               :category="element.key"
               :transactions="transactionsByCategory.get(element.key) ?? []"
+              :pinned="pinnedCategories.includes(element.key)"
+              @toggle-pin="togglePin"
             />
           </template>
         </draggable>
@@ -305,6 +333,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
                 @dragenter="($event: DragEvent) => { if ($event.dataTransfer?.types.includes('text/x-transaction-id')) ($event.currentTarget as HTMLElement).classList.add('bg-purple-50', 'dark:bg-purple-900/20') }"
                 @dragleave="($event: DragEvent) => { ($event.currentTarget as HTMLElement).classList.remove('bg-purple-50', 'dark:bg-purple-900/20') }"
                 @drop="async ($event: DragEvent) => {
+                  $event.preventDefault();
                   ($event.currentTarget as HTMLElement).classList.remove('bg-purple-50', 'dark:bg-purple-900/20');
                   const txnId = $event.dataTransfer?.getData('text/x-transaction-id');
                   if (txnId && familyStore.family?.id) {
@@ -379,6 +408,8 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
               :key="item.key"
               :category="item.key"
               :transactions="transactionsByCategory.get(item.key) ?? []"
+              :pinned="pinnedCategories.includes(item.key)"
+              @toggle-pin="togglePin"
             />
           </div>
         </div>

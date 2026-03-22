@@ -76,6 +76,7 @@ export interface UserPreferences {
   showPaymentSource: boolean
   themeMode: string
   categoryOrder: string[]
+  pinnedCategories: string[]
 }
 
 export interface FamilySettings {

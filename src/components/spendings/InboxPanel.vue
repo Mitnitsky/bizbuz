@@ -3,8 +3,9 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import { onRules, autoCategorizeTransaction } from '@/services/firestore'
+import { onRules, autoCategorizeTransaction, uncategorizeTransaction } from '@/services/firestore'
 import { useIcons } from '@/composables/useIcons'
+import { useFamilyStore } from '@/stores/family'
 import type { Rule, Transaction } from '@/types'
 import TransactionListItem from './TransactionListItem.vue'
 
@@ -23,6 +24,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const txnStore = useTransactionsStore()
 const authStore = useAuthStore()
+const familyStore = useFamilyStore()
 const { icon } = useIcons()
 
 const inboxSort = ref<InboxSort>('date')
@@ -30,6 +32,39 @@ const rules = ref<Rule[]>([])
 const rerunning = ref(false)
 const rerunResult = ref<{ matched: number; total: number } | null>(null)
 let unsubRules: (() => void) | null = null
+
+const isDragOver = ref(false)
+const dragEnterCount = ref(0)
+
+function onInboxDragOver(e: DragEvent) {
+  if (e.dataTransfer?.types.includes('text/x-transaction-id')) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+}
+function onInboxDragEnter(e: DragEvent) {
+  if (e.dataTransfer?.types.includes('text/x-transaction-id')) {
+    dragEnterCount.value++
+    isDragOver.value = true
+  }
+}
+function onInboxDragLeave() {
+  dragEnterCount.value--
+  if (dragEnterCount.value <= 0) {
+    dragEnterCount.value = 0
+    isDragOver.value = false
+  }
+}
+async function onInboxDrop(e: DragEvent) {
+  e.preventDefault()
+  dragEnterCount.value = 0
+  isDragOver.value = false
+  const txnId = e.dataTransfer?.getData('text/x-transaction-id')
+  if (!txnId) return
+  const familyId = familyStore.family?.id
+  if (!familyId) return
+  await uncategorizeTransaction(familyId, txnId)
+}
 
 const MIN_WIDTH = 280
 const MAX_WIDTH = 600
@@ -128,13 +163,43 @@ const inboxTransactions = computed(() => {
   }
 })
 const inboxCount = computed(() => txnStore.inboxCount)
+
+// Telegram-style leave animation: capture height, then animate out
+function onBeforeLeave(el: Element) {
+  const htmlEl = el as HTMLElement
+  const { height } = htmlEl.getBoundingClientRect()
+  htmlEl.style.height = height + 'px'
+  htmlEl.style.overflow = 'hidden'
+}
+
+function onLeave(el: Element, done: () => void) {
+  const htmlEl = el as HTMLElement
+  // Force reflow so the initial state is applied
+  void htmlEl.offsetHeight
+  htmlEl.style.transition = 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)'
+  htmlEl.style.height = '0px'
+  htmlEl.style.opacity = '0'
+  htmlEl.style.paddingTop = '0px'
+  htmlEl.style.paddingBottom = '0px'
+  htmlEl.style.marginTop = '0px'
+  htmlEl.style.marginBottom = '0px'
+  htmlEl.style.transform = 'translateX(-30px)'
+  htmlEl.addEventListener('transitionend', done, { once: true })
+}
 </script>
 
 <template>
   <div
-    class="flex flex-col border-r border-gray-200 dark:border-gray-700 overflow-hidden flex-shrink-0 bg-white dark:bg-gray-800 relative"
-    :class="collapsible ? '' : 'w-full border-r-0'"
+    class="flex flex-col border-r border-gray-200 dark:border-gray-700 overflow-hidden flex-shrink-0 bg-white dark:bg-gray-800 relative transition-all duration-200"
+    :class="[
+      collapsible ? '' : 'w-full border-r-0',
+      isDragOver ? 'ring-2 ring-purple-400 dark:ring-purple-500 bg-purple-50/50 dark:bg-purple-900/20' : ''
+    ]"
     :style="collapsible ? { width: collapsed ? '48px' : panelWidth + 'px' } : undefined"
+    @dragover="onInboxDragOver"
+    @dragenter="onInboxDragEnter"
+    @dragleave="onInboxDragLeave"
+    @drop="onInboxDrop"
   >
     <!-- Collapsed strip -->
     <div v-if="collapsible && collapsed" class="flex flex-col items-center py-4 gap-2">
@@ -143,11 +208,11 @@ const inboxCount = computed(() => txnStore.inboxCount)
         @click="emit('toggle')"
         title="Expand inbox"
       >
-        📥
+        <component :is="icon('inbox')" class="w-5 h-5" />
       </button>
       <span
         v-if="inboxCount > 0"
-        class="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+        class="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-5 h-5 px-1.5 flex items-center justify-center"
       >{{ inboxCount > 99 ? '99+' : inboxCount }}</span>
     </div>
 
@@ -206,14 +271,21 @@ const inboxCount = computed(() => txnStore.inboxCount)
           <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('spendings.inboxZero') }}</p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('spendings.allCategorized') }}</p>
         </div>
-        <div v-else class="py-1">
+        <TransitionGroup
+          v-else
+          tag="div"
+          class="py-1"
+          name="inbox-item"
+          @before-leave="onBeforeLeave"
+          @leave="onLeave"
+        >
           <TransactionListItem
             v-for="txn in inboxTransactions"
             :key="txn.id"
             :transaction="txn"
             :draggable="true"
           />
-        </div>
+        </TransitionGroup>
       </div>
     </template>
 
@@ -225,3 +297,25 @@ const inboxCount = computed(() => txnStore.inboxCount)
     />
   </div>
 </template>
+
+<style scoped>
+/* Sibling items slide up smoothly when one is removed */
+.inbox-item-move {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Items leaving are taken out of flow so siblings can animate */
+.inbox-item-leave-active {
+  position: relative;
+  z-index: 0;
+}
+
+/* Enter animation for new items */
+.inbox-item-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.inbox-item-enter-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>

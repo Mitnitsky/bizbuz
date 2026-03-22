@@ -70,14 +70,14 @@ const wrapperSize = computed(() => ({
 .glass-icon-active {
   background: linear-gradient(
     135deg,
-    rgb(var(--color-purple-600) / 0.25),
-    rgb(var(--color-purple-600) / 0.10)
+    color-mix(in srgb, var(--color-purple-600) 25%, transparent),
+    color-mix(in srgb, var(--color-purple-600) 10%, transparent)
   );
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border-color: rgb(var(--color-purple-600) / 0.3);
+  border-color: color-mix(in srgb, var(--color-purple-600) 30%, transparent);
   box-shadow:
-    0 2px 12px rgb(var(--color-purple-600) / 0.15),
+    0 2px 12px color-mix(in srgb, var(--color-purple-600) 15%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
@@ -109,12 +109,12 @@ const wrapperSize = computed(() => ({
 :root.dark .glass-icon-active {
   background: linear-gradient(
     135deg,
-    rgb(var(--color-purple-400) / 0.3),
-    rgb(var(--color-purple-400) / 0.12)
+    color-mix(in srgb, var(--color-purple-400) 30%, transparent),
+    color-mix(in srgb, var(--color-purple-400) 12%, transparent)
   );
-  border-color: rgb(var(--color-purple-400) / 0.35);
+  border-color: color-mix(in srgb, var(--color-purple-400) 35%, transparent);
   box-shadow:
-    0 2px 12px rgb(var(--color-purple-400) / 0.2),
+    0 2px 12px color-mix(in srgb, var(--color-purple-400) 20%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 </style>

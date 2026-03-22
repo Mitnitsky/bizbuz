@@ -52,7 +52,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
 </script>
 
 <template>
-  <div class="p-4 max-w-3xl mx-auto space-y-6">
+  <div class="max-w-7xl mx-auto w-full p-4 space-y-6">
     <!-- Liquid Money Section -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow">
       <div class="p-5">

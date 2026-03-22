@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { onRules, addRule, updateRule, deleteRule } from '@/services/firestore'
 import { CATEGORIES, categoryDisplayName } from '@/composables/useCategories'
 import { useIcons } from '@/composables/useIcons'
+import { useConfirm } from '@/composables/useConfirm'
 import type { Rule } from '@/types'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const prefsStore = usePreferencesStore()
@@ -30,6 +32,19 @@ onMounted(() => {
   }
 })
 onUnmounted(() => { unsubRules?.() })
+
+// Auto-open rule editor from query param (e.g. ?edit=ruleId)
+watch(rules, (newRules) => {
+  const editId = route.query.edit as string | undefined
+  if (editId && newRules.length > 0 && !editingRule.value) {
+    const rule = newRules.find(r => r.id === editId)
+    if (rule) {
+      editingRule.value = JSON.parse(JSON.stringify(rule))
+      editingRuleIsNew.value = false
+      router.replace({ query: {} })
+    }
+  }
+})
 
 // Group rules by category, sorted alphabetically
 const rulesByCategory = computed(() => {
@@ -75,16 +90,18 @@ async function saveRule() {
   } finally { saving.value = false }
 }
 
+const { confirm } = useConfirm()
+
 async function removeRule(id: string) {
   if (!familyId.value) return
-  if (!window.confirm(t('common.confirmDelete'))) return
+  if (!(await confirm(t('common.confirmDelete')))) return
   saving.value = true
   try { await deleteRule(familyId.value, id) } finally { saving.value = false }
 }
 </script>
 
 <template>
-  <div class="p-4 max-w-5xl mx-auto">
+  <div class="max-w-7xl mx-auto w-full p-4">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">

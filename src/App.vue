@@ -9,6 +9,7 @@ import { useSavingsStore } from '@/stores/savings'
 import { updateDisplayName } from '@/services/firestore'
 import { useI18n } from 'vue-i18n'
 import GlassIcon from '@/components/GlassIcon.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useIcons } from '@/composables/useIcons'
 import '@/composables/useAccentColor'
 
@@ -161,7 +162,7 @@ onUnmounted(() => {
   <router-view v-else-if="appState === 'login' || appState === 'onboarding'" />
 
   <!-- Main App Shell -->
-  <div v-else class="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div v-else class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
     <!-- Sidebar (wide screens) -->
     <aside
       v-if="isWide"
@@ -172,7 +173,7 @@ onUnmounted(() => {
         @click="sidebarExpanded = !sidebarExpanded"
         class="p-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 self-end"
       >
-        <component :is="icon('menu')" class="h-5 w-5" />
+        <component :is="sidebarExpanded ? icon('chevronLeft') : icon('chevronRight')" class="h-5 w-5" />
       </button>
 
       <nav class="flex-1 flex flex-col gap-1 px-2">
@@ -192,8 +193,8 @@ onUnmounted(() => {
     </aside>
 
     <!-- Main content -->
-    <main class="flex-1 min-w-0" :class="{ 'pb-16': !isWide }">
-      <router-view />
+    <main class="flex flex-col flex-1 min-w-0 min-h-0" :class="{ 'pb-16': !isWide }">
+      <router-view class="flex-1 min-h-0 overflow-y-auto" />
     </main>
 
     <!-- Bottom tab bar (narrow screens) -->
@@ -252,6 +253,7 @@ onUnmounted(() => {
       </div>
     </Teleport>
   </div>
+  <ConfirmDialog />
 </template>
 
 <style scoped>
