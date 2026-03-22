@@ -20,12 +20,20 @@ const liquidOpen = ref(true)
 const lockedOpen = ref(true)
 const addDialogOpen = ref(false)
 const addDialogType = ref<SavingsType>('liquid')
+const editingEntry = ref<SavingsEntry | null>(null)
 
 const trackerDialogOpen = ref(false)
 const trackerTarget = ref<SavingsEntry | null>(null)
 
 function openAddDialog(type: SavingsType) {
+  editingEntry.value = null
   addDialogType.value = type
+  addDialogOpen.value = true
+}
+
+function openEdit(entry: SavingsEntry) {
+  editingEntry.value = entry
+  addDialogType.value = entry.savingsType
   addDialogOpen.value = true
 }
 
@@ -87,6 +95,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           :key="entry.id"
           :entry="entry"
           @open-tracker="openTracker"
+          @edit="openEdit"
         />
       </div>
     </div>
@@ -125,6 +134,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           :key="entry.id"
           :entry="entry"
           @open-tracker="openTracker"
+          @edit="openEdit"
         />
       </div>
     </div>
@@ -133,7 +143,8 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
     <AddSavingsDialog
       :open="addDialogOpen"
       :initial-type="addDialogType"
-      @close="addDialogOpen = false"
+      :entry="editingEntry"
+      @close="addDialogOpen = false; editingEntry = null"
     />
     <TrackerDialog
       :open="trackerDialogOpen"

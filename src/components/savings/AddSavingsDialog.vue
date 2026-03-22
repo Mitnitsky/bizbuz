@@ -3,23 +3,28 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
-import { upsertSavingsEntry } from '@/services/firestore'
+import { upsertSavingsEntry, deleteSavingsEntry } from '@/services/firestore'
+import { useConfirm } from '@/composables/useConfirm'
 import { LIQUID_ACCOUNT_TYPES, LOCKED_FUND_TYPES, liquidTypeDisplayName, lockedTypeDisplayName } from '@/composables/useCategories'
-import type { SavingsType } from '@/types'
+import type { SavingsEntry, SavingsType } from '@/types'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 const prefsStore = usePreferencesStore()
+const { confirm } = useConfirm()
 
 const props = defineProps<{
   open: boolean
   initialType: SavingsType
+  entry?: SavingsEntry | null
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const isEdit = ref(false)
+const editId = ref<string | undefined>()
 const savingsType = ref<SavingsType>('liquid')
 const selectedChip = ref('')
 const name = ref('')
@@ -30,8 +35,26 @@ const notes = ref('')
 const saving = ref(false)
 const error = ref('')
 
+function formatDateInput(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
 watch(() => props.open, (isOpen) => {
-  if (isOpen) {
+  if (!isOpen) return
+  error.value = ''
+  if (props.entry) {
+    isEdit.value = true
+    editId.value = props.entry.id
+    savingsType.value = props.entry.savingsType
+    selectedChip.value = ''
+    name.value = props.entry.name
+    amount.value = String(props.entry.amount)
+    firmName.value = props.entry.firmName ?? ''
+    liquidityDate.value = props.entry.liquidityDate ? formatDateInput(props.entry.liquidityDate) : ''
+    notes.value = props.entry.notes ?? ''
+  } else {
+    isEdit.value = false
+    editId.value = undefined
     savingsType.value = props.initialType
     selectedChip.value = ''
     name.value = ''
@@ -39,7 +62,6 @@ watch(() => props.open, (isOpen) => {
     firmName.value = ''
     liquidityDate.value = ''
     notes.value = ''
-    error.value = ''
   }
 })
 
@@ -71,6 +93,7 @@ async function handleSave() {
   saving.value = true
   try {
     await upsertSavingsEntry(familyId, {
+      id: editId.value,
       name: name.value.trim(),
       amount: parsedAmount,
       savingsType: savingsType.value,
@@ -85,6 +108,14 @@ async function handleSave() {
     saving.value = false
   }
 }
+
+async function handleDelete() {
+  const familyId = authStore.familyId
+  if (!familyId || !editId.value) return
+  if (!(await confirm(t('common.confirmDelete')))) return
+  await deleteSavingsEntry(familyId, editId.value)
+  emit('close')
+}
 </script>
 
 <template>
@@ -92,7 +123,7 @@ async function handleSave() {
     <div v-if="open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          {{ savingsType === 'liquid' ? t('savings.addLiquidAccount') : t('savings.addLockedFund') }}
+          {{ isEdit ? t('common.edit') : (savingsType === 'liquid' ? t('savings.addLiquidAccount') : t('savings.addLockedFund')) }}
         </h3>
 
         <!-- Segmented toggle -->
@@ -181,16 +212,24 @@ async function handleSave() {
         <p v-if="error" class="text-red-500 text-sm mb-3">{{ error }}</p>
 
         <!-- Actions -->
-        <div class="flex gap-3 justify-end">
+        <div class="flex gap-3 justify-between">
           <button
-            class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            @click="emit('close')"
-          >{{ t('common.cancel') }}</button>
-          <button
-            class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-            :disabled="saving"
-            @click="handleSave"
-          >{{ saving ? '...' : t('common.save') }}</button>
+            v-if="isEdit"
+            class="px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+            @click="handleDelete"
+          >{{ t('common.delete') }}</button>
+          <div v-else />
+          <div class="flex gap-3">
+            <button
+              class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              @click="emit('close')"
+            >{{ t('common.cancel') }}</button>
+            <button
+              class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              :disabled="saving"
+              @click="handleSave"
+            >{{ saving ? '...' : t('common.save') }}</button>
+          </div>
         </div>
       </div>
     </div>
