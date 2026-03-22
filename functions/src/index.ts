@@ -32,6 +32,7 @@ interface IngestPayload {
   transactions: IngestTransaction[];
 }
 
+// Ingest endpoint for moneyman scraper integration
 export const ingest = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).send({error: "Method not allowed"});
@@ -82,6 +83,7 @@ export const ingest = functions.https.onRequest(async (req, res) => {
 
   const results = {
     processed: 0,
+    skipped_existing: 0,
     skipped_locked: 0,
     skipped_split: 0,
     errors: 0,
@@ -106,6 +108,35 @@ export const ingest = functions.https.onRequest(async (req, res) => {
       if (existingDoc.exists && existingDoc.data()?.is_split === true) {
         results.skipped_split++;
         continue;
+      }
+
+      // Already exists by uniqueId — skip if categorized/locked
+      if (existingDoc.exists) {
+        const existing = existingDoc.data()!;
+        if (existing.user_locked === true) {
+          results.skipped_locked++;
+          continue;
+        }
+        if (existing.status && existing.status !== "pending_categorization") {
+          results.skipped_existing++;
+          continue;
+        }
+      }
+
+      // Fuzzy dedup: check if a transaction with same date + amount + description
+      // already exists under a different doc ID (e.g. manually added)
+      if (!existingDoc.exists) {
+        const txnDate = admin.firestore.Timestamp.fromDate(new Date(txn.date));
+        const dupeQuery = await txnCol
+          .where("date", "==", txnDate)
+          .where("chargedAmount", "==", txn.chargedAmount)
+          .where("description", "==", txn.description)
+          .limit(1)
+          .get();
+        if (!dupeQuery.empty) {
+          results.skipped_existing++;
+          continue;
+        }
       }
 
       // Run rules engine
@@ -159,36 +190,24 @@ export const ingest = functions.https.onRequest(async (req, res) => {
       // If user_locked, skip overwriting user-editable fields
       if (existingDoc.exists && existingDoc.data()?.user_locked === true) {
         results.skipped_locked++;
+        continue;
+      } else if (ruleResult) {
+        docData.category = ruleResult.category;
+        docData.override_description = ruleResult.overrideDescription;
+        docData.applied_rule_id = ruleResult.ruleId;
+        docData.status = "auto_categorized";
+        docData.owner_tag = resolvedOwner;
+        docData.user_locked = false;
       } else {
-        if (ruleResult) {
-          docData.category = ruleResult.category;
-          docData.override_description = ruleResult.overrideDescription;
-          docData.applied_rule_id = ruleResult.ruleId;
+        const mapped = txn.category ? mapScraperCategory(txn.category) : undefined;
+        if (mapped) {
+          docData.category = mapped;
           docData.status = "auto_categorized";
-          if (!existingDoc.exists) {
-            docData.owner_tag = resolvedOwner;
-            docData.user_locked = false;
-          }
         } else {
-          // Try mapping scraper category to our canonical set
-          const mapped = txn.category ? mapScraperCategory(txn.category) : undefined;
-          if (mapped) {
-            docData.category = mapped;
-            docData.status = "auto_categorized";
-            if (!existingDoc.exists) {
-              docData.owner_tag = resolvedOwner;
-              docData.user_locked = false;
-            }
-          } else {
-            docData.status = existingDoc.exists
-              ? existingDoc.data()?.status || "pending_categorization"
-              : "pending_categorization";
-            if (!existingDoc.exists) {
-              docData.owner_tag = resolvedOwner;
-              docData.user_locked = false;
-            }
-          }
+          docData.status = "pending_categorization";
         }
+        docData.owner_tag = resolvedOwner;
+        docData.user_locked = false;
       }
 
       // Upsert

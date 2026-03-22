@@ -78,7 +78,7 @@ function toggleExpand() {
 
 // HTML5 Drop target for transaction categorization
 function onDragOver(e: DragEvent) {
-  const hasTxn = e.dataTransfer?.types.includes('text/x-transaction-id')
+  const hasTxn = e.dataTransfer?.types.includes('text/x-transaction-id') || e.dataTransfer?.types.includes('text/x-transaction-ids')
   if (hasTxn) {
     e.preventDefault()
     e.stopPropagation()
@@ -87,11 +87,10 @@ function onDragOver(e: DragEvent) {
 }
 
 function onDragEnter(e: DragEvent) {
-  if (e.dataTransfer?.types.includes('text/x-transaction-id')) {
+  if (e.dataTransfer?.types.includes('text/x-transaction-id') || e.dataTransfer?.types.includes('text/x-transaction-ids')) {
     e.stopPropagation()
     dragEnterCount.value++
     isDragOver.value = true
-    console.log('[DND] dragenter on', props.category, 'count=', dragEnterCount.value)
   }
 }
 
@@ -102,22 +101,29 @@ function onDragLeave(e: DragEvent) {
     dragEnterCount.value = 0
     isDragOver.value = false
   }
-  console.log('[DND] dragleave on', props.category, 'count=', dragEnterCount.value)
 }
 
 async function onDrop(e: DragEvent) {
-  console.log('[DND] DROP on', props.category, 'types=', Array.from(e.dataTransfer?.types ?? []))
   e.preventDefault()
   e.stopPropagation()
   dragEnterCount.value = 0
   isDragOver.value = false
-  const txnId = e.dataTransfer?.getData('text/x-transaction-id')
-  console.log('[DND] txnId=', txnId)
-  if (!txnId) return
   const familyId = familyStore.family?.id
   if (!familyId) return
+
+  // Multi-select drop
+  const multiIds = e.dataTransfer?.getData('text/x-transaction-ids')
+  if (multiIds) {
+    const ids: string[] = JSON.parse(multiIds)
+    for (const id of ids) {
+      await categorizeTransaction(familyId, id, props.category)
+    }
+    return
+  }
+
+  const txnId = e.dataTransfer?.getData('text/x-transaction-id')
+  if (!txnId) return
   await categorizeTransaction(familyId, txnId, props.category)
-  console.log('[DND] categorized', txnId, '->', props.category)
 }
 </script>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed, inject, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Transaction } from '@/types'
 import { useFamilyStore } from '@/stores/family'
@@ -22,6 +22,13 @@ const prefsStore = usePreferencesStore()
 const txnStore = useTransactionsStore()
 const openDetail = inject<(txn: Transaction) => void>('openTransactionDetail')
 
+const selectionMode = inject<Ref<boolean>>('inboxSelectionMode', ref(false))
+const selectedIds = inject<Ref<Set<string>>>('inboxSelectedIds', ref(new Set()))
+const toggleSelection = inject<(id: string) => void>('toggleInboxSelection')
+
+import { ref } from 'vue'
+
+const isSelected = computed(() => selectedIds.value.has(props.transaction.id))
 const isNew = computed(() => txnStore.isNewTransaction(props.transaction))
 
 const displayTitle = computed(() => {
@@ -51,23 +58,55 @@ const amountClass = computed(() => {
 
 function onDragStart(e: DragEvent) {
   if (!props.draggable || !e.dataTransfer) return
-  e.dataTransfer.setData('text/x-transaction-id', props.transaction.id)
+  // If in selection mode and this item is selected, drag all selected
+  if (selectionMode.value && isSelected.value && selectedIds.value.size > 1) {
+    const ids = JSON.stringify([...selectedIds.value])
+    e.dataTransfer.setData('text/x-transaction-ids', ids)
+    e.dataTransfer.setData('text/x-transaction-id', props.transaction.id)
+  } else {
+    e.dataTransfer.setData('text/x-transaction-id', props.transaction.id)
+  }
   e.dataTransfer.effectAllowed = 'move'
-  console.log('[DND] dragstart', props.transaction.id, props.transaction.description)
 }
 
-function onClick() {
+function onClick(e: MouseEvent) {
+  if (selectionMode.value) {
+    e.stopPropagation()
+    toggleSelection?.(props.transaction.id)
+    return
+  }
   openDetail?.(props.transaction)
+}
+
+function onLongPress() {
+  if (!selectionMode.value && toggleSelection) {
+    selectionMode.value = true
+    toggleSelection(props.transaction.id)
+  }
 }
 </script>
 
 <template>
   <div
     class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
-    :draggable="draggable"
+    :class="{
+      'bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-300 dark:ring-purple-600': isSelected,
+    }"
+    :draggable="draggable && !selectionMode"
     @dragstart="onDragStart"
     @click="onClick"
+    @contextmenu.prevent="onLongPress"
   >
+    <!-- Selection checkbox -->
+    <div
+      v-if="selectionMode"
+      class="flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+      :class="isSelected
+        ? 'bg-purple-600 border-purple-600 text-white'
+        : 'border-gray-300 dark:border-gray-500'"
+    >
+      <svg v-if="isSelected" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+    </div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-1.5">
         <span class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ displayTitle }}</span>

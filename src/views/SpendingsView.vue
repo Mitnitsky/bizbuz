@@ -356,10 +356,19 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
                 @drop="async ($event: DragEvent) => {
                   $event.preventDefault();
                   ($event.currentTarget as HTMLElement).classList.remove('bg-purple-50', 'dark:bg-purple-900/20');
-                  const txnId = $event.dataTransfer?.getData('text/x-transaction-id');
-                  if (txnId && familyStore.family?.id) {
+                  const familyId = familyStore.family?.id;
+                  if (!familyId) return;
+                  const multiIds = $event.dataTransfer?.getData('text/x-transaction-ids');
+                  if (multiIds) {
+                    const ids: string[] = JSON.parse(multiIds);
                     const { categorizeTransaction } = await import('@/services/firestore');
-                    await categorizeTransaction(familyStore.family.id, txnId, item.key);
+                    for (const id of ids) await categorizeTransaction(familyId, id, item.key);
+                    return;
+                  }
+                  const txnId = $event.dataTransfer?.getData('text/x-transaction-id');
+                  if (txnId) {
+                    const { categorizeTransaction } = await import('@/services/firestore');
+                    await categorizeTransaction(familyId, txnId, item.key);
                   }
                 }"
               >

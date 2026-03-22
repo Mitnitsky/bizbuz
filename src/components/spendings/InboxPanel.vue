@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, provide } from 'vue'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import { onRules, autoCategorizeTransaction, uncategorizeTransaction } from '@/services/firestore'
+import { onRules, autoCategorizeTransaction, uncategorizeTransaction, deleteTransaction } from '@/services/firestore'
 import { useIcons } from '@/composables/useIcons'
 import { useFamilyStore } from '@/stores/family'
 import type { Rule, Transaction } from '@/types'
@@ -36,6 +36,43 @@ let unsubRules: (() => void) | null = null
 
 const isDragOver = ref(false)
 const dragEnterCount = ref(0)
+
+// Multi-select state
+const selectionMode = ref(false)
+const selectedIds = ref(new Set<string>())
+
+provide('inboxSelectionMode', selectionMode)
+provide('inboxSelectedIds', selectedIds)
+
+function toggleSelection(id: string) {
+  const s = new Set(selectedIds.value)
+  if (s.has(id)) s.delete(id)
+  else s.add(id)
+  selectedIds.value = s
+  if (s.size === 0) selectionMode.value = false
+}
+provide('toggleInboxSelection', toggleSelection)
+
+function selectAll() {
+  selectedIds.value = new Set(inboxTransactions.value.map(t => t.id))
+}
+function selectNone() {
+  selectedIds.value = new Set()
+}
+function exitSelectionMode() {
+  selectionMode.value = false
+  selectedIds.value = new Set()
+}
+
+async function deleteSelected() {
+  const familyId = familyStore.family?.id
+  if (!familyId || selectedIds.value.size === 0) return
+  const ids = [...selectedIds.value]
+  exitSelectionMode()
+  for (const id of ids) {
+    await deleteTransaction(familyId, id)
+  }
+}
 
 function onInboxDragOver(e: DragEvent) {
   if (e.dataTransfer?.types.includes('text/x-transaction-id')) {
@@ -280,9 +317,36 @@ function onLeave(el: Element, done: () => void) {
         </button>
         <div class="flex-1" />
         <button
+          v-if="inboxCount > 0"
+          class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors"
+          :class="selectionMode
+            ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+          @click="selectionMode ? exitSelectionMode() : (selectionMode = true)"
+          :title="selectionMode ? t('common.cancel') : t('spendings.select')"
+        ><component :is="icon('edit')" class="w-3.5 h-3.5" /></button>
+        <button
           class="inline-flex items-center gap-1 px-2 py-1 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition-colors whitespace-nowrap"
           @click="emit('addTransaction')"
         ><component :is="icon('plus')" class="w-3.5 h-3.5" /> {{ t('spendings.addTransaction') }}</button>
+      </div>
+
+      <!-- Bulk action bar -->
+      <div
+        v-if="selectionMode"
+        class="px-3 py-1.5 flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 bg-purple-50 dark:bg-purple-900/20 flex-shrink-0"
+      >
+        <button
+          class="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline"
+          @click="selectedIds.size === inboxTransactions.length ? selectNone() : selectAll()"
+        >{{ selectedIds.size === inboxTransactions.length ? t('common.selectNone') : t('common.selectAll') }}</button>
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ selectedIds.size }} {{ t('common.selected') }}</span>
+        <div class="flex-1" />
+        <button
+          v-if="selectedIds.size > 0"
+          class="inline-flex items-center gap-1 px-2 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
+          @click="deleteSelected"
+        ><component :is="icon('trash')" class="w-3 h-3" /> {{ t('common.delete') }}</button>
       </div>
 
       <!-- Transaction list -->

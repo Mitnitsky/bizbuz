@@ -24,6 +24,9 @@ export default {
     confirmDelete: 'האם אתה בטוח שברצונך למחוק?',
     delete: 'מחק',
     edit: 'עריכה',
+    selectAll: 'בחר הכל',
+    selectNone: 'בטל בחירה',
+    selected: 'נבחרו',
   },
   home: {
     cycleSpending: 'הוצאות בתקופה',
@@ -165,6 +168,7 @@ export default {
   },
   spendings: {
     addTransaction: 'הוסף עסקה',
+    select: 'בחירה',
     rerunRules: 'הפעל כללים',
     inbox: 'דואר נכנס',
     allTransactions: 'כל העסקאות',

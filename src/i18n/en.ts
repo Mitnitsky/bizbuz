@@ -24,6 +24,9 @@ export default {
     confirmDelete: 'Are you sure you want to delete this?',
     delete: 'Delete',
     edit: 'Edit',
+    selectAll: 'Select all',
+    selectNone: 'Deselect all',
+    selected: 'selected',
   },
   home: {
     cycleSpending: 'Cycle Expenses',
@@ -165,6 +168,7 @@ export default {
   },
   spendings: {
     addTransaction: 'Add Transaction',
+    select: 'Select',
     rerunRules: 'Run Rules',
     inbox: 'Inbox',
     allTransactions: 'All Transactions',
