@@ -4,7 +4,7 @@ import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { useTransactionsStore } from '@/stores/transactions'
 import { usePreferencesStore } from '@/stores/preferences'
-import { TRANSFER_CATEGORY, categoryDisplayName } from '@/composables/useCategories'
+import { TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY, categoryDisplayName } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useI18n } from 'vue-i18n'
 
@@ -20,12 +20,15 @@ const COLORS = [
   '#14b8a6', '#e11d48', '#a855f7', '#eab308', '#22c55e',
 ]
 
+const EXCLUDED = [TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY]
+
 const categoryData = computed(() => {
   const grouped: Record<string, number> = {}
   for (const txn of txnStore.cycleTransactions) {
-    if (txn.category === TRANSFER_CATEGORY) continue
+    if (EXCLUDED.includes(txn.category)) continue
+    if (txn.chargedAmount >= 0) continue
     const cat = txn.category || 'Other'
-    grouped[cat] = (grouped[cat] ?? 0) + txn.chargedAmount
+    grouped[cat] = (grouped[cat] ?? 0) + Math.abs(txn.chargedAmount)
   }
   return Object.entries(grouped)
     .map(([category, amount]) => ({ category, amount }))

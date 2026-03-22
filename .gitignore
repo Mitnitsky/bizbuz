@@ -28,3 +28,10 @@ dist-ssr
 
 # OS
 Thumbs.db
+
+# Data files
+t.txt
+transactions.txt
+transactions_extra.txt
+transactions_test.txt
+*.495Z.json

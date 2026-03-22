@@ -5,6 +5,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   deleteField,
   query,
   where,
@@ -94,10 +95,12 @@ function toDate(val: unknown): Date {
 export async function createFamily(uid: string, email: string, familyName: string): Promise<string> {
   const familyRef = doc(collection(db, 'families'))
   const familyId = familyRef.id
+  const displayName = email.split('@')[0]
   await setDoc(familyRef, {
     name: familyName,
     created_by: uid,
     member_uids: [uid],
+    member_display_names: { [uid]: displayName },
     created_at: serverTimestamp(),
   })
   await setDoc(doc(db, 'users', uid), {
@@ -135,9 +138,13 @@ export async function joinFamily(uid: string, email: string, inviteCode: string)
   const familyId = match.id
   const data = match.data()
   const members: string[] = data.member_uids ?? []
+  const displayName = email.split('@')[0]
   if (!members.includes(uid)) {
     members.push(uid)
-    await updateDoc(doc(db, 'families', familyId), { member_uids: members })
+    await updateDoc(doc(db, 'families', familyId), {
+      member_uids: members,
+      [`member_display_names.${uid}`]: displayName,
+    })
   }
   await setDoc(doc(db, 'users', uid), {
     uid,
@@ -168,8 +175,13 @@ export async function getAppUser(uid: string): Promise<AppUser | null> {
   }
 }
 
-export async function updateDisplayName(uid: string, name: string): Promise<void> {
+export async function updateDisplayName(uid: string, familyId: string, name: string): Promise<void> {
   await updateDoc(doc(db, 'users', uid), { display_name: name })
+  if (familyId) {
+    await updateDoc(doc(db, 'families', familyId), {
+      [`member_display_names.${uid}`]: name,
+    })
+  }
 }
 
 // ---------- Transactions ----------
@@ -184,6 +196,22 @@ export async function categorizeTransaction(
     user_locked: true,
     status: 'categorized',
   })
+}
+
+export async function autoCategorizeTransaction(
+  familyId: string,
+  txnId: string,
+  category: string,
+  ruleId: string,
+  overrideDescription?: string,
+): Promise<void> {
+  const updates: Record<string, unknown> = {
+    category,
+    applied_rule_id: ruleId,
+    status: 'auto_categorized',
+  }
+  if (overrideDescription) updates.override_description = overrideDescription
+  await updateDoc(doc(db, 'families', familyId, 'transactions', txnId), updates)
 }
 
 export async function updateOwnerTag(
@@ -305,6 +333,37 @@ export async function addRule(familyId: string, rule: Rule): Promise<void> {
     action_override_description: rule.actionOverrideDescription ?? '',
     created_at: serverTimestamp(),
   })
+}
+
+export function onRules(
+  familyId: string,
+  callback: (rules: Rule[]) => void,
+): Unsubscribe {
+  return onSnapshot(collection(db, 'families', familyId, 'rules'), (snapshot) => {
+    const rules: Rule[] = snapshot.docs.map((d) => {
+      const data = d.data()
+      return {
+        id: d.id,
+        conditions: data.conditions ?? [],
+        actionCategory: data.action_category ?? '',
+        actionOverrideDescription: data.action_override_description ?? '',
+        isDefault: data.is_default ?? false,
+      }
+    })
+    callback(rules)
+  })
+}
+
+export async function updateRule(familyId: string, ruleId: string, rule: Rule): Promise<void> {
+  await updateDoc(doc(db, 'families', familyId, 'rules', ruleId), {
+    conditions: rule.conditions,
+    action_category: rule.actionCategory,
+    action_override_description: rule.actionOverrideDescription ?? '',
+  })
+}
+
+export async function deleteRule(familyId: string, ruleId: string): Promise<void> {
+  await deleteDoc(doc(db, 'families', familyId, 'rules', ruleId))
 }
 
 export async function getAllTransactions(familyId: string): Promise<Transaction[]> {
@@ -453,6 +512,14 @@ export async function updateDashboardTileOrder(
   await updateUserPreferences(familyId, uid, { dashboard_tile_order: order })
 }
 
+export async function updateHiddenDashboardTiles(
+  familyId: string,
+  uid: string,
+  hidden: string[],
+): Promise<void> {
+  await updateUserPreferences(familyId, uid, { hidden_dashboard_tiles: hidden })
+}
+
 export async function updateLocale(familyId: string, uid: string, locale: string): Promise<void> {
   await updateUserPreferences(familyId, uid, { locale })
 }
@@ -465,6 +532,17 @@ function familySettingsRef(familyId: string) {
 
 export async function updateCycleStartDay(familyId: string, day: number): Promise<void> {
   await updateDoc(familySettingsRef(familyId), { cycle_start_day: day })
+}
+
+export async function updateIncomeAnchor(
+  familyId: string,
+  anchorDay: number | null,
+  graceDays: number,
+): Promise<void> {
+  await updateDoc(familySettingsRef(familyId), {
+    income_anchor_day: anchorDay,
+    income_anchor_grace_days: graceDays,
+  })
 }
 
 export async function updateCategoryBudgets(
@@ -481,6 +559,13 @@ export async function updatePaymentMethodLabels(
   await updateDoc(familySettingsRef(familyId), { payment_method_labels: labels })
 }
 
+export async function updatePaymentMethodOwners(
+  familyId: string,
+  owners: Record<string, string>,
+): Promise<void> {
+  await updateDoc(familySettingsRef(familyId), { payment_method_owners: owners })
+}
+
 export async function updateCategoryNameOverrides(
   familyId: string,
   overrides: Record<string, string>,
@@ -488,8 +573,8 @@ export async function updateCategoryNameOverrides(
   await updateDoc(familySettingsRef(familyId), { category_name_overrides: overrides })
 }
 
-export async function updateCategoryOrder(familyId: string, order: string[]): Promise<void> {
-  await updateDoc(familySettingsRef(familyId), { category_order: order })
+export async function updateCategoryOrder(familyId: string, uid: string, order: string[]): Promise<void> {
+  await updateUserPreferences(familyId, uid, { category_order: order })
 }
 
 export async function updateFamilyName(familyId: string, name: string): Promise<void> {
@@ -541,6 +626,7 @@ export function onFamily(
       name: d.name ?? '',
       createdBy: d.created_by ?? '',
       memberUids: d.member_uids ?? [],
+      memberDisplayNames: d.member_display_names ?? {},
       ingestSecret: d.ingest_secret,
     })
   }, (error) => {
@@ -557,10 +643,12 @@ export function onFamilySettings(
     const d = snap.data()
     callback({
       cycleStartDay: d.cycle_start_day ?? 1,
+      incomeAnchorDay: d.income_anchor_day ?? null,
+      incomeAnchorGraceDays: d.income_anchor_grace_days ?? 3,
       categoryBudgets: d.category_budgets ?? {},
       paymentMethodLabels: d.payment_method_labels ?? {},
+      paymentMethodOwners: d.payment_method_owners ?? {},
       categoryNameOverrides: d.category_name_overrides ?? {},
-      categoryOrder: d.category_order ?? [],
     })
   }, (error) => {
     console.error('[onFamilySettings] Firestore error:', error.message)
@@ -577,10 +665,12 @@ export function onUserPreferences(
     const d = snap.data()
     callback({
       dashboardTileOrder: d.dashboard_tile_order ?? [],
+      hiddenDashboardTiles: d.hidden_dashboard_tiles ?? [],
       locale: d.locale ?? 'en',
       showOwnerFilter: d.show_owner_filter ?? true,
       showPaymentSource: d.show_payment_source ?? false,
       themeMode: d.theme_mode ?? 'system',
+      categoryOrder: d.category_order ?? [],
     })
   }, (error) => {
     console.error('[onUserPreferences] Firestore error:', error.message)

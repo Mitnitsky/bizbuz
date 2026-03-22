@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useSavingsStore } from '@/stores/savings'
 import { useAuthStore } from '@/stores/auth'
 import { formatCurrency } from '@/composables/useFormatters'
+import { useIcons } from '@/composables/useIcons'
 import { updateSavingsTracker } from '@/services/firestore'
 import SavingsEntryCard from '@/components/savings/SavingsEntryCard.vue'
 import AddSavingsDialog from '@/components/savings/AddSavingsDialog.vue'
@@ -13,6 +14,7 @@ import type { SavingsEntry, SavingsType, TrackerType } from '@/types'
 const { t } = useI18n()
 const savingsStore = useSavingsStore()
 const authStore = useAuthStore()
+const { icon } = useIcons()
 
 const liquidOpen = ref(true)
 const lockedOpen = ref(true)
@@ -56,7 +58,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       <div class="p-5">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <span class="text-3xl">💰</span>
+            <component :is="icon('savings')" class="w-8 h-8 text-green-500" />
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('savings.liquidMoney') }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('savings.liquidMoneySubtitle') }}</p>
@@ -70,7 +72,9 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           <button
             class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
             @click="liquidOpen = !liquidOpen"
-          >{{ liquidOpen ? '▲' : '▼' }} {{ savingsStore.liquidEntries.length }} items</button>
+          >
+            <component :is="liquidOpen ? icon('chevronUp') : icon('chevronDown')" class="w-3.5 h-3.5 inline" />
+            {{ savingsStore.liquidEntries.length }} items</button>
           <button
             class="px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700"
             @click="openAddDialog('liquid')"
@@ -92,7 +96,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       <div class="p-5">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <span class="text-3xl">🔒</span>
+            <component :is="icon('lock')" class="w-8 h-8 text-blue-500" />
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('savings.lockedFunds') }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('savings.lockedFundsSubtitle') }}</p>
@@ -106,7 +110,9 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           <button
             class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
             @click="lockedOpen = !lockedOpen"
-          >{{ lockedOpen ? '▲' : '▼' }} {{ savingsStore.lockedEntries.length }} items</button>
+          >
+            <component :is="lockedOpen ? icon('chevronUp') : icon('chevronDown')" class="w-3.5 h-3.5 inline" />
+            {{ savingsStore.lockedEntries.length }} items</button>
           <button
             class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
             @click="openAddDialog('locked')"

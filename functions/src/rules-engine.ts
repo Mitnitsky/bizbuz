@@ -57,6 +57,12 @@ function evaluateCondition(
         typeof condition.value === "number" &&
         fieldValue < condition.value
       );
+    case "not_in":
+      return (
+        typeof fieldValue === "string" &&
+        typeof condition.value === "string" &&
+        !condition.value.split(",").map((v) => v.trim()).includes(fieldValue)
+      );
     default:
       return false;
   }

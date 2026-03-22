@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {evaluateRules} from "./rules-engine";
+import {mapScraperCategory} from "./categories";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -73,6 +74,12 @@ export const ingest = functions.https.onRequest(async (req, res) => {
   const rulesSnapshot = await familyRef.collection("rules").get();
   const rules = rulesSnapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
 
+  // Load payment method → owner mapping
+  const settingsSnap = await familyRef
+    .collection("family_settings").doc("default").get();
+  const paymentMethodOwners: Record<string, string> =
+    settingsSnap.exists ? (settingsSnap.data()?.payment_method_owners ?? {}) : {};
+
   const results = {
     processed: 0,
     skipped_locked: 0,
@@ -103,6 +110,12 @@ export const ingest = functions.https.onRequest(async (req, res) => {
 
       // Run rules engine
       const ruleResult = evaluateRules(txn as unknown as Record<string, unknown>, rules);
+
+      // Resolve owner from payment method mapping (account is more specific, check first)
+      const resolvedOwner =
+        (txn.account && paymentMethodOwners[txn.account]) ||
+        (txn.companyId && paymentMethodOwners[txn.companyId]) ||
+        "shared";
 
       // Build the document data
       const docData: Record<string, unknown> = {
@@ -152,13 +165,28 @@ export const ingest = functions.https.onRequest(async (req, res) => {
           docData.override_description = ruleResult.overrideDescription;
           docData.applied_rule_id = ruleResult.ruleId;
           docData.status = "auto_categorized";
-        } else {
-          docData.status = existingDoc.exists
-            ? existingDoc.data()?.status || "pending_categorization"
-            : "pending_categorization";
           if (!existingDoc.exists) {
-            docData.owner_tag = "shared";
+            docData.owner_tag = resolvedOwner;
             docData.user_locked = false;
+          }
+        } else {
+          // Try mapping scraper category to our canonical set
+          const mapped = txn.category ? mapScraperCategory(txn.category) : undefined;
+          if (mapped) {
+            docData.category = mapped;
+            docData.status = "auto_categorized";
+            if (!existingDoc.exists) {
+              docData.owner_tag = resolvedOwner;
+              docData.user_locked = false;
+            }
+          } else {
+            docData.status = existingDoc.exists
+              ? existingDoc.data()?.status || "pending_categorization"
+              : "pending_categorization";
+            if (!existingDoc.exists) {
+              docData.owner_tag = resolvedOwner;
+              docData.user_locked = false;
+            }
           }
         }
       }

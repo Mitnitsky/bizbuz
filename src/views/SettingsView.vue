@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFamilyStore } from '@/stores/family'
@@ -10,21 +10,29 @@ import {
   updateLocale,
   updateUserPreferences,
   updateCycleStartDay,
+  updateIncomeAnchor,
   updateCategoryBudgets,
   updatePaymentMethodLabels,
+  updatePaymentMethodOwners,
   updateCategoryNameOverrides,
   updateFamilyName,
   getAllTransactions,
+  onRules,
 } from '@/services/firestore'
 import { CATEGORIES, categoryDisplayName } from '@/composables/useCategories'
 import { formatDate } from '@/composables/useFormatters'
-import type { Transaction } from '@/types'
+import { useIcons, ICON_SET_LABELS } from '@/composables/useIcons'
+import { useAccentColor } from '@/composables/useAccentColor'
+import type { Transaction, Rule } from '@/types'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const transactionsStore = useTransactionsStore()
+const { activeSet: activeIconSet, setIconSet } = useIcons()
+const iconSetLabels = ICON_SET_LABELS
+const { activeColor: activeAccent, setAccentColor, accentColors } = useAccentColor()
 
 // --- Dialog state ---
 const editNameOpen = ref(false)
@@ -32,12 +40,22 @@ const editNameValue = ref('')
 const editFamilyNameOpen = ref(false)
 const editFamilyNameValue = ref('')
 const billingCycleOpen = ref(false)
+const incomeAnchorOpen = ref(false)
 const budgetsOpen = ref(false)
 const paymentMethodsOpen = ref(false)
 const categoryAliasesOpen = ref(false)
 const csvDialogOpen = ref(false)
 const csvContent = ref('')
 const saving = ref(false)
+const rules = ref<Rule[]>([])
+let unsubRules: (() => void) | null = null
+
+onMounted(() => {
+  if (familyId.value) {
+    unsubRules = onRules(familyId.value, (r) => { rules.value = r })
+  }
+})
+onUnmounted(() => { unsubRules?.() })
 
 // --- Computed ---
 const familyId = computed(() => authStore.familyId)
@@ -52,6 +70,8 @@ const themeMode = computed(() => prefsStore.themeMode)
 const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilter ?? true)
 const showPaymentSource = computed(() => prefsStore.userPreferences?.showPaymentSource ?? false)
 const cycleStartDay = computed(() => familyStore.familySettings.cycleStartDay)
+const incomeAnchorDay = computed(() => familyStore.familySettings.incomeAnchorDay)
+const incomeAnchorGraceDays = computed(() => familyStore.familySettings.incomeAnchorGraceDays)
 const budgets = computed(() => familyStore.familySettings.categoryBudgets)
 const budgetCount = computed(() => Object.values(budgets.value).filter((v) => v > 0).length)
 const paymentLabels = computed(() => familyStore.familySettings.paymentMethodLabels)
@@ -72,6 +92,7 @@ const paymentSources = computed(() => {
 // --- Edit temp state ---
 const tempBudgets = ref<Record<string, string>>({})
 const tempPaymentLabels = ref<Record<string, string>>({})
+const tempPaymentOwners = ref<Record<string, string>>({})
 const tempCategoryOverrides = ref<Record<string, string>>({})
 
 // --- Locale/Theme ---
@@ -104,7 +125,7 @@ async function saveDisplayName() {
   if (!uid.value) return
   saving.value = true
   try {
-    await updateDisplayName(uid.value, editNameValue.value.trim())
+    await updateDisplayName(uid.value, familyId.value ?? '', editNameValue.value.trim())
     await authStore.refreshAppUser()
     editNameOpen.value = false
   } catch { /* silent */ } finally { saving.value = false }
@@ -135,6 +156,28 @@ async function saveBillingCycle(day: number) {
   } catch { /* silent */ } finally { saving.value = false }
 }
 
+// --- Income Anchor ---
+const editAnchorDay = ref<number | null>(null)
+const editAnchorGrace = ref(3)
+
+function openIncomeAnchor() {
+  editAnchorDay.value = incomeAnchorDay.value
+  editAnchorGrace.value = incomeAnchorGraceDays.value
+  incomeAnchorOpen.value = true
+}
+async function saveIncomeAnchor() {
+  if (!familyId.value) return
+  saving.value = true
+  try {
+    await updateIncomeAnchor(familyId.value, editAnchorDay.value, editAnchorGrace.value)
+    incomeAnchorOpen.value = false
+  } catch { /* silent */ } finally { saving.value = false }
+}
+function incomeAnchorLabel(): string {
+  if (incomeAnchorDay.value === null) return t('settings.incomeAnchorNone')
+  return t('settings.incomeAnchorSummary', { day: incomeAnchorDay.value, grace: incomeAnchorGraceDays.value })
+}
+
 // --- Budgets ---
 function openBudgets() {
   const b: Record<string, string> = {}
@@ -159,21 +202,35 @@ async function saveBudgets() {
 }
 
 // --- Payment Methods ---
+const paymentOwners = computed(() => familyStore.familySettings.paymentMethodOwners)
+
 function openPaymentMethods() {
   const labels: Record<string, string> = {}
-  paymentSources.value.forEach((s) => { labels[s] = paymentLabels.value[s] ?? '' })
+  const owners: Record<string, string> = {}
+  paymentSources.value.forEach((s) => {
+    labels[s] = paymentLabels.value[s] ?? ''
+    owners[s] = paymentOwners.value[s] ?? 'shared'
+  })
   tempPaymentLabels.value = labels
+  tempPaymentOwners.value = owners
   paymentMethodsOpen.value = true
 }
 async function savePaymentMethods() {
   if (!familyId.value) return
   saving.value = true
-  const result: Record<string, string> = {}
+  const resultLabels: Record<string, string> = {}
+  const resultOwners: Record<string, string> = {}
   for (const [k, v] of Object.entries(tempPaymentLabels.value)) {
-    if (v.trim()) result[k] = v.trim()
+    if (v.trim()) resultLabels[k] = v.trim()
+  }
+  for (const [k, v] of Object.entries(tempPaymentOwners.value)) {
+    resultOwners[k] = v
   }
   try {
-    await updatePaymentMethodLabels(familyId.value, result)
+    await Promise.all([
+      updatePaymentMethodLabels(familyId.value, resultLabels),
+      updatePaymentMethodOwners(familyId.value, resultOwners),
+    ])
     paymentMethodsOpen.value = false
   } catch { /* silent */ } finally { saving.value = false }
 }
@@ -227,6 +284,8 @@ function cycleLabel(day: number): string {
   if (day === -1) return t('settings.lastDayOfMonth')
   return t('settings.day', { n: day })
 }
+
+// --- Rules (count only, editor is now at /settings/rules) ---
 </script>
 
 <template>
@@ -266,6 +325,12 @@ function cycleLabel(day: number): string {
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ cycleLabel(cycleStartDay) }}</span>
           </div>
 
+          <!-- Income Anchor -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openIncomeAnchor">
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.incomeAnchor') }}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ incomeAnchorLabel() }}</span>
+          </div>
+
           <!-- Category Budgets -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openBudgets">
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.categoryBudgets') }}</span>
@@ -282,6 +347,12 @@ function cycleLabel(day: number): string {
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openCategoryAliases">
             <span class="text-sm text-gray-700 dark:text-gray-300">Category Name Aliases</span>
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ categoryOverrideCount > 0 ? t('settings.nLabelsConfigured', { n: categoryOverrideCount }) : t('settings.noLabelsConfigured') }}</span>
+          </div>
+
+          <!-- Categorization Rules -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="$router.push('/settings/rules')">
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.categorizationRules') }}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ rules.length }} {{ t('settings.rulesCount') }} →</span>
           </div>
 
           <!-- Family Name -->
@@ -314,6 +385,36 @@ function cycleLabel(day: number): string {
               <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'system' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('system')">{{ t('settings.themeSystem') }}</button>
               <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'light' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('light')">{{ t('settings.themeLight') }}</button>
               <button class="flex-1 py-2 text-sm font-medium transition-colors" :class="themeMode === 'dark' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'" @click="setTheme('dark')">{{ t('settings.themeDark') }}</button>
+            </div>
+          </div>
+
+          <!-- Icon Set -->
+          <div>
+            <div class="text-sm text-gray-700 dark:text-gray-300 mb-2">{{ t('settings.iconSet') }}</div>
+            <div class="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+              <button
+                v-for="(label, key) in iconSetLabels"
+                :key="key"
+                class="flex-1 py-2 text-sm font-medium transition-colors"
+                :class="activeIconSet === key ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                @click="setIconSet(key as any)"
+              >{{ label }}</button>
+            </div>
+          </div>
+
+          <!-- Accent Color -->
+          <div>
+            <div class="text-sm text-gray-700 dark:text-gray-300 mb-2">{{ t('settings.accentColor') }}</div>
+            <div class="flex gap-2 flex-wrap">
+              <button
+                v-for="c in accentColors"
+                :key="c.key"
+                class="w-8 h-8 rounded-full border-2 transition-all"
+                :class="activeAccent === c.key ? 'border-gray-900 dark:border-white scale-110 ring-2 ring-offset-2 ring-gray-400 dark:ring-gray-500 dark:ring-offset-gray-800' : 'border-transparent hover:scale-105'"
+                :style="{ backgroundColor: c.swatch }"
+                :title="c.label"
+                @click="setAccentColor(c.key)"
+              />
             </div>
           </div>
 
@@ -393,6 +494,48 @@ function cycleLabel(day: number): string {
       </div>
     </Teleport>
 
+    <!-- Income Anchor -->
+    <Teleport to="body">
+      <div v-if="incomeAnchorOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="incomeAnchorOpen = false">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">{{ t('settings.incomeAnchor') }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('settings.incomeAnchorDesc') }}</p>
+
+          <div class="space-y-4">
+            <!-- Anchor day selector -->
+            <div>
+              <label class="text-sm text-gray-700 dark:text-gray-300 mb-1 block">{{ t('settings.incomeAnchorDay') }}</label>
+              <select
+                :value="editAnchorDay ?? ''"
+                @change="editAnchorDay = ($event.target as HTMLSelectElement).value === '' ? null : Number(($event.target as HTMLSelectElement).value)"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm"
+              >
+                <option value="">{{ t('settings.incomeAnchorNone') }}</option>
+                <option v-for="d in 28" :key="d" :value="d">{{ cycleLabel(d) }}</option>
+              </select>
+            </div>
+
+            <!-- Grace days -->
+            <div v-if="editAnchorDay !== null">
+              <label class="text-sm text-gray-700 dark:text-gray-300 mb-1 block">{{ t('settings.incomeAnchorGrace') }}</label>
+              <input
+                v-model.number="editAnchorGrace"
+                type="number"
+                min="0"
+                max="10"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+
+          <div class="flex gap-2 justify-end mt-6">
+            <button class="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm" @click="incomeAnchorOpen = false">{{ t('common.cancel') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50" :disabled="saving" @click="saveIncomeAnchor">{{ t('common.save') }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Category Budgets -->
     <Teleport to="body">
       <div v-if="budgetsOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="budgetsOpen = false">
@@ -415,13 +558,21 @@ function cycleLabel(day: number): string {
     <!-- Payment Methods -->
     <Teleport to="body">
       <div v-if="paymentMethodsOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="paymentMethodsOpen = false">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-xl p-6 max-h-[80vh] overflow-y-auto">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ t('settings.paymentMethods') }}</h3>
           <div v-if="paymentSources.length === 0" class="text-sm text-gray-500 dark:text-gray-400">{{ t('settings.noPaymentMethods') }}</div>
           <div v-else class="space-y-2">
-            <div v-for="src in paymentSources" :key="src" class="flex items-center gap-3">
-              <span class="text-sm text-gray-500 dark:text-gray-400 flex-1 truncate font-mono">{{ src }}</span>
-              <input v-model="tempPaymentLabels[src]" type="text" placeholder="Alias" class="w-36 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
+            <div v-for="src in paymentSources" :key="src" class="flex items-center gap-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400 flex-1 truncate font-mono min-w-0">{{ src }}</span>
+              <input v-model="tempPaymentLabels[src]" type="text" :placeholder="t('settings.alias')" class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
+              <select
+                v-model="tempPaymentOwners[src]"
+                class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm"
+              >
+                <option value="shared">{{ familyStore.ownerTagNames.shared ?? t('spendings.shared') }}</option>
+                <option value="userA">{{ familyStore.ownerTagNames.userA ?? 'User A' }}</option>
+                <option value="userB">{{ familyStore.ownerTagNames.userB ?? 'User B' }}</option>
+              </select>
             </div>
           </div>
           <div class="flex gap-3 justify-end mt-4">

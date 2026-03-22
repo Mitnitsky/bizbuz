@@ -12,6 +12,7 @@ import {
 } from '@/services/firestore'
 import { CATEGORIES, categoryDisplayName } from '@/composables/useCategories'
 import { formatCurrency, formatDate } from '@/composables/useFormatters'
+import { useIcons } from '@/composables/useIcons'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
@@ -29,6 +30,7 @@ const show = defineModel<boolean>({ default: false })
 const { t } = useI18n()
 const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
+const { icon } = useIcons()
 
 const editCategory = ref('')
 const editOwner = ref('')
@@ -72,6 +74,7 @@ async function toggleLock(txn: Transaction) {
 async function onDelete(txn: Transaction) {
   const familyId = familyStore.family?.id
   if (!familyId) return
+  if (!window.confirm(t('common.confirmDelete'))) return
   await deleteTransaction(familyId, txn.id)
   show.value = false
   emit('close')
@@ -83,6 +86,19 @@ function onSplit() {
 
 function onCreateRule() {
   emit('createRule')
+}
+
+const isPending = computed(() => props.transaction?.status === 'pending_categorization')
+
+async function onCategorize() {
+  const txn = props.transaction
+  const familyId = familyStore.family?.id
+  if (!txn || !familyId) return
+  if (editCategory.value !== txn.category) {
+    await categorizeTransaction(familyId, txn.id, editCategory.value)
+  }
+  show.value = false
+  emit('close')
 }
 </script>
 
@@ -125,7 +141,7 @@ function onCreateRule() {
           <div class="text-gray-900 dark:text-gray-100">{{ categoryDisplayName(transaction.category, locale, overrides) }}</div>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.owner') }}</div>
-          <div class="text-gray-900 dark:text-gray-100">{{ familyStore.ownerTagNames[transaction.ownerTag] ?? transaction.ownerTag }}</div>
+          <div class="text-gray-900 dark:text-gray-100">{{ familyStore.resolveOwnerName(transaction.ownerTag) }}</div>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.source') }}</div>
           <div class="text-gray-900 dark:text-gray-100">{{ transaction.source || '—' }}</div>
@@ -149,7 +165,7 @@ function onCreateRule() {
           </template>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.locked') }}</div>
-          <div class="text-gray-900 dark:text-gray-100">{{ transaction.userLocked ? '🔒' : '🔓' }}</div>
+          <div class="text-gray-900 dark:text-gray-100"><component :is="transaction.userLocked ? icon('lock') : icon('unlock')" class="w-4 h-4 inline" /></div>
         </div>
 
         <!-- Edit section -->
@@ -197,21 +213,31 @@ function onCreateRule() {
             </div>
           </div>
 
-          <!-- Lock/Unlock + Delete row -->
           <div class="flex items-center gap-3">
             <button
               class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
               @click="toggleLock(transaction!)"
-            >{{ transaction.userLocked ? '🔓 ' + t('spendings.unlock') : '🔒 ' + t('spendings.lock') }}</button>
+            >
+              <component :is="transaction.userLocked ? icon('unlock') : icon('lock')" class="w-4 h-4" />
+              {{ transaction.userLocked ? t('spendings.unlock') : t('spendings.lock') }}
+            </button>
             <button
-              class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
+              class="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
               @click="onDelete(transaction!)"
-            >{{ t('spendings.deleteTransaction') }}</button>
+            >
+              <component :is="icon('trash')" class="w-4 h-4" />
+              {{ t('spendings.deleteTransaction') }}
+            </button>
           </div>
         </div>
 
         <!-- Action buttons -->
         <div class="flex gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            v-if="isPending"
+            class="flex-1 px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
+            @click="onCategorize"
+          >{{ t('spendings.categorize') }}</button>
           <button
             class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
             @click="onSplit"

@@ -3,9 +3,11 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
+import { useIcons } from '@/composables/useIcons'
 import type { TrackerType } from '@/types'
 
 const { t } = useI18n()
+const { icon } = useIcons()
 
 export interface LoanItem {
   id: string
@@ -55,7 +57,7 @@ const trackerColor = computed(() => {
   >
     <div class="flex items-center gap-2 mb-2">
       <span class="text-lg font-bold text-gray-900 dark:text-white">{{ loan.name }}</span>
-      <span>🏦</span>
+      <component :is="icon('loans')" class="w-4 h-4 text-gray-500" />
     </div>
 
     <span

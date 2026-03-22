@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue'
-import { format, lastDayOfMonth, addMonths, subMonths, startOfDay } from 'date-fns'
+import { format, lastDayOfMonth, addMonths, subMonths, startOfDay, subDays, addDays } from 'date-fns'
 
 export function useBillingCycle(cycleStartDay: () => number) {
   const cycleOffset = ref(0)
@@ -54,4 +54,39 @@ export function computeCycleRange(today: Date, startDay: number, offset: number)
   const end = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), endDayResolved - 1)
 
   return { start: startOfDay(start), end: startOfDay(end) }
+}
+
+/**
+ * Compute the date window for income attribution to a given cycle.
+ *
+ * If anchorDay is set: income around that day (±graceDays) in the cycle's
+ * starting month gets attributed to this cycle, even if it falls before
+ * the cycle start date.
+ *
+ * If anchorDay is null: income window extends graceDays before cycle start.
+ *
+ * The returned window is UNIONED with the normal cycle range by the caller
+ * so regular in-cycle income (refunds etc.) is always included.
+ */
+export function computeIncomeWindow(
+  cycleStart: Date,
+  anchorDay: number | null,
+  graceDays: number,
+): { start: Date; end: Date } {
+  if (anchorDay !== null) {
+    // Anchor mode: income expected around anchorDay of the cycle's month
+    const year = cycleStart.getFullYear()
+    const month = cycleStart.getMonth()
+    const resolvedAnchor = Math.min(anchorDay, lastDayOfMonth(cycleStart).getDate())
+    const anchor = new Date(year, month, resolvedAnchor)
+    return {
+      start: startOfDay(subDays(anchor, graceDays)),
+      end: startOfDay(addDays(anchor, graceDays)),
+    }
+  }
+  // Default: extend cycle start backwards by graceDays
+  return {
+    start: startOfDay(subDays(cycleStart, graceDays)),
+    end: startOfDay(subDays(cycleStart, 1)),
+  }
 }

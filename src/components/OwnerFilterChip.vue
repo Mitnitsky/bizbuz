@@ -11,11 +11,13 @@ const { t } = useI18n()
 
 const options = computed<Array<{ value: 'all' | OwnerTag; label: string }>>(() => {
   const names = familyStore.ownerTagNames
-  return [
+  const opts: Array<{ value: 'all' | OwnerTag; label: string }> = [
     { value: 'all', label: t('ownerFilter.all') },
-    { value: 'userA', label: names.userA ? names.userA.charAt(0) + '.' : 'A' },
-    { value: 'userB', label: names.userB ? names.userB.charAt(0) + '.' : 'B' },
   ]
+  if (names.userA) opts.push({ value: 'userA', label: names.userA })
+  if (names.userB) opts.push({ value: 'userB', label: names.userB })
+  if (opts.length > 2) opts.push({ value: 'shared', label: names.shared ?? t('ownerFilter.shared') })
+  return opts
 })
 </script>
 

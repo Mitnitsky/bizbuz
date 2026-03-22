@@ -9,11 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@phosphor-icons/vue": "^2.2.1",
+    "@tabler/icons-vue": "^3.40.0",
     "@tailwindcss/vite": "^4.2.2",
     "@vee-validate/zod": "^4.15.1",
     "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.11.0",
+    "lucide-vue-next": "^0.577.0",
     "pinia": "^3.0.4",
     "primevue": "^4.5.4",
     "tailwindcss": "^4.2.2",

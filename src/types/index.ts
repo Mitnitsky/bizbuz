@@ -41,6 +41,7 @@ export interface Family {
   name: string
   createdBy: string
   memberUids: string[]
+  memberDisplayNames: Record<string, string>
   ingestSecret?: string
 }
 
@@ -65,20 +66,26 @@ export interface SavingsEntry {
   trackerIntervalDays?: number
 }
 
+export type CategorySortMode = 'custom' | 'spending' | 'name'
+
 export interface UserPreferences {
   dashboardTileOrder: string[]
+  hiddenDashboardTiles: string[]
   locale: string
   showOwnerFilter: boolean
   showPaymentSource: boolean
   themeMode: string
+  categoryOrder: string[]
 }
 
 export interface FamilySettings {
   cycleStartDay: number
+  incomeAnchorDay: number | null
+  incomeAnchorGraceDays: number
   categoryBudgets: Record<string, number>
   paymentMethodLabels: Record<string, string>
+  paymentMethodOwners: Record<string, OwnerTag | string>
   categoryNameOverrides: Record<string, string>
-  categoryOrder: string[]
 }
 
 export interface TrackerFields {
@@ -92,6 +99,7 @@ export interface Rule {
   conditions: Array<{ field: string; operator: string; value: string }>
   actionCategory: string
   actionOverrideDescription?: string
+  isDefault?: boolean
 }
 
 export interface InvestmentEntry {

@@ -3,9 +3,11 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
+import { useIcons } from '@/composables/useIcons'
 import type { TrackerType } from '@/types'
 
 const { t } = useI18n()
+const { icon } = useIcons()
 
 export interface InvestmentItem {
   id: string
@@ -58,7 +60,7 @@ const trackerColor = computed(() => {
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
         <span class="text-lg font-bold text-gray-900 dark:text-white">{{ investment.name }}</span>
-        <span class="text-green-500">📈</span>
+        <component :is="icon('investments')" class="w-4 h-4 text-green-500" />
       </div>
       <span
         class="text-xs font-medium px-2 py-0.5 rounded-full"

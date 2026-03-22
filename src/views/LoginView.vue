@@ -3,10 +3,13 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import GlassIcon from '@/components/GlassIcon.vue'
+import { useIcons } from '@/composables/useIcons'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
+const { icon } = useIcons()
 
 const email = ref('')
 const password = ref('')
@@ -42,7 +45,9 @@ async function handleSubmit() {
     <div class="w-full max-w-sm">
       <!-- Logo -->
       <div class="text-center mb-8">
-        <div class="text-5xl mb-3">💸</div>
+        <GlassIcon glass size="xl" class="mx-auto mb-3">
+          <template #default="{ iconClass }"><component :is="icon('coins')" :class="[iconClass, 'text-purple-500']" /></template>
+        </GlassIcon>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">BizBuz</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('auth.familyFinancialTracker') }}</p>
       </div>
@@ -77,7 +82,7 @@ async function handleSubmit() {
           :disabled="loading"
           class="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span v-if="loading" class="inline-block animate-spin mr-2">⏳</span>
+          <span v-if="loading" class="inline-flex mr-2"><component :is="icon('loader')" class="w-4 h-4 animate-spin" /></span>
           {{ isRegistering ? t('auth.createAccount') : t('auth.signIn') }}
         </button>
 
