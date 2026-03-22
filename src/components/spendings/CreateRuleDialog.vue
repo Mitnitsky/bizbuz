@@ -28,7 +28,7 @@ const saving = ref(false)
 
 const locale = computed(() => prefsStore.locale)
 const overrides = computed(() => familyStore.familySettings.categoryNameOverrides)
-const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
+const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories, locale.value))
 
 const fieldOptions = ['description', 'category', 'account'] as const
 const operatorOptions = ['equals', 'contains'] as const

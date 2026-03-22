@@ -95,9 +95,13 @@ export function categoryTooltip(key: string, locale: string): string | undefined
  * Merge default categories with family custom categories.
  * If familyCategories is empty/undefined, returns DEFAULT_CATEGORIES.
  */
-export function getEffectiveCategories(familyCategories: CategoryDef[] = []): CategoryDef[] {
+export function getEffectiveCategories(familyCategories: CategoryDef[] = [], locale = 'he'): CategoryDef[] {
   const cats = familyCategories.length === 0 ? DEFAULT_CATEGORIES : familyCategories
-  return [...cats].sort((a, b) => a.name.localeCompare(b.name, 'he'))
+  return [...cats].sort((a, b) => {
+    const nameA = locale === 'en' ? (a.nameEn || a.name) : a.name
+    const nameB = locale === 'en' ? (b.nameEn || b.name) : b.name
+    return nameA.localeCompare(nameB, locale)
+  })
 }
 
 export const LIQUID_ACCOUNT_TYPES = ['עו"ש (חשבון עובר ושב)', 'חיסכון נזיל', 'פיקדון', 'מזומן'] as const

@@ -72,7 +72,7 @@ watch(show, (val) => {
 
 const locale = computed(() => prefsStore.locale)
 const overrides = computed(() => familyStore.familySettings.categoryNameOverrides)
-const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
+const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories, locale.value))
 
 const accountAlias = computed(() => {
   const labels = familyStore.familySettings.paymentMethodLabels

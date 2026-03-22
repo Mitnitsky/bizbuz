@@ -20,7 +20,7 @@ const { icon } = useIcons()
 const familyStore = useFamilyStore()
 
 const familyId = computed(() => authStore.familyId)
-const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
+const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories, locale.value))
 const locale = computed(() => prefsStore.locale)
 
 const rules = ref<Rule[]>([])

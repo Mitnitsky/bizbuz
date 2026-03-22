@@ -26,7 +26,7 @@ const { confirm } = useConfirm()
 
 const familyId = computed(() => authStore.familyId)
 const locale = computed(() => prefsStore.locale)
-const categories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
+const categories = computed(() => getEffectiveCategories(familyStore.familySettings.categories, locale.value))
 
 const rules = ref<Rule[]>([])
 let unsubRules: (() => void) | null = null

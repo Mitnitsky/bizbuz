@@ -24,7 +24,7 @@ const saving = ref(false)
 
 const locale = computed(() => prefsStore.locale)
 const overrides = computed(() => familyStore.familySettings.categoryNameOverrides)
-const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
+const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories, locale.value))
 
 const isValid = computed(() => {
   return amount.value !== 0 && description.value.trim().length > 0
