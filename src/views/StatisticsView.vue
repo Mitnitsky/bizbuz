@@ -13,7 +13,9 @@ import {
   NON_BUDGET_CATEGORY,
   EXCEPTIONAL_CATEGORY,
   INCOME_CATEGORY,
+  DEFAULT_CATEGORY,
   categoryDisplayName,
+  getEffectiveCategories,
 } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useI18n } from 'vue-i18n'
@@ -72,7 +74,7 @@ const months = computed(() => {
 const yearlyByCategory = computed(() => {
   const grouped: Record<string, number> = {}
   for (const txn of yearTransactions.value) {
-    const cat = txn.category || 'אחר'
+    const cat = txn.category || DEFAULT_CATEGORY
     grouped[cat] = (grouped[cat] ?? 0) + Math.abs(txn.chargedAmount)
   }
   return Object.entries(grouped)
@@ -84,7 +86,7 @@ const yearlyTotal = computed(() => yearlyByCategory.value.reduce((s, d) => s + d
 
 const pieData = computed(() => ({
   labels: yearlyByCategory.value.map(d =>
-    categoryDisplayName(d.category, prefsStore.locale, familyStore.familySettings.categoryNameOverrides)
+    categoryDisplayName(d.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides)
   ),
   datasets: [{
     data: yearlyByCategory.value.map(d => d.amount),
@@ -128,7 +130,7 @@ const barData = computed(() => {
       return Math.round(sum)
     })
     return {
-      label: categoryDisplayName(cat, prefsStore.locale, familyStore.familySettings.categoryNameOverrides),
+      label: categoryDisplayName(cat, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides),
       data,
       backgroundColor: COLORS[idx % COLORS.length],
     }
@@ -173,13 +175,13 @@ const categoryMonthlyData = computed(() => {
     const total = data.reduce((s, v) => s + v, 0)
     return {
       category: cat,
-      displayName: categoryDisplayName(cat, prefsStore.locale, familyStore.familySettings.categoryNameOverrides),
+      displayName: categoryDisplayName(cat, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides),
       color: COLORS[idx % COLORS.length],
       total,
       chartData: {
         labels: months.value.map(m => m.label),
         datasets: [{
-          label: categoryDisplayName(cat, prefsStore.locale, familyStore.familySettings.categoryNameOverrides),
+          label: categoryDisplayName(cat, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides),
           data,
           backgroundColor: COLORS[idx % COLORS.length],
         }],
@@ -241,7 +243,7 @@ const categoryBarOptions = {
             >
               <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: COLORS[idx % COLORS.length] }"></span>
               <span class="truncate text-gray-700 dark:text-gray-300">
-                {{ categoryDisplayName(item.category, prefsStore.locale, familyStore.familySettings.categoryNameOverrides) }}
+                {{ categoryDisplayName(item.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
               </span>
               <span class="ml-auto text-gray-500 dark:text-gray-400 shrink-0">
                 {{ yearlyTotal > 0 ? ((item.amount / yearlyTotal) * 100).toFixed(1) : 0 }}%

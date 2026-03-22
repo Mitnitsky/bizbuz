@@ -1,38 +1,13 @@
-// --- System Constants ---
-export const DEFAULT_CATEGORY = 'אחר'
-export const TRANSFER_CATEGORY = 'העברה'
-export const NON_BUDGET_CATEGORY = 'לא תקציבי'
-export const EXCEPTIONAL_CATEGORY = 'חריג'
-export const INCOME_CATEGORY = 'הכנסה'
+import type { CategoryDef } from '@/types'
 
-// --- Canonical Categories ---
-export const CATEGORIES = [
-  // Core Living
-  'סופרמרקט ומכולת',
-  'חשבונות',
-  'רכב ותחבורה',
-  'בריאות ופארם',
-  'ילדים וחינוך',
-  'משכנתא',
+// --- System Category IDs ---
+export const DEFAULT_CATEGORY = 'other'
+export const TRANSFER_CATEGORY = 'transfer'
+export const NON_BUDGET_CATEGORY = 'non-budget'
+export const EXCEPTIONAL_CATEGORY = 'exceptional'
+export const INCOME_CATEGORY = 'income'
 
-  // Discretionary & Lifestyle
-  'מסעדות ובתי קפה',
-  'מנויים',
-  'פנאי',
-  'קניות לבית ולמשפחה',
-  'קניות אונליין',
-  'ביגוד והנעלה',
-  'חיות מחמד',
-
-  // Irregular & Big Ticket
-  'חופשות ותיירות',
-  'ביטוח ופיננסים',
-  'שירותים ותיקונים',
-
-  // Misc & System
-  'תרומות ומתנות',
-  'חסכון והשקעות',
-
+export const SYSTEM_CATEGORY_IDS = [
   DEFAULT_CATEGORY,
   TRANSFER_CATEGORY,
   NON_BUDGET_CATEGORY,
@@ -40,62 +15,60 @@ export const CATEGORIES = [
   INCOME_CATEGORY,
 ] as const
 
-// --- English Display Names ---
-const CATEGORY_ENGLISH: Record<string, string> = {
-  'סופרמרקט ומכולת': 'Groceries',
-  'חשבונות': 'Bills & Utilities',
-  'רכב ותחבורה': 'Auto & Transport',
-  'בריאות ופארם': 'Health & Pharma',
-  'ילדים וחינוך': 'Kids & Education',
-  'משכנתא': 'Mortgage',
-  'מסעדות ובתי קפה': 'Dining & Cafes',
-  'מנויים': 'Subscriptions',
-  'פנאי': 'Leisure',
-  'קניות לבית ולמשפחה': 'Shopping & Home',
-  'קניות אונליין': 'Online Shopping',
-  'ביגוד והנעלה': 'Clothing & Shoes',
-  'חיות מחמד': 'Pets',
-  'חופשות ותיירות': 'Travel & Vacations',
-  'ביטוח ופיננסים': 'Insurance & Finance',
-  'שירותים ותיקונים': 'Services & Repairs',
-  'תרומות ומתנות': 'Gifts & Donations',
-  'חסכון והשקעות': 'Savings & Investments',
-  [DEFAULT_CATEGORY]: 'Other',
-  [TRANSFER_CATEGORY]: 'Transfer',
-  [NON_BUDGET_CATEGORY]: 'Non-Budget',
-  [EXCEPTIONAL_CATEGORY]: 'Exceptional',
-  [INCOME_CATEGORY]: 'Income',
+export function isSystemCategory(id: string): boolean {
+  return (SYSTEM_CATEGORY_IDS as readonly string[]).includes(id)
 }
 
-// --- Scraper Category Mapping (old → new) ---
-export const SCRAPER_CATEGORY_MAP: Record<string, string> = {
-  'מזון ומשקאות': 'סופרמרקט ומכולת',
-  'מסעדות': 'מסעדות ובתי קפה',
-  'אנרגיה': 'חשבונות',
-  'מוסדות': 'חשבונות',
-  'תקשורת ומחשבים': 'מנויים',
-  'רכב ותחבורה': 'רכב ותחבורה',
-  'רפואה ובריאות': 'בריאות ופארם',
-  'ילדים': 'ילדים וחינוך',
-  'פנאי בילוי': 'פנאי',
-  'מנויים': 'מנויים',
-  'אירועים': 'פנאי',
-  'אופנה': 'ביגוד והנעלה',
-  'ריהוט ובית': 'קניות לבית ולמשפחה',
-  'קניות כלליות': 'קניות לבית ולמשפחה',
-  'ציוד ומשרד': 'קניות לבית ולמשפחה',
-  'חיות מחמד': 'חיות מחמד',
-  'תיירות': 'חופשות ותיירות',
-  'מלונאות ואירוח': 'חופשות ותיירות',
-  'ביטוח ופיננסים': 'ביטוח ופיננסים',
-  'מקצועות חופשיים': 'שירותים ותיקונים',
-  'תעשיה ומכירות': 'שירותים ותיקונים',
-  'עמותות ותרומות': 'תרומות ומתנות',
-  'חסכון והשקעות': 'חסכון והשקעות',
-  // Old merged categories → new split
-  'חשבונות ותקשורת': 'חשבונות',
-  'פנאי ומנויים': 'פנאי',
-  'שונות': DEFAULT_CATEGORY,
+// --- Default Categories (seeded on first use) ---
+export const DEFAULT_CATEGORIES: CategoryDef[] = [
+  { id: 'groceries', name: 'סופרמרקט ומכולת', nameEn: 'Groceries' },
+  { id: 'bills', name: 'חשבונות', nameEn: 'Bills & Utilities' },
+  { id: 'auto', name: 'רכב ותחבורה', nameEn: 'Auto & Transport' },
+  { id: 'health', name: 'בריאות ופארם', nameEn: 'Health & Pharma' },
+  { id: 'kids', name: 'ילדים וחינוך', nameEn: 'Kids & Education' },
+  { id: 'mortgage', name: 'משכנתא', nameEn: 'Mortgage' },
+  { id: 'dining', name: 'מסעדות ובתי קפה', nameEn: 'Dining & Cafes' },
+  { id: 'subscriptions', name: 'מנויים', nameEn: 'Subscriptions' },
+  { id: 'leisure', name: 'פנאי', nameEn: 'Leisure' },
+  { id: 'shopping-home', name: 'קניות לבית ולמשפחה', nameEn: 'Shopping & Home' },
+  { id: 'shopping-online', name: 'קניות אונליין', nameEn: 'Online Shopping' },
+  { id: 'clothing', name: 'ביגוד והנעלה', nameEn: 'Clothing & Shoes' },
+  { id: 'pets', name: 'חיות מחמד', nameEn: 'Pets' },
+  { id: 'travel', name: 'חופשות ותיירות', nameEn: 'Travel & Vacations' },
+  { id: 'insurance', name: 'ביטוח ופיננסים', nameEn: 'Insurance & Finance' },
+  { id: 'services', name: 'שירותים ותיקונים', nameEn: 'Services & Repairs' },
+  { id: 'gifts', name: 'תרומות ומתנות', nameEn: 'Gifts & Donations' },
+  { id: 'savings', name: 'חסכון והשקעות', nameEn: 'Savings & Investments' },
+  { id: DEFAULT_CATEGORY, name: 'אחר', nameEn: 'Other', system: true },
+  { id: TRANSFER_CATEGORY, name: 'העברה', nameEn: 'Transfer', system: true },
+  { id: NON_BUDGET_CATEGORY, name: 'לא תקציבי', nameEn: 'Non-Budget', system: true },
+  { id: EXCEPTIONAL_CATEGORY, name: 'חריג', nameEn: 'Exceptional', system: true },
+  { id: INCOME_CATEGORY, name: 'הכנסה', nameEn: 'Income', system: true },
+]
+
+// Legacy Hebrew name → new ID mapping (for migration)
+export const LEGACY_NAME_TO_ID: Record<string, string> = {}
+for (const cat of DEFAULT_CATEGORIES) {
+  LEGACY_NAME_TO_ID[cat.name] = cat.id
+}
+
+export function categoryDisplayName(
+  id: string,
+  locale: string,
+  categories: CategoryDef[] = [],
+  overrides: Record<string, string> = {},
+): string {
+  if (overrides[id]) return overrides[id]
+  const cat = categories.find(c => c.id === id) || DEFAULT_CATEGORIES.find(c => c.id === id)
+  if (cat) {
+    return locale === 'en' ? (cat.nameEn || cat.name) : cat.name
+  }
+  // Fallback for legacy Hebrew-name categories
+  const legacy = DEFAULT_CATEGORIES.find(c => c.name === id)
+  if (legacy) {
+    return locale === 'en' ? (legacy.nameEn || legacy.name) : legacy.name
+  }
+  return id
 }
 
 // --- Tooltips ---
@@ -118,15 +91,14 @@ export function categoryTooltip(key: string, locale: string): string | undefined
   return CATEGORY_TOOLTIPS[key]?.[locale === 'he' ? 'he' : 'en']
 }
 
-export function categoryDisplayName(key: string, locale: string, overrides: Record<string, string> = {}): string {
-  if (overrides[key]) return overrides[key]
-  if (locale === 'en') return CATEGORY_ENGLISH[key] ?? key
-  return key
-}
-
-/** Map a scraper-provided category to our canonical set */
-export function mapScraperCategory(scraperCat: string): string | undefined {
-  return SCRAPER_CATEGORY_MAP[scraperCat]
+/**
+ * Merge default categories with family custom categories.
+ * If familyCategories is empty/undefined, returns DEFAULT_CATEGORIES.
+ */
+export function getEffectiveCategories(familyCategories: CategoryDef[] = []): CategoryDef[] {
+  if (familyCategories.length === 0) return DEFAULT_CATEGORIES
+  // Family categories are the source of truth (includes defaults + custom)
+  return familyCategories
 }
 
 export const LIQUID_ACCOUNT_TYPES = ['עו"ש (חשבון עובר ושב)', 'חיסכון נזיל', 'פיקדון', 'מזומן'] as const

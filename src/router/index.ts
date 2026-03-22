@@ -15,6 +15,7 @@ const router = createRouter({
     { path: '/installments', name: 'installments', component: () => import('@/views/InstallmentsView.vue'), meta: { requiresAuth: true } },
     { path: '/settings', name: 'settings', component: () => import('@/views/SettingsView.vue'), meta: { requiresAuth: true } },
     { path: '/settings/rules', name: 'rules', component: () => import('@/views/RulesView.vue'), meta: { requiresAuth: true } },
+    { path: '/settings/categories', name: 'categories', component: () => import('@/views/CategoriesView.vue'), meta: { requiresAuth: true } },
   ]
 })
 

@@ -7,7 +7,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
-import { CATEGORIES, TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY } from '@/composables/useCategories'
+import { TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { updateCategoryOrder, updateUserPreferences } from '@/services/firestore'
 import draggable from 'vuedraggable'
@@ -112,7 +112,7 @@ const categorizedTransactions = computed(() => {
 const transactionsByCategory = computed(() => {
   const map = new Map<string, Transaction[]>()
   for (const t of categorizedTransactions.value) {
-    const cat = t.category || 'אחר'
+    const cat = t.category || DEFAULT_CATEGORY
     if (!map.has(cat)) map.set(cat, [])
     map.get(cat)!.push(t)
   }
@@ -123,7 +123,8 @@ const transactionsByCategory = computed(() => {
 const categoryItems = ref<Array<{ key: string }>>([])
 
 function collectAllCategories(): string[] {
-  const allCats: string[] = [...CATEGORIES.filter(c => c !== TRANSFER_CATEGORY)]
+  const effective = getEffectiveCategories(familyStore.familySettings.categories)
+  const allCats: string[] = effective.map(c => c.id).filter(c => c !== TRANSFER_CATEGORY)
   for (const cat of transactionsByCategory.value.keys()) {
     if (!allCats.includes(cat) && cat !== TRANSFER_CATEGORY) allCats.push(cat)
   }
@@ -171,8 +172,8 @@ watchEffect(() => {
       break
     case 'name':
       sorted = [...allCats].sort((a, b) => {
-        const nameA = categoryDisplayName(a, locale, overrides)
-        const nameB = categoryDisplayName(b, locale, overrides)
+        const nameA = categoryDisplayName(a, locale, getEffectiveCategories(familyStore.familySettings.categories), overrides)
+        const nameB = categoryDisplayName(b, locale, getEffectiveCategories(familyStore.familySettings.categories), overrides)
         const cmp = nameA.localeCompare(nameB, locale === 'he' ? 'he' : 'en')
         return dir === 'asc' ? cmp : -cmp
       })
@@ -374,7 +375,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
               >
                 <span class="text-xs text-gray-400 transition-transform" :class="{ 'rotate-90': expandedGroups.has(item.key) }">▶</span>
                 <span class="text-sm font-medium text-gray-900 dark:text-white flex-1 text-left truncate">
-                  {{ categoryDisplayName(item.key, prefsStore.locale, familyStore.familySettings.categoryNameOverrides) }}
+                  {{ categoryDisplayName(item.key, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
                 </span>
                 <span class="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
                   {{ transactionsByCategory.get(item.key)?.length ?? 0 }}

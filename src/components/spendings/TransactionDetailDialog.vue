@@ -11,7 +11,7 @@ import {
   deleteTransaction,
   onRules,
 } from '@/services/firestore'
-import { CATEGORIES, categoryDisplayName } from '@/composables/useCategories'
+import { getEffectiveCategories, categoryDisplayName } from '@/composables/useCategories'
 import { formatCurrency, formatDate } from '@/composables/useFormatters'
 import { useIcons } from '@/composables/useIcons'
 import { useConfirm } from '@/composables/useConfirm'
@@ -72,6 +72,7 @@ watch(show, (val) => {
 
 const locale = computed(() => prefsStore.locale)
 const overrides = computed(() => familyStore.familySettings.categoryNameOverrides)
+const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
 
 const accountAlias = computed(() => {
   const labels = familyStore.familySettings.paymentMethodLabels
@@ -175,7 +176,7 @@ async function onCategorize() {
           <div class="text-gray-900 dark:text-gray-100">{{ formatDate(transaction.processedDate) }}</div>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.category') }}</div>
-          <div class="text-gray-900 dark:text-gray-100">{{ categoryDisplayName(transaction.category, locale, overrides) }}</div>
+          <div class="text-gray-900 dark:text-gray-100">{{ categoryDisplayName(transaction.category, locale, effectiveCategories, overrides) }}</div>
 
           <div class="text-gray-500 dark:text-gray-400">{{ t('spendings.owner') }}</div>
           <div class="text-gray-900 dark:text-gray-100">{{ familyStore.resolveOwnerName(transaction.ownerTag) }}</div>
@@ -238,8 +239,8 @@ async function onCategorize() {
               class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
               @change="saveCategory(transaction!)"
             >
-              <option v-for="cat in CATEGORIES" :key="cat" :value="cat">
-                {{ categoryDisplayName(cat, locale, overrides) }}
+              <option v-for="catDef in effectiveCategories" :key="catDef.id" :value="catDef.id">
+                {{ categoryDisplayName(catDef.id, locale, effectiveCategories, overrides) }}
               </option>
             </select>
           </div>

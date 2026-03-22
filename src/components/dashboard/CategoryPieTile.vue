@@ -5,7 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { useTransactionsStore } from '@/stores/transactions'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useFamilyStore } from '@/stores/family'
-import { TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY, categoryDisplayName } from '@/composables/useCategories'
+import { TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY, DEFAULT_CATEGORY, categoryDisplayName, getEffectiveCategories } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useI18n } from 'vue-i18n'
 
@@ -29,7 +29,7 @@ const categoryData = computed(() => {
   for (const txn of txnStore.cycleTransactions) {
     if (EXCLUDED.includes(txn.category)) continue
     if (txn.chargedAmount >= 0) continue
-    const cat = txn.category || 'Other'
+    const cat = txn.category || DEFAULT_CATEGORY
     grouped[cat] = (grouped[cat] ?? 0) + Math.abs(txn.chargedAmount)
   }
   return Object.entries(grouped)
@@ -40,7 +40,7 @@ const categoryData = computed(() => {
 const totalSpend = computed(() => categoryData.value.reduce((sum, d) => sum + d.amount, 0))
 
 const chartData = computed(() => ({
-  labels: categoryData.value.map(d => categoryDisplayName(d.category, prefsStore.locale, familyStore.familySettings.categoryNameOverrides)),
+  labels: categoryData.value.map(d => categoryDisplayName(d.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides)),
   datasets: [{
     data: categoryData.value.map(d => d.amount),
     backgroundColor: categoryData.value.map((_d, i) => COLORS[i % COLORS.length]),
@@ -85,7 +85,7 @@ const chartOptions = {
           class="flex items-center gap-2 text-sm"
         >
           <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: COLORS[idx % COLORS.length] }"></span>
-          <span class="truncate text-gray-700 dark:text-gray-300">{{ categoryDisplayName(item.category, prefsStore.locale, familyStore.familySettings.categoryNameOverrides) }}</span>
+          <span class="truncate text-gray-700 dark:text-gray-300">{{ categoryDisplayName(item.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}</span>
           <span class="ml-auto text-gray-500 dark:text-gray-400 shrink-0">
             {{ totalSpend > 0 ? ((item.amount / totalSpend) * 100).toFixed(0) : 0 }}%
           </span>

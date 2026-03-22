@@ -19,7 +19,7 @@ import {
   getAllTransactions,
   onRules,
 } from '@/services/firestore'
-import { CATEGORIES, categoryDisplayName } from '@/composables/useCategories'
+import { getEffectiveCategories, categoryDisplayName } from '@/composables/useCategories'
 import { formatDate } from '@/composables/useFormatters'
 import { useIcons, ICON_SET_LABELS } from '@/composables/useIcons'
 import { useAccentColor } from '@/composables/useAccentColor'
@@ -189,8 +189,8 @@ function incomeAnchorLabel(): string {
 // --- Budgets ---
 function openBudgets() {
   const b: Record<string, string> = {}
-  CATEGORIES.forEach((c) => {
-    b[c] = (budgets.value[c] ?? 0).toString()
+  getEffectiveCategories(familyStore.familySettings.categories).forEach((c) => {
+    b[c.id] = (budgets.value[c.id] ?? 0).toString()
   })
   tempBudgets.value = b
   budgetsOpen.value = true
@@ -246,7 +246,7 @@ async function savePaymentMethods() {
 // --- Category Aliases ---
 function openCategoryAliases() {
   const overrides: Record<string, string> = {}
-  CATEGORIES.forEach((c) => { overrides[c] = categoryOverrides.value[c] ?? '' })
+  getEffectiveCategories(familyStore.familySettings.categories).forEach((c) => { overrides[c.id] = categoryOverrides.value[c.id] ?? '' })
   tempCategoryOverrides.value = overrides
   categoryAliasesOpen.value = true
 }
@@ -368,6 +368,12 @@ function cycleLabel(day: number): string {
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openCategoryAliases">
             <span class="text-sm text-gray-700 dark:text-gray-300">Category Name Aliases</span>
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ categoryOverrideCount > 0 ? t('settings.nLabelsConfigured', { n: categoryOverrideCount }) : t('settings.noLabelsConfigured') }}</span>
+          </div>
+
+          <!-- Manage Categories -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="$router.push('/settings/categories')">
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.manageCategories') }}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">→</span>
           </div>
 
           <!-- Categorization Rules -->
@@ -573,9 +579,9 @@ function cycleLabel(day: number): string {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ t('settings.categoryBudgets') }}</h3>
           <div class="space-y-2">
-            <div v-for="cat in CATEGORIES" :key="cat" class="flex items-center gap-3">
-              <span class="text-sm text-gray-700 dark:text-gray-300 flex-1 truncate">{{ categoryDisplayName(cat, locale) }}</span>
-              <input v-model="tempBudgets[cat]" type="number" step="1" placeholder="₪" class="w-24 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
+            <div v-for="catDef in getEffectiveCategories(familyStore.familySettings.categories)" :key="catDef.id" class="flex items-center gap-3">
+              <span class="text-sm text-gray-700 dark:text-gray-300 flex-1 truncate">{{ categoryDisplayName(catDef.id, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
+              <input v-model="tempBudgets[catDef.id]" type="number" step="1" placeholder="₪" class="w-24 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
             </div>
           </div>
           <div class="flex gap-3 justify-end mt-4">
@@ -620,9 +626,9 @@ function cycleLabel(day: number): string {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Category Name Aliases</h3>
           <div class="space-y-2">
-            <div v-for="cat in CATEGORIES" :key="cat" class="flex items-center gap-3">
-              <span class="text-sm text-gray-500 dark:text-gray-400 flex-1 truncate" :title="cat">{{ categoryDisplayName(cat, locale) }}</span>
-              <input v-model="tempCategoryOverrides[cat]" type="text" :placeholder="cat" class="w-36 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
+            <div v-for="catDef in getEffectiveCategories(familyStore.familySettings.categories)" :key="catDef.id" class="flex items-center gap-3">
+              <span class="text-sm text-gray-500 dark:text-gray-400 flex-1 truncate" :title="catDef.id">{{ categoryDisplayName(catDef.id, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
+              <input v-model="tempCategoryOverrides[catDef.id]" type="text" :placeholder="catDef.name" class="w-36 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
             </div>
           </div>
           <div class="flex gap-3 justify-end mt-4">

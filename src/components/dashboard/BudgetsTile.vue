@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
-import { TRANSFER_CATEGORY, categoryDisplayName } from '@/composables/useCategories'
+import { TRANSFER_CATEGORY, categoryDisplayName, getEffectiveCategories } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useI18n } from 'vue-i18n'
 
@@ -44,7 +44,7 @@ const hasBudgets = computed(() => budgetItems.value.length > 0)
     <div v-else class="space-y-3">
       <div v-for="item in budgetItems" :key="item.category">
         <div class="flex justify-between text-sm mb-1">
-          <span class="text-gray-700 dark:text-gray-300">{{ categoryDisplayName(item.category, prefsStore.locale) }}</span>
+          <span class="text-gray-700 dark:text-gray-300">{{ categoryDisplayName(item.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
           <span class="text-gray-500 dark:text-gray-400">{{ formatCurrency(item.spent) }} / {{ formatCurrency(item.budget) }}</span>
         </div>
         <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">

@@ -5,7 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { onRules, addRule, updateRule, deleteRule } from '@/services/firestore'
-import { CATEGORIES, categoryDisplayName } from '@/composables/useCategories'
+import { getEffectiveCategories, categoryDisplayName } from '@/composables/useCategories'
+import { useFamilyStore } from '@/stores/family'
 import { useIcons } from '@/composables/useIcons'
 import { useConfirm } from '@/composables/useConfirm'
 import type { Rule } from '@/types'
@@ -16,8 +17,10 @@ const router = useRouter()
 const authStore = useAuthStore()
 const prefsStore = usePreferencesStore()
 const { icon } = useIcons()
+const familyStore = useFamilyStore()
 
 const familyId = computed(() => authStore.familyId)
+const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
 const locale = computed(() => prefsStore.locale)
 
 const rules = ref<Rule[]>([])
@@ -55,7 +58,7 @@ const rulesByCategory = computed(() => {
     map.get(cat)!.push(rule)
   }
   return [...map.entries()].sort((a, b) =>
-    categoryDisplayName(a[0], locale.value).localeCompare(categoryDisplayName(b[0], locale.value))
+    categoryDisplayName(a[0], locale.value, effectiveCategories.value).localeCompare(categoryDisplayName(b[0], locale.value, effectiveCategories.value))
   )
 })
 
@@ -161,7 +164,7 @@ async function removeRule(id: string) {
         <div>
           <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ t('settings.ruleCategory') }}</label>
           <select v-model="editingRule.actionCategory" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm">
-            <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ categoryDisplayName(cat, locale) }}</option>
+            <option v-for="catDef in effectiveCategories" :key="catDef.id" :value="catDef.id">{{ categoryDisplayName(catDef.id, locale, effectiveCategories) }}</option>
           </select>
         </div>
         <div>
@@ -196,7 +199,7 @@ async function removeRule(id: string) {
     <div v-else class="space-y-6">
       <div v-for="[cat, catRules] in rulesByCategory" :key="cat">
         <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2">
-          {{ categoryDisplayName(cat, locale) }}
+          {{ categoryDisplayName(cat, locale, effectiveCategories) }}
           <span class="text-xs font-normal normal-case text-gray-400 dark:text-gray-500">({{ catRules.length }})</span>
         </h2>
         <div class="space-y-2">

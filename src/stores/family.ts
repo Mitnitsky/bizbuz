@@ -14,6 +14,7 @@ export const useFamilyStore = defineStore('family', () => {
     paymentMethodLabels: {},
     paymentMethodOwners: {},
     categoryNameOverrides: {},
+    categories: [],
   })
   const memberNames = ref<Record<string, string>>({})
 

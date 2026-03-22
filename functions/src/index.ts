@@ -1,7 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {evaluateRules} from "./rules-engine";
-import {mapScraperCategory} from "./categories";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -110,33 +109,51 @@ export const ingest = functions.https.onRequest(async (req, res) => {
         continue;
       }
 
-      // Already exists by uniqueId — skip if categorized/locked
-      if (existingDoc.exists) {
-        const existing = existingDoc.data()!;
-        if (existing.user_locked === true) {
-          results.skipped_locked++;
-          continue;
-        }
-        if (existing.status && existing.status !== "pending_categorization") {
+      // Hash+identifier dedup: same hash AND same identifier = true duplicate
+      // Different identifier with same hash = legit separate charges (keep both)
+      if (txn.hash) {
+        const hashQuery = await txnCol
+          .where("hash", "==", txn.hash)
+          .limit(10)
+          .get();
+        const dupeMatch = hashQuery.docs.find((d) => {
+          if (d.id === txn.uniqueId) return false;
+          const data = d.data();
+          if (data.hidden_from_ui === true) return false;
+          // Same hash + same identifier = true dupe (timezone date shift)
+          // Same hash + different identifier = legit separate charge
+          const sameIdentifier = txn.identifier !== undefined &&
+            data.identifier !== undefined &&
+            String(data.identifier) === String(txn.identifier);
+          if (sameIdentifier) return true;
+          // No identifier on either side — fall back to hash-only match
+          // but only skip if the existing doc is categorized/locked
+          if (txn.identifier === undefined || data.identifier === undefined) {
+            return data.user_locked === true ||
+              (data.status && data.status !== "pending_categorization");
+          }
+          return false;
+        });
+        if (dupeMatch) {
           results.skipped_existing++;
           continue;
         }
       }
 
-      // Fuzzy dedup: check if a transaction with same date + amount + description
-      // already exists under a different doc ID (e.g. manually added)
-      if (!existingDoc.exists) {
-        const txnDate = admin.firestore.Timestamp.fromDate(new Date(txn.date));
-        const dupeQuery = await txnCol
-          .where("date", "==", txnDate)
-          .where("chargedAmount", "==", txn.chargedAmount)
-          .where("description", "==", txn.description)
-          .limit(1)
-          .get();
-        if (!dupeQuery.empty) {
-          results.skipped_existing++;
-          continue;
+      // UniqueId-based dedup: skip if existing doc is categorized/locked (not hidden)
+      if (existingDoc.exists) {
+        const existing = existingDoc.data()!;
+        if (existing.hidden_from_ui !== true) {
+          if (existing.user_locked === true) {
+            results.skipped_locked++;
+            continue;
+          }
+          if (existing.status && existing.status !== "pending_categorization") {
+            results.skipped_existing++;
+            continue;
+          }
         }
+        // hidden_from_ui docs fall through — they get overwritten below
       }
 
       // Run rules engine
@@ -199,13 +216,7 @@ export const ingest = functions.https.onRequest(async (req, res) => {
         docData.owner_tag = resolvedOwner;
         docData.user_locked = false;
       } else {
-        const mapped = txn.category ? mapScraperCategory(txn.category) : undefined;
-        if (mapped) {
-          docData.category = mapped;
-          docData.status = "auto_categorized";
-        } else {
-          docData.status = "pending_categorization";
-        }
+        docData.status = "pending_categorization";
         docData.owner_tag = resolvedOwner;
         docData.user_locked = false;
       }

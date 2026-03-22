@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useFamilyStore } from '@/stores/family'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
-import { categoryDisplayName } from '@/composables/useCategories'
+import { categoryDisplayName, getEffectiveCategories } from '@/composables/useCategories'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useI18n } from 'vue-i18n'
 import type { Transaction } from '@/types'
@@ -113,7 +113,7 @@ function cardLabel(txn: Transaction) {
           <div class="flex-1 min-w-0">
             <div class="font-medium text-gray-900 dark:text-white truncate">{{ item.transaction.overrideDescription || item.transaction.description }}</div>
             <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale) }}</span>
+              <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
               <span v-if="cardLabel(item.transaction)" class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">{{ cardLabel(item.transaction) }}</span>
               <span>{{ formatDateShort(item.transaction.date) }}</span>
             </div>

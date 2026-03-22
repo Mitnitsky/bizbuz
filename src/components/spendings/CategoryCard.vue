@@ -4,7 +4,7 @@ import type { Transaction } from '@/types'
 import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
 import { categorizeTransaction } from '@/services/firestore'
-import { categoryDisplayName, categoryTooltip, NON_BUDGET_CATEGORY } from '@/composables/useCategories'
+import { categoryDisplayName, categoryTooltip, NON_BUDGET_CATEGORY, getEffectiveCategories } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useIcons } from '@/composables/useIcons'
 import { useI18n } from 'vue-i18n'
@@ -41,7 +41,7 @@ const locale = computed(() => prefsStore.locale)
 const overrides = computed(() => familyStore.familySettings.categoryNameOverrides)
 
 const displayName = computed(() => {
-  return categoryDisplayName(props.category, locale.value, overrides.value)
+  return categoryDisplayName(props.category, locale.value, getEffectiveCategories(familyStore.familySettings.categories), overrides.value)
 })
 
 const tooltip = computed(() => {

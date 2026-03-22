@@ -24,6 +24,7 @@ import type {
   Family,
   SavingsEntry,
   FamilySettings,
+  CategoryDef,
   UserPreferences,
   Rule,
   TrackerType,
@@ -32,7 +33,7 @@ import type {
   LoanEntry,
 } from '@/types'
 import { extractTrackerFields } from '@/composables/useTracker'
-import { SCRAPER_CATEGORY_MAP } from '@/composables/useCategories'
+import { LEGACY_NAME_TO_ID } from '@/composables/useCategories'
 
 // ---------- Converter helpers ----------
 
@@ -47,7 +48,7 @@ export function transactionFromFirestore(docSnap: QueryDocumentSnapshot<Document
     description: d.description ?? '',
     overrideDescription: d.override_description ?? '',
     status: d.status ?? 'pending_categorization',
-    category: SCRAPER_CATEGORY_MAP[d.category] ?? d.category ?? '',
+    category: LEGACY_NAME_TO_ID[d.category] ?? d.category ?? '',
     ownerTag: d.owner_tag ?? 'shared',
     type: d.type ?? 'normal',
     installments: d.installments
@@ -603,6 +604,41 @@ export async function updateCategoryNameOverrides(
   await updateDoc(familySettingsRef(familyId), { category_name_overrides: overrides })
 }
 
+export async function updateCategories(
+  familyId: string,
+  categories: CategoryDef[],
+): Promise<void> {
+  await updateDoc(familySettingsRef(familyId), { categories })
+}
+
+/** Delete a category: reassign all its transactions to 'other' and remove related rules */
+export async function deleteCategoryWithCascade(
+  familyId: string,
+  categoryId: string,
+  allCategories: CategoryDef[],
+): Promise<{ transactionsReassigned: number; rulesDeleted: number }> {
+  const txnRef = collection(db, 'families', familyId, 'transactions')
+  const txnSnap = await getDocs(query(txnRef, where('category', '==', categoryId)))
+  let transactionsReassigned = 0
+  for (const d of txnSnap.docs) {
+    await updateDoc(d.ref, { category: '', status: 'pending_categorization' })
+    transactionsReassigned++
+  }
+
+  const rulesRef = collection(db, 'families', familyId, 'rules')
+  const rulesSnap = await getDocs(query(rulesRef, where('assign_category', '==', categoryId)))
+  let rulesDeleted = 0
+  for (const d of rulesSnap.docs) {
+    await deleteDoc(d.ref)
+    rulesDeleted++
+  }
+
+  const updated = allCategories.filter(c => c.id !== categoryId)
+  await updateCategories(familyId, updated)
+
+  return { transactionsReassigned, rulesDeleted }
+}
+
 export async function updateCategoryOrder(familyId: string, uid: string, order: string[]): Promise<void> {
   await updateUserPreferences(familyId, uid, { category_order: order })
 }
@@ -679,6 +715,7 @@ export function onFamilySettings(
       paymentMethodLabels: d.payment_method_labels ?? {},
       paymentMethodOwners: d.payment_method_owners ?? {},
       categoryNameOverrides: d.category_name_overrides ?? {},
+      categories: d.categories ?? [],
     })
   }, (error) => {
     console.error('[onFamilySettings] Firestore error:', error.message)

@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
 import { addManualTransaction } from '@/services/firestore'
-import { CATEGORIES, categoryDisplayName, DEFAULT_CATEGORY } from '@/composables/useCategories'
+import { getEffectiveCategories, categoryDisplayName, DEFAULT_CATEGORY } from '@/composables/useCategories'
 import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{
@@ -24,6 +24,7 @@ const saving = ref(false)
 
 const locale = computed(() => prefsStore.locale)
 const overrides = computed(() => familyStore.familySettings.categoryNameOverrides)
+const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories))
 
 const isValid = computed(() => {
   return amount.value !== 0 && description.value.trim().length > 0
@@ -102,8 +103,8 @@ async function onSave() {
               v-model="category"
               class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
             >
-              <option v-for="cat in CATEGORIES" :key="cat" :value="cat">
-                {{ categoryDisplayName(cat, locale, overrides) }}
+              <option v-for="catDef in effectiveCategories" :key="catDef.id" :value="catDef.id">
+                {{ categoryDisplayName(catDef.id, locale, effectiveCategories, overrides) }}
               </option>
             </select>
           </div>

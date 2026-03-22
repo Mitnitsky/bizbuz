@@ -79,6 +79,13 @@ export interface UserPreferences {
   pinnedCategories: string[]
 }
 
+export interface CategoryDef {
+  id: string
+  name: string
+  nameEn?: string
+  system?: boolean
+}
+
 export interface FamilySettings {
   cycleStartDay: number
   incomeAnchorDay: number | null
@@ -87,6 +94,7 @@ export interface FamilySettings {
   paymentMethodLabels: Record<string, string>
   paymentMethodOwners: Record<string, OwnerTag | string>
   categoryNameOverrides: Record<string, string>
+  categories: CategoryDef[]
 }
 
 export interface TrackerFields {

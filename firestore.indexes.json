@@ -2,6 +2,14 @@
   "indexes": [
     {
       "collectionGroup": "transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chargedAmount", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "transactions",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "hidden_from_ui", "order": "ASCENDING" },
