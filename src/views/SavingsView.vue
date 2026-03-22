@@ -84,7 +84,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
             <component :is="liquidOpen ? icon('chevronUp') : icon('chevronDown')" class="w-3.5 h-3.5 inline" />
             {{ savingsStore.liquidEntries.length }} items</button>
           <button
-            class="px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700"
+            class="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
             @click="openAddDialog('liquid')"
           >{{ t('savings.addAccount') }}</button>
         </div>
