@@ -70,7 +70,14 @@ const autoHidden = computed(() => {
 
 watch(() => prefsStore.userPreferences, (prefs) => {
   const order = prefs?.dashboardTileOrder
-  const ids = (order && order.length > 0) ? order : [...ALL_TILES]
+  let ids: string[]
+  if (order && order.length > 0) {
+    // Append any new tiles not in saved order
+    const missing = ([...ALL_TILES] as string[]).filter(t => !order.includes(t))
+    ids = [...order, ...missing]
+  } else {
+    ids = [...ALL_TILES]
+  }
   tiles.value = ids.map(id => ({ id }))
   hiddenTiles.value = new Set(prefs?.hiddenDashboardTiles ?? [])
 }, { immediate: true })
