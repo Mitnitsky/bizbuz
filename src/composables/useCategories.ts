@@ -104,6 +104,11 @@ export function getEffectiveCategories(familyCategories: CategoryDef[] = [], loc
   })
 }
 
+export function isSharedCategory(id: string, familyCategories: CategoryDef[] = []): boolean {
+  const cat = familyCategories.find(c => c.id === id)
+  return cat?.shared === true
+}
+
 export const LIQUID_ACCOUNT_TYPES = ['עו"ש (חשבון עובר ושב)', 'חיסכון נזיל', 'פיקדון', 'מזומן'] as const
 export const LOCKED_FUND_TYPES = ['קרן השתלמות', 'פנסיה', 'קופת גמל', 'ביטוח מנהלים', 'קרן נאמנות'] as const
 

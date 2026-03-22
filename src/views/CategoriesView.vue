@@ -143,6 +143,19 @@ async function deleteCategory(cat: CategoryDef) {
   }
 }
 
+// --- Toggle shared ---
+async function toggleShared(cat: CategoryDef) {
+  if (!familyId.value) return
+  const current = familyStore.familySettings.categories.length > 0
+    ? [...familyStore.familySettings.categories]
+    : [...DEFAULT_CATEGORIES]
+  const idx = current.findIndex(c => c.id === cat.id)
+  if (idx >= 0) {
+    current[idx] = { ...current[idx], shared: !current[idx].shared }
+    await updateCategories(familyId.value!, current)
+  }
+}
+
 const regularCategories = computed(() => categories.value.filter(c => !c.system))
 const systemCategories = computed(() => categories.value.filter(c => c.system))
 </script>
@@ -238,7 +251,13 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
             {{ categoryDisplayName(cat.id, locale, categories) }}
           </span>
           <span v-if="cat.nameEn && locale !== 'en'" class="text-xs text-gray-400">{{ cat.nameEn }}</span>
-          <span class="text-xs text-gray-400 font-mono">{{ cat.id }}</span>
+          <button
+            class="px-2 py-0.5 rounded-full text-xs transition-colors"
+            :class="cat.shared
+              ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'"
+            @click="toggleShared(cat)"
+          >{{ t('categories.shared') }}</button>
           <button
             class="text-xs text-purple-600 dark:text-purple-400 hover:underline"
             @click="startRename(cat)"

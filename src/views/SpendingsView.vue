@@ -7,7 +7,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
-import { TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories } from '@/composables/useCategories'
+import { TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories, isSharedCategory } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { updateCategoryOrder, updateUserPreferences } from '@/services/firestore'
 import draggable from 'vuedraggable'
@@ -105,9 +105,15 @@ const ownerFilteredTransactions = computed(() => {
 })
 
 // Total spending for filtered transactions (expenses only, excludes transfers)
+// When filtered by a specific user, also exclude shared categories
 const filteredTotalSpending = computed(() => {
+  const isUserFilter = uiStore.ownerFilter !== 'all'
+  const cats = familyStore.familySettings.categories
   return categorizedTransactions.value
-    .filter(t => t.chargedAmount < 0 && t.category !== TRANSFER_CATEGORY && t.category !== NON_BUDGET_CATEGORY)
+    .filter(t => t.chargedAmount < 0
+      && t.category !== TRANSFER_CATEGORY
+      && t.category !== NON_BUDGET_CATEGORY
+      && !(isUserFilter && isSharedCategory(t.category, cats)))
     .reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
 })
 

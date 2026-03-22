@@ -84,6 +84,7 @@ export interface CategoryDef {
   name: string
   nameEn?: string
   system?: boolean
+  shared?: boolean
 }
 
 export interface FamilySettings {

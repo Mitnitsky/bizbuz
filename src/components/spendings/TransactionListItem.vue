@@ -92,7 +92,7 @@ function onLongPress() {
     :class="{
       'bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-300 dark:ring-purple-600': isSelected,
     }"
-    :draggable="draggable && !selectionMode"
+    :draggable="draggable && (!selectionMode || isSelected)"
     @dragstart="onDragStart"
     @click="onClick"
     @contextmenu.prevent="onLongPress"

@@ -289,6 +289,7 @@ export default {
     back: '← חזרה להגדרות',
     rename: 'שינוי שם',
     delete: 'מחיקה',
+    shared: 'משותף',
     save: 'שמירה',
     cancel: 'ביטול',
   },
