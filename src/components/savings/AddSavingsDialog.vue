@@ -25,6 +25,8 @@ const selectedChip = ref('')
 const name = ref('')
 const amount = ref('')
 const firmName = ref('')
+const liquidityDate = ref('')
+const notes = ref('')
 const saving = ref(false)
 const error = ref('')
 
@@ -35,6 +37,8 @@ watch(() => props.open, (isOpen) => {
     name.value = ''
     amount.value = ''
     firmName.value = ''
+    liquidityDate.value = ''
+    notes.value = ''
     error.value = ''
   }
 })
@@ -71,6 +75,8 @@ async function handleSave() {
       amount: parsedAmount,
       savingsType: savingsType.value,
       firmName: firmName.value.trim() || undefined,
+      liquidityDate: liquidityDate.value ? new Date(liquidityDate.value) : undefined,
+      notes: notes.value.trim() || undefined,
     })
     emit('close')
   } catch (err) {
@@ -142,12 +148,32 @@ async function handleSave() {
         </div>
 
         <!-- Firm -->
-        <div class="mb-4">
+        <div class="mb-3">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('savings.companyBankOptional') }}</label>
           <input
             v-model="firmName"
             type="text"
             class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+          />
+        </div>
+
+        <!-- Liquidity date (locked only) -->
+        <div v-if="savingsType === 'locked'" class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('savings.liquidityDate') }}</label>
+          <input
+            v-model="liquidityDate"
+            type="date"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+          />
+        </div>
+
+        <!-- Notes -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('savings.notes') }}</label>
+          <textarea
+            v-model="notes"
+            rows="2"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 resize-none"
           />
         </div>
 

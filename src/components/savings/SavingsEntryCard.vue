@@ -50,6 +50,7 @@ const trackerColor = computed(() => {
         <span>{{ t('savings.updatedPrefix') }}{{ formatDateShort(entry.lastUpdated) }}</span>
         <span v-if="entry.liquidityDate">{{ t('savings.liquidityPrefix') }}{{ formatDateShort(entry.liquidityDate) }}</span>
       </div>
+      <div v-if="entry.notes" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ entry.notes }}</div>
       <span
         v-if="trackerLabel"
         class="inline-block text-xs font-medium px-2 py-0.5 rounded-full mt-1"

@@ -75,6 +75,8 @@ export default {
     lockedLabel: 'נעול',
     amountIls: 'סכום (₪)',
     companyBankOptional: 'חברה/בנק (אופציונלי)',
+    liquidityDate: 'תאריך נזילות',
+    notes: 'הערות (אופציונלי)',
   },
   loans: {
     loansAndMortgages: 'הלוואות ומשכנתאות',

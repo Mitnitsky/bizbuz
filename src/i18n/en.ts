@@ -75,6 +75,8 @@ export default {
     lockedLabel: 'Locked',
     amountIls: 'Amount (₪)',
     companyBankOptional: 'Company / Bank (optional)',
+    liquidityDate: 'Liquidity Date',
+    notes: 'Notes (optional)',
   },
   loans: {
     loansAndMortgages: 'Loans & Mortgages',
