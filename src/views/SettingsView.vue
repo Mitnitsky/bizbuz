@@ -132,8 +132,13 @@ async function saveDisplayName() {
 }
 
 // --- Family Name ---
+const copiedFamilyId = ref(false)
 function copyFamilyId() {
-  if (familyId.value) navigator.clipboard.writeText(familyId.value)
+  if (familyId.value) {
+    navigator.clipboard.writeText(familyId.value)
+    copiedFamilyId.value = true
+    setTimeout(() => { copiedFamilyId.value = false }, 2000)
+  }
 }
 function openEditFamilyName() {
   editFamilyNameValue.value = familyName.value
@@ -309,11 +314,16 @@ function cycleLabel(day: number): string {
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('home.inviteCode') }}</span><span class="font-mono text-gray-900 dark:text-white">{{ inviteCode }}</span></div>
           <div class="flex justify-between items-center">
             <span class="text-gray-500 dark:text-gray-400">Family ID</span>
-            <button
-              class="font-mono text-xs text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              @click="copyFamilyId"
-              :title="'Copy'"
-            >{{ familyId }} 📋</button>
+            <span class="relative">
+              <button
+                class="font-mono text-xs text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                @click="copyFamilyId"
+              >{{ familyId }} 📋</button>
+              <span
+                v-if="copiedFamilyId"
+                class="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap"
+              >Copied!</span>
+            </span>
           </div>
         </div>
 
