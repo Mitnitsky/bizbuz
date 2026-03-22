@@ -20,11 +20,11 @@ const totalAmount = computed(() =>
 <template>
   <div
     v-if="count > 0"
-    class="bg-amber-50 dark:bg-amber-900/20 rounded-xl shadow p-5 cursor-pointer hover:shadow-md transition-shadow"
+    class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 cursor-pointer hover:shadow-md transition-shadow"
     @click="router.push('/spendings')"
   >
-    <h3 class="text-sm font-medium text-amber-700 dark:text-amber-300 mb-1">{{ t('home.uncategorized') }}</h3>
-    <div class="text-2xl font-bold text-amber-800 dark:text-amber-100">{{ count }}</div>
-    <p class="text-sm text-amber-600 dark:text-amber-400 mt-1">{{ formatCurrency(totalAmount) }} {{ t('home.uncategorizedDesc') }}</p>
+    <h3 class="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1">{{ t('home.uncategorized') }}</h3>
+    <div class="text-2xl font-bold text-orange-700 dark:text-orange-300">{{ count }}</div>
+    <p class="text-sm text-orange-500 dark:text-orange-400/80 mt-1">{{ formatCurrency(totalAmount) }} {{ t('home.uncategorizedDesc') }}</p>
   </div>
 </template>

@@ -21,7 +21,7 @@ import UncategorizedTile from '@/components/dashboard/UncategorizedTile.vue'
 const { t } = useI18n()
 const { icon } = useIcons()
 
-const ALL_TILES = ['cycle_spend', 'income', 'uncategorized', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+const ALL_TILES = ['uncategorized', 'cycle_spend', 'income', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
 const ALWAYS_VISIBLE = ['cycle_spend']
 
 const TILE_LABELS: Record<string, string> = {
