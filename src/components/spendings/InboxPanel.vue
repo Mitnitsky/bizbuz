@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, provide } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, provide } from 'vue'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
@@ -41,6 +41,19 @@ const dragEnterCount = ref(0)
 const selectionMode = ref(false)
 const selectedIds = ref(new Set<string>())
 
+// Auto-exit selection mode when all selected items leave the inbox
+watch(() => txnStore.inboxTransactions, (inbox) => {
+  if (!selectionMode.value || selectedIds.value.size === 0) return
+  const inboxIds = new Set(inbox.map(t => t.id))
+  const remaining = new Set([...selectedIds.value].filter(id => inboxIds.has(id)))
+  if (remaining.size === 0) {
+    selectionMode.value = false
+    selectedIds.value = new Set()
+  } else if (remaining.size !== selectedIds.value.size) {
+    selectedIds.value = remaining
+  }
+})
+
 provide('inboxSelectionMode', selectionMode)
 provide('inboxSelectedIds', selectedIds)
 
@@ -52,6 +65,7 @@ function toggleSelection(id: string) {
   if (s.size === 0) selectionMode.value = false
 }
 provide('toggleInboxSelection', toggleSelection)
+provide('exitInboxSelection', exitSelectionMode)
 
 function selectAll() {
   selectedIds.value = new Set(inboxTransactions.value.map(t => t.id))

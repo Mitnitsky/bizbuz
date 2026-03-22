@@ -26,6 +26,7 @@ const prefsStore = usePreferencesStore()
 const { icon } = useIcons()
 
 const allCategoriesExpanded = inject<Ref<boolean>>('allCategoriesExpanded', ref(true))
+const exitInboxSelection = inject<() => void>('exitInboxSelection', () => {})
 const isExpanded = ref(true)
 const showAll = ref(false)
 const isDragOver = ref(false)
@@ -118,6 +119,7 @@ async function onDrop(e: DragEvent) {
     for (const id of ids) {
       await categorizeTransaction(familyId, id, props.category)
     }
+    exitInboxSelection()
     return
   }
 
