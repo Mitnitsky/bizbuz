@@ -309,7 +309,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           ghost-class="dragging-ghost"
           chosen-class="dragging-chosen"
           drag-class="dragging-drag"
-          class="columns-1 gap-2 min-[1000px]:columns-2 min-[1600px]:columns-3 [&>*]:mb-2 [&>*]:break-inside-avoid"
+          class="-mt-2 columns-1 min-[1000px]:columns-2 min-[1600px]:columns-3 [&>*]:mt-2 [&>*]:break-inside-avoid"
           @end="onCategoryReorder"
         >
           <template #item="{ element }">
