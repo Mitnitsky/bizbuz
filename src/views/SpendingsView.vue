@@ -30,13 +30,23 @@ const uiStore = useUiStore()
 
 // --- Sort mode ---
 const SORT_MODE_KEY = 'bizbuz:categorySortMode'
+const SORT_DIR_KEY = 'bizbuz:categorySortDir'
 const sortMode = ref<CategorySortMode>(
   (localStorage.getItem(SORT_MODE_KEY) as CategorySortMode) || 'custom'
 )
+const sortDir = ref<'asc' | 'desc'>(
+  (localStorage.getItem(SORT_DIR_KEY) as 'asc' | 'desc') || 'desc'
+)
 
 function setSortMode(mode: CategorySortMode) {
-  sortMode.value = mode
-  localStorage.setItem(SORT_MODE_KEY, mode)
+  if (sortMode.value === mode) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortMode.value = mode
+    sortDir.value = mode === 'name' ? 'asc' : 'desc'
+  }
+  localStorage.setItem(SORT_MODE_KEY, sortMode.value)
+  localStorage.setItem(SORT_DIR_KEY, sortDir.value)
 }
 
 // --- View mode (cards vs list) ---
@@ -147,18 +157,24 @@ watchEffect(() => {
   const locale = prefsStore.locale
   const overrides = familyStore.familySettings.categoryNameOverrides
   const pinned = pinnedCategories.value
+  const dir = sortDir.value
 
   let sorted: string[]
 
   switch (sortMode.value) {
     case 'spending':
-      sorted = [...allCats].sort((a, b) => categorySpending(b) - categorySpending(a))
+      sorted = [...allCats].sort((a, b) =>
+        dir === 'desc'
+          ? categorySpending(b) - categorySpending(a)
+          : categorySpending(a) - categorySpending(b)
+      )
       break
     case 'name':
       sorted = [...allCats].sort((a, b) => {
         const nameA = categoryDisplayName(a, locale, overrides)
         const nameB = categoryDisplayName(b, locale, overrides)
-        return nameA.localeCompare(nameB, locale === 'he' ? 'he' : 'en')
+        const cmp = nameA.localeCompare(nameB, locale === 'he' ? 'he' : 'en')
+        return dir === 'asc' ? cmp : -cmp
       })
       break
     case 'custom':
@@ -171,6 +187,7 @@ watchEffect(() => {
       for (const cat of allCats) {
         if (!sorted.includes(cat)) sorted.push(cat)
       }
+      if (dir === 'asc') sorted.reverse()
       break
     }
   }
@@ -240,26 +257,26 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
       <!-- Sort mode toggle -->
       <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-xs font-medium">
         <button
-          class="px-2.5 py-1.5 transition-colors"
+          class="px-2.5 py-1.5 transition-colors flex items-center gap-1"
           :class="sortMode === 'spending'
             ? 'bg-purple-600 text-white'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
           @click="setSortMode('spending')"
-        >{{ t('spendings.sortBySpending') }}</button>
+        >{{ t('spendings.sortBySpending') }}<span v-if="sortMode === 'spending'" class="text-[10px]">{{ sortDir === 'desc' ? '▼' : '▲' }}</span></button>
         <button
-          class="px-2.5 py-1.5 border-x border-gray-300 dark:border-gray-600 transition-colors"
+          class="px-2.5 py-1.5 border-x border-gray-300 dark:border-gray-600 transition-colors flex items-center gap-1"
           :class="sortMode === 'name'
             ? 'bg-purple-600 text-white'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
           @click="setSortMode('name')"
-        >{{ t('spendings.sortByName') }}</button>
+        >{{ t('spendings.sortByName') }}<span v-if="sortMode === 'name'" class="text-[10px]">{{ sortDir === 'desc' ? '▼' : '▲' }}</span></button>
         <button
-          class="px-2.5 py-1.5 transition-colors"
+          class="px-2.5 py-1.5 transition-colors flex items-center gap-1"
           :class="sortMode === 'custom'
             ? 'bg-purple-600 text-white'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
           @click="setSortMode('custom')"
-        >{{ t('spendings.sortCustom') }}</button>
+        >{{ t('spendings.sortCustom') }}<span v-if="sortMode === 'custom'" class="text-[10px]">{{ sortDir === 'desc' ? '▼' : '▲' }}</span></button>
       </div>
       <button
         class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
