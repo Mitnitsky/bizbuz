@@ -27,6 +27,7 @@ export interface Transaction {
   userLocked: boolean
   isSplit: boolean
   hiddenFromUi: boolean
+  isNew?: boolean
   memo?: string
   categoryHint?: string
   account?: string

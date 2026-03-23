@@ -67,6 +67,7 @@ export function transactionFromFirestore(docSnap: QueryDocumentSnapshot<Document
     chargedCurrency: d.chargedCurrency ?? 'ILS',
     hash: d.hash,
     identifier: d.identifier,
+    isNew: d.is_new ?? false,
   }
 }
 

@@ -27,6 +27,7 @@ export default {
     selectAll: 'Select all',
     selectNone: 'Deselect all',
     selected: 'selected',
+    all: 'All',
   },
   home: {
     cycleSpending: 'Cycle Expenses',

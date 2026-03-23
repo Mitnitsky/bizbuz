@@ -81,26 +81,33 @@ export const useTransactionsStore = defineStore('transactions', () => {
     return [...seen.values()].reduce((sum, t) => sum + t.chargedAmount, 0)
   })
 
-  // Descriptions seen only in the current cycle, never in prior history
-  const newDescriptions = computed(() => {
+  // Descriptions seen only in the current cycle, never in prior history → "unique"
+  const uniqueDescriptions = computed(() => {
     const cycleIds = new Set(cycleTransactions.value.map(t => t.id))
     const historicalDescs = new Set(
       visibleTransactions.value
         .filter(t => !cycleIds.has(t.id))
         .map(t => (t.description || '').trim().toLowerCase())
     )
-    const newDescs = new Set<string>()
+    const uDescs = new Set<string>()
     for (const t of cycleTransactions.value) {
       const desc = (t.description || '').trim().toLowerCase()
       if (desc && !historicalDescs.has(desc)) {
-        newDescs.add(desc)
+        uDescs.add(desc)
       }
     }
-    return newDescs
+    return uDescs
   })
 
+  // 🦄 Unique = description never seen before + still uncategorized
+  function isUniqueTransaction(txn: Transaction): boolean {
+    return txn.status === 'pending_categorization' &&
+      uniqueDescriptions.value.has((txn.description || '').trim().toLowerCase())
+  }
+
+  // NEW = from latest ingestion (stored in Firestore)
   function isNewTransaction(txn: Transaction): boolean {
-    return newDescriptions.value.has((txn.description || '').trim().toLowerCase())
+    return txn.isNew === true
   }
 
   function bindTransactions(familyId: string) {
@@ -126,6 +133,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
     cycleSpend,
     cycleIncome,
     isNewTransaction,
+    isUniqueTransaction,
     bindTransactions,
     unbind,
   }

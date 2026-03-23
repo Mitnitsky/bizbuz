@@ -202,8 +202,18 @@ async function rerunRules() {
   setTimeout(() => { rerunResult.value = null }, 3000)
 }
 
+const inboxFilter = ref<'all' | 'unique' | 'new'>('all')
+
 const inboxTransactions = computed(() => {
-  const txns = [...txnStore.inboxTransactions]
+  let txns = [...txnStore.inboxTransactions]
+
+  // Apply filter
+  if (inboxFilter.value === 'unique') {
+    txns = txns.filter(t => txnStore.isUniqueTransaction(t))
+  } else if (inboxFilter.value === 'new') {
+    txns = txns.filter(t => txnStore.isNewTransaction(t))
+  }
+
   const flip = inboxSortDir.value === 'asc' ? 1 : -1
   switch (inboxSort.value) {
     case 'name':
@@ -313,6 +323,30 @@ function onLeave(el: Element, done: () => void) {
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             @click="inboxSort === 'amount' ? (inboxSortDir = inboxSortDir === 'desc' ? 'asc' : 'desc') : (inboxSort = 'amount', inboxSortDir = 'desc')"
           >{{ t('spendings.amount') }}<span v-if="inboxSort === 'amount'" class="text-[10px]">{{ inboxSortDir === 'desc' ? '▼' : '▲' }}</span></button>
+        </div>
+        <!-- Filter pills -->
+        <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-xs font-medium">
+          <button
+            class="px-2 py-1 transition-colors"
+            :class="inboxFilter === 'all'
+              ? 'bg-purple-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            @click="inboxFilter = 'all'"
+          >{{ t('common.all') }}</button>
+          <button
+            class="px-2 py-1 border-x border-gray-300 dark:border-gray-600 transition-colors"
+            :class="inboxFilter === 'unique'
+              ? 'bg-violet-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            @click="inboxFilter = inboxFilter === 'unique' ? 'all' : 'unique'"
+          >🦄</button>
+          <button
+            class="px-2 py-1 transition-colors"
+            :class="inboxFilter === 'new'
+              ? 'bg-emerald-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            @click="inboxFilter = inboxFilter === 'new' ? 'all' : 'new'"
+          >NEW</button>
         </div>
         <button
           v-if="inboxCount > 0"

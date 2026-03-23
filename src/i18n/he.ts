@@ -27,6 +27,7 @@ export default {
     selectAll: 'בחר הכל',
     selectNone: 'בטל בחירה',
     selected: 'נבחרו',
+    all: 'הכל',
   },
   home: {
     cycleSpending: 'הוצאות בתקופה',

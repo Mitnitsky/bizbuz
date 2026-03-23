@@ -1,6 +1,5 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import {evaluateRules} from "./rules-engine";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -70,15 +69,21 @@ export const ingest = functions.https.onRequest(async (req, res) => {
   const txnCol = familyRef.collection("transactions");
   const dlqCol = familyRef.collection("ingestion_errors");
 
-  // Load family-scoped rules
-  const rulesSnapshot = await familyRef.collection("rules").get();
-  const rules = rulesSnapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
-
   // Load payment method → owner mapping
   const settingsSnap = await familyRef
     .collection("family_settings").doc("default").get();
   const paymentMethodOwners: Record<string, string> =
     settingsSnap.exists ? (settingsSnap.data()?.payment_method_owners ?? {}) : {};
+
+  // Clear is_new flag on all previously-new transactions
+  const prevNewSnap = await txnCol.where("is_new", "==", true).get();
+  if (!prevNewSnap.empty) {
+    const clearBatch = db.batch();
+    for (const doc of prevNewSnap.docs) {
+      clearBatch.update(doc.ref, {is_new: false});
+    }
+    await clearBatch.commit();
+  }
 
   const results = {
     processed: 0,
@@ -156,8 +161,8 @@ export const ingest = functions.https.onRequest(async (req, res) => {
         // hidden_from_ui docs fall through — they get overwritten below
       }
 
-      // Run rules engine
-      const ruleResult = evaluateRules(txn as unknown as Record<string, unknown>, rules);
+      // Run rules engine — disabled: all transactions go to inbox for manual review
+      // const ruleResult = evaluateRules(txn as unknown as Record<string, unknown>, rules);
 
       // Resolve owner from payment method mapping (account is more specific, check first)
       const resolvedOwner =
@@ -177,6 +182,7 @@ export const ingest = functions.https.onRequest(async (req, res) => {
         is_split: false,
         hidden_from_ui: false,
         last_ingested: admin.firestore.FieldValue.serverTimestamp(),
+        is_new: true,
       };
 
       if (txn.installments) {
@@ -207,17 +213,10 @@ export const ingest = functions.https.onRequest(async (req, res) => {
         docData.identifier = txn.identifier;
       }
 
-      // If user_locked, skip overwriting user-editable fields
+      // All transactions go to inbox — user applies rules manually
       if (existingDoc.exists && existingDoc.data()?.user_locked === true) {
         results.skipped_locked++;
         continue;
-      } else if (ruleResult) {
-        docData.category = ruleResult.category;
-        docData.override_description = ruleResult.overrideDescription;
-        docData.applied_rule_id = ruleResult.ruleId;
-        docData.status = "auto_categorized";
-        docData.owner_tag = resolvedOwner;
-        docData.user_locked = false;
       } else {
         docData.status = "pending_categorization";
         docData.owner_tag = resolvedOwner;
