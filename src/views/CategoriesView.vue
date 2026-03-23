@@ -11,7 +11,6 @@ import {
   DEFAULT_CATEGORIES,
   getEffectiveCategories,
   categoryDisplayName,
-  isSystemCategory,
 } from '@/composables/useCategories'
 import { useConfirm } from '@/composables/useConfirm'
 import type { CategoryDef, Rule } from '@/types'
@@ -123,12 +122,11 @@ async function saveRename() {
 // --- Delete ---
 async function deleteCategory(cat: CategoryDef) {
   if (!familyId.value) return
-  const txnCount = txnStore.allTransactions.filter(t => t.category === cat.id).length
+  const txnCount = txnStore.transactions.filter((t: { category: string }) => t.category === cat.id).length
   const ruleCount = rules.value.filter(r => r.actionCategory === cat.id).length
 
   const ok = await confirm(
-    t('categories.deleteConfirm', { name: cat.name }),
-    t('categories.deleteWarning', { txnCount, ruleCount }),
+    `${t('categories.deleteConfirm', { name: cat.name })}\n${t('categories.deleteWarning', { txnCount, ruleCount })}`,
   )
   if (!ok) return
 
