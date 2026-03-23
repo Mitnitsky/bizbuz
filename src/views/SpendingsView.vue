@@ -95,6 +95,12 @@ provide('allCategoriesExpanded', allCategoriesExpanded)
 
 function toggleExpandAll() {
   allCategoriesExpanded.value = !allCategoriesExpanded.value
+  // Sync list view expanded groups
+  if (allCategoriesExpanded.value) {
+    expandedGroups.value = new Set(categoryItems.value.map(i => i.key))
+  } else {
+    expandedGroups.value = new Set()
+  }
 }
 
 // --- Owner-filtered transactions (local to this page) ---
@@ -365,7 +371,8 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
             >
               <!-- Group header -->
               <button
-                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                type="button"
+                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                 @click="toggleGroup(item.key)"
                 @dragover.prevent
                 @dragenter="($event: DragEvent) => { if ($event.dataTransfer?.types.includes('text/x-transaction-id')) ($event.currentTarget as HTMLElement).classList.add('bg-purple-50', 'dark:bg-purple-900/20') }"
