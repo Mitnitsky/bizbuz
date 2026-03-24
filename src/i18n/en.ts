@@ -90,6 +90,7 @@ export default {
     mortgages: 'Mortgages',
     loan: 'Loan',
     mortgage: 'Mortgage',
+    mortgageAdvanced: 'Mortgage (Tracks)',
     paid: 'Paid',
     remaining: 'Remaining',
     totalPrefix: 'Total: {amount}',

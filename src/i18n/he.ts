@@ -90,6 +90,7 @@ export default {
     mortgages: 'משכנתאות',
     loan: 'הלוואה',
     mortgage: 'משכנתא',
+    mortgageAdvanced: 'משכנתא (מסלולים)',
     paid: 'שולם',
     remaining: 'נותר',
     totalPrefix: 'סה"כ: {amount}',

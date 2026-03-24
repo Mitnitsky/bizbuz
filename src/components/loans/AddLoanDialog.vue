@@ -23,6 +23,7 @@ const emit = defineEmits<{
 
 const isEdit = ref(false)
 const dialogType = ref<LoanType>('loan')
+const dialogMode = ref<'loan' | 'mortgage' | 'mortgageAdvanced'>('loan')
 const name = ref('')
 const principal = ref('')
 const remaining = ref('')
@@ -30,8 +31,8 @@ const endDate = ref('')
 const saving = ref(false)
 const error = ref('')
 
-const hasTracks = computed(() => tracks.value.length > 0)
-const isMortgage = computed(() => isEdit.value ? (props.loan?.loanType === 'mortgage') : (dialogType.value === 'mortgage'))
+const isAdvanced = computed(() => dialogMode.value === 'mortgageAdvanced')
+const isMortgage = computed(() => dialogMode.value === 'mortgage' || dialogMode.value === 'mortgageAdvanced')
 
 const trackerType = ref<TrackerType | null>(null)
 const trackerDate = ref('')
@@ -126,6 +127,9 @@ watch(() => props.open, (val) => {
   if (props.loan) {
     isEdit.value = true
     dialogType.value = props.loan.loanType
+    dialogMode.value = props.loan.loanType === 'mortgage'
+      ? (props.loan.tracks && props.loan.tracks.length > 0 ? 'mortgageAdvanced' : 'mortgage')
+      : 'loan'
     name.value = props.loan.name
     principal.value = String(props.loan.principal)
     remaining.value = String(props.loan.remaining)
@@ -137,6 +141,7 @@ watch(() => props.open, (val) => {
   } else {
     isEdit.value = false
     dialogType.value = props.defaultType ?? 'loan'
+    dialogMode.value = props.defaultType === 'mortgage' ? 'mortgage' : 'loan'
     name.value = ''
     principal.value = ''
     remaining.value = ''
@@ -148,6 +153,17 @@ watch(() => props.open, (val) => {
   }
   error.value = ''
 })
+
+function setMode(mode: 'loan' | 'mortgage' | 'mortgageAdvanced') {
+  dialogMode.value = mode
+  dialogType.value = mode === 'loan' ? 'loan' : 'mortgage'
+  if (mode === 'mortgageAdvanced' && tracks.value.length === 0) {
+    addTrack()
+  }
+  if (mode !== 'mortgageAdvanced') {
+    tracks.value = []
+  }
+}
 
 async function handleSave() {
   error.value = ''
@@ -226,20 +242,28 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
         <div v-if="!isEdit" class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1 mb-4 shrink-0">
           <button
             type="button"
-            class="flex-1 py-1.5 text-sm font-medium rounded-md transition-colors"
-            :class="dialogType === 'loan'
+            class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors"
+            :class="dialogMode === 'loan'
               ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400'"
-            @click="dialogType = 'loan'"
+            @click="setMode('loan')"
           >{{ t('loans.loan') }}</button>
           <button
             type="button"
-            class="flex-1 py-1.5 text-sm font-medium rounded-md transition-colors"
-            :class="dialogType === 'mortgage'
+            class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors"
+            :class="dialogMode === 'mortgage'
               ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400'"
-            @click="dialogType = 'mortgage'"
+            @click="setMode('mortgage')"
           >{{ t('loans.mortgage') }}</button>
+          <button
+            type="button"
+            class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors"
+            :class="dialogMode === 'mortgageAdvanced'
+              ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400'"
+            @click="setMode('mortgageAdvanced')"
+          >{{ t('loans.mortgageAdvanced') }}</button>
         </div>
 
         <div class="overflow-y-auto flex-1" style="max-height: 60vh;">
@@ -252,7 +276,7 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
             />
           </div>
 
-          <template v-if="!hasTracks">
+          <template v-if="!isAdvanced">
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.originalAmountIls') }} *</label>
               <input
@@ -284,7 +308,7 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
           </template>
 
           <!-- Mortgage Tracks Section -->
-          <div v-if="isMortgage" class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+          <div v-if="isAdvanced" class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
             <div class="flex items-center justify-between mb-3">
               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                 <span>📊</span>
