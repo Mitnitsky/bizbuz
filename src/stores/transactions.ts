@@ -81,6 +81,38 @@ export const useTransactionsStore = defineStore('transactions', () => {
     return [...seen.values()].reduce((sum, t) => sum + t.chargedAmount, 0)
   })
 
+  // Deduped income transactions (earliest per description, extended window)
+  const cycleIncomeTransactions = computed(() => {
+    const familyStore = useFamilyStore()
+    const ui = useUiStore()
+    const today = startOfDay(new Date())
+    const { incomeAnchorDay, incomeAnchorGraceDays, cycleStartDay } = familyStore.familySettings
+    const range = computeCycleRange(today, cycleStartDay, ui.cycleOffset)
+
+    let incomeTxns: typeof visibleTransactions.value
+
+    if (incomeAnchorDay === null && incomeAnchorGraceDays === 0) {
+      incomeTxns = cycleTransactions.value.filter((t) => t.chargedAmount > 0)
+    } else {
+      const incomeWin = computeIncomeWindow(range.start, incomeAnchorDay, incomeAnchorGraceDays)
+      incomeTxns = visibleTransactions.value.filter((t) => {
+        if (t.chargedAmount <= 0) return false
+        const d = t.date
+        return (d >= range.start && d <= range.end) || (d >= incomeWin.start && d <= incomeWin.end)
+      })
+    }
+
+    const seen = new Map<string, typeof incomeTxns[0]>()
+    for (const t of incomeTxns) {
+      const key = (t.description || '').trim().toLowerCase()
+      const existing = seen.get(key)
+      if (!existing || t.date < existing.date) {
+        seen.set(key, t)
+      }
+    }
+    return [...seen.values()]
+  })
+
   // Descriptions that appear in already-categorized transactions → "known"
   const knownDescriptions = computed(() => {
     return new Set(
@@ -124,6 +156,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
     inboxCount,
     cycleSpend,
     cycleIncome,
+    cycleIncomeTransactions,
     isNewTransaction,
     isUniqueTransaction,
     bindTransactions,

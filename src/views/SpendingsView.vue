@@ -7,7 +7,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
-import { TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories, isSharedCategory } from '@/composables/useCategories'
+import { TRANSFER_CATEGORY, INCOME_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories, isSharedCategory } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { updateCategoryOrder, updateUserPreferences } from '@/services/firestore'
 import draggable from 'vuedraggable'
@@ -140,9 +140,16 @@ const categorizedTransactions = computed(() => {
 const transactionsByCategory = computed(() => {
   const map = new Map<string, Transaction[]>()
   for (const t of categorizedTransactions.value) {
+    // Skip income — we'll use the deduped list below
+    if (t.category === INCOME_CATEGORY) continue
     const cat = t.category || DEFAULT_CATEGORY
     if (!map.has(cat)) map.set(cat, [])
     map.get(cat)!.push(t)
+  }
+  // Use deduped income transactions (earliest per description, extended window)
+  const incomeTxns = txnStore.cycleIncomeTransactions
+  if (incomeTxns.length > 0) {
+    map.set(INCOME_CATEGORY, [...incomeTxns])
   }
   return map
 })
