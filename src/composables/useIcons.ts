@@ -5,7 +5,7 @@ import {
   Home as LHome, ClipboardList as LClipboardList, RefreshCw as LRefreshCw,
   PiggyBank as LPiggyBank, TrendingUp as LTrendingUp, Landmark as LLandmark,
   BarChart3 as LBarChart3, Settings as LSettings, MoreHorizontal as LMoreHorizontal,
-  Menu as LMenu, Loader2 as LLoader2, Coins as LCoins, Bot as LBot,
+  Menu as LMenu, Loader2 as LLoader2, Coins as LCoins, Sparkles as LSparkles,
   GripVertical as LGripVertical, Info as LInfo, ChevronDown as LChevronDown,
   ChevronUp as LChevronUp, ChevronLeft as LChevronLeft, ChevronRight as LChevronRight,
   Lock as LLock, Unlock as LUnlock, Trash2 as LTrash2, Split as LSplit,
@@ -17,7 +17,7 @@ import {
 import {
   PhHouse, PhClipboardText, PhArrowsClockwise, PhPiggyBank,
   PhTrendUp, PhBank, PhChartBar, PhGear, PhDotsThree,
-  PhList, PhSpinnerGap, PhCoins, PhRobot,
+  PhList, PhSpinnerGap, PhCoins, PhSparkle,
   PhDotsSixVertical, PhInfo, PhCaretDown, PhCaretUp,
   PhCaretLeft, PhCaretRight, PhLock, PhLockOpen,
   PhTrash, PhScissors, PhBookOpen, PhPlus, PhSplitVertical,
@@ -28,7 +28,7 @@ import {
 import {
   IconHome, IconClipboardList, IconRefresh, IconPigMoney,
   IconTrendingUp, IconBuildingBank, IconChartBar, IconSettings,
-  IconDots, IconMenu2, IconLoader2, IconCoins, IconRobot,
+  IconDots, IconMenu2, IconLoader2, IconCoins, IconSparkles,
   IconGripVertical, IconInfoCircle, IconChevronDown, IconChevronUp,
   IconChevronLeft, IconChevronRight, IconLock, IconLockOpen,
   IconTrash, IconScissors, IconBook, IconPlus, IconArrowsSplit2,
@@ -39,7 +39,7 @@ export type IconSetName = 'lucide' | 'phosphor' | 'tabler'
 export type AppIconName =
   | 'home' | 'spendings' | 'installments' | 'savings' | 'investments'
   | 'loans' | 'statistics' | 'settings' | 'more' | 'menu' | 'loader'
-  | 'coins' | 'bot' | 'grip' | 'info' | 'chevronDown' | 'chevronUp'
+  | 'coins' | 'sparkles' | 'grip' | 'info' | 'chevronDown' | 'chevronUp'
   | 'chevronLeft' | 'chevronRight' | 'lock' | 'unlock' | 'trash'
   | 'split' | 'rules' | 'plus' | 'scissors' | 'inbox' | 'pin' | 'edit'
 
@@ -58,7 +58,7 @@ const lucideIcons: IconMap = {
   menu: markRaw(LMenu),
   loader: markRaw(LLoader2),
   coins: markRaw(LCoins),
-  bot: markRaw(LBot),
+  sparkles: markRaw(LSparkles),
   grip: markRaw(LGripVertical),
   info: markRaw(LInfo),
   chevronDown: markRaw(LChevronDown),
@@ -90,7 +90,7 @@ const phosphorIcons: IconMap = {
   menu: markRaw(PhList),
   loader: markRaw(PhSpinnerGap),
   coins: markRaw(PhCoins),
-  bot: markRaw(PhRobot),
+  sparkles: markRaw(PhSparkle),
   grip: markRaw(PhDotsSixVertical),
   info: markRaw(PhInfo),
   chevronDown: markRaw(PhCaretDown),
@@ -122,7 +122,7 @@ const tablerIcons: IconMap = {
   menu: markRaw(IconMenu2),
   loader: markRaw(IconLoader2),
   coins: markRaw(IconCoins),
-  bot: markRaw(IconRobot),
+  sparkles: markRaw(IconSparkles),
   grip: markRaw(IconGripVertical),
   info: markRaw(IconInfoCircle),
   chevronDown: markRaw(IconChevronDown),

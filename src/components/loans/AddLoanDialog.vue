@@ -222,8 +222,8 @@ async function handleDelete() {
   emit('close')
 }
 
-const inputClass = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2'
-const inputClassSm = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2.5 py-1.5 text-sm'
+const inputClass = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2'
+const inputClassSm = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2.5 py-1.5 text-sm'
 const pillActive = 'bg-purple-600 text-white border-purple-600'
 const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
 </script>
@@ -232,7 +232,7 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 flex flex-col" style="max-height: 90vh;">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 shrink-0">{{
+        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4 shrink-0">{{
           isEdit
             ? (isMortgage ? t('loans.editMortgage') : t('loans.editLoan'))
             : t('loans.addLoanMortgage')
@@ -409,7 +409,7 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
                 <!-- Variable interval -->
                 <div v-if="track.rateType === 'variable'" class="flex items-center gap-2">
                   <label class="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ t('loans.variableInterval') }}</label>
-                  <input v-model="track.variableIntervalYears" type="number" min="1" class="w-16 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1.5 text-sm" />
+                  <input v-model="track.variableIntervalYears" type="number" min="1" class="w-16 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2 py-1.5 text-sm" />
                   <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('loans.years') }}</span>
                 </div>
 
@@ -462,10 +462,10 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
               >{{ t('tracker.interval') }}</button>
             </div>
             <div v-if="trackerType === 'once'" class="mb-2">
-              <input v-model="trackerDate" type="date" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm" />
+              <input v-model="trackerDate" type="date" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm" />
             </div>
             <div v-if="trackerType === 'interval'" class="flex items-center gap-2 mb-2">
-              <input v-model.number="trackerIntervalDays" type="number" min="1" class="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm" />
+              <input v-model.number="trackerIntervalDays" type="number" min="1" class="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm" />
               <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('tracker.days') }}</span>
             </div>
           </div>

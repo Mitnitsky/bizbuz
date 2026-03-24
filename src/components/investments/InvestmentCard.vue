@@ -59,7 +59,7 @@ const trackerColor = computed(() => {
   >
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
-        <span class="text-lg font-bold text-gray-900 dark:text-white">{{ investment.name }}</span>
+        <span class="text-lg font-bold text-gray-900 dark:text-gray-200">{{ investment.name }}</span>
         <component :is="icon('investments')" class="w-4 h-4 text-green-500" />
       </div>
       <span
@@ -87,7 +87,7 @@ const trackerColor = computed(() => {
       </div>
       <div class="text-right">
         <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('investments.currentValue') }}</div>
-        <div class="text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(investment.currentValue) }}</div>
+        <div class="text-sm font-bold text-gray-900 dark:text-gray-200">{{ formatCurrency(investment.currentValue) }}</div>
       </div>
     </div>
   </div>

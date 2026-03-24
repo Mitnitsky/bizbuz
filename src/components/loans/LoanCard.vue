@@ -104,7 +104,7 @@ const sortedTracks = computed(() => {
     @click="emit('edit', loan)"
   >
     <div class="flex items-center gap-2 mb-2">
-      <span class="text-lg font-bold text-gray-900 dark:text-white">{{ loan.name }}</span>
+      <span class="text-lg font-bold text-gray-900 dark:text-gray-200">{{ loan.name }}</span>
       <component :is="icon('loans')" class="w-4 h-4 text-gray-500" />
     </div>
 
@@ -139,7 +139,7 @@ const sortedTracks = computed(() => {
       </div>
       <div class="text-center">
         <div class="text-xs text-gray-500 dark:text-gray-400">&nbsp;</div>
-        <div class="font-bold text-gray-900 dark:text-white">{{ paidPct.toFixed(0) }}%</div>
+        <div class="font-bold text-gray-900 dark:text-gray-200">{{ paidPct.toFixed(0) }}%</div>
       </div>
       <div class="text-right">
         <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('loans.remaining') }}</div>

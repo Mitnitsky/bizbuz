@@ -304,25 +304,25 @@ function cycleLabel(day: number): string {
 
 <template>
   <div class="max-w-7xl mx-auto w-full p-4">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ t('nav.settings') }}</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-200 mb-6">{{ t('nav.settings') }}</h1>
 
     <div class="grid grid-cols-1 min-[800px]:grid-cols-3 gap-6">
       <!-- Column 1: Profile -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">{{ t('settings.profile') }}</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-200 mb-1">{{ t('settings.profile') }}</h2>
         <div class="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
 
         <div class="space-y-3 text-sm">
-          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('auth.email') }}</span><span class="text-gray-900 dark:text-white">{{ email }}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.editDisplayName') }}</span><span class="text-gray-900 dark:text-white">{{ displayName }}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.familyName') }}</span><span class="text-gray-900 dark:text-white">{{ familyName }}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Members</span><span class="text-gray-900 dark:text-white">{{ memberCount }}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('home.inviteCode') }}</span><span class="font-mono text-gray-900 dark:text-white">{{ inviteCode }}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('auth.email') }}</span><span class="text-gray-900 dark:text-gray-200">{{ email }}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.editDisplayName') }}</span><span class="text-gray-900 dark:text-gray-200">{{ displayName }}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.familyName') }}</span><span class="text-gray-900 dark:text-gray-200">{{ familyName }}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Members</span><span class="text-gray-900 dark:text-gray-200">{{ memberCount }}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('home.inviteCode') }}</span><span class="font-mono text-gray-900 dark:text-gray-200">{{ inviteCode }}</span></div>
           <div class="flex justify-between items-center">
             <span class="text-gray-500 dark:text-gray-400">Family ID</span>
             <span class="relative">
               <button
-                class="font-mono text-xs text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                class="font-mono text-xs text-gray-900 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 @click="copyFamilyId"
               >{{ familyId }} 📋</button>
               <span
@@ -342,7 +342,7 @@ function cycleLabel(day: number): string {
 
       <!-- Column 2: Family Settings -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">{{ t('settings.familySettings') }}</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-200 mb-1">{{ t('settings.familySettings') }}</h2>
         <div class="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
 
         <div class="space-y-4">
@@ -398,7 +398,7 @@ function cycleLabel(day: number): string {
 
       <!-- Column 3: User Settings -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">{{ t('settings.userSettings') }}</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-200 mb-1">{{ t('settings.userSettings') }}</h2>
         <div class="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
 
         <div class="space-y-5">
@@ -511,8 +511,8 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="editNameOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="editNameOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ t('settings.editDisplayName') }}</h3>
-          <input v-model="editNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 mb-4" />
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">{{ t('settings.editDisplayName') }}</h3>
+          <input v-model="editNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 mb-4" />
           <div class="flex gap-3 justify-end">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="editNameOpen = false">{{ t('common.cancel') }}</button>
             <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveDisplayName">{{ t('common.save') }}</button>
@@ -525,8 +525,8 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="editFamilyNameOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="editFamilyNameOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ t('settings.editFamilyName') }}</h3>
-          <input v-model="editFamilyNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 mb-4" />
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">{{ t('settings.editFamilyName') }}</h3>
+          <input v-model="editFamilyNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 mb-4" />
           <div class="flex gap-3 justify-end">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="editFamilyNameOpen = false">{{ t('common.cancel') }}</button>
             <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveFamilyName">{{ t('common.save') }}</button>
@@ -539,7 +539,7 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="billingCycleOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="billingCycleOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">{{ t('settings.billingCycleStartDay') }}</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-2">{{ t('settings.billingCycleStartDay') }}</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('settings.whichDayCycleStarts') }}</p>
           <div class="space-y-1">
             <button
@@ -558,7 +558,7 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="incomeAnchorOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="incomeAnchorOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">{{ t('settings.incomeAnchor') }}</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-2">{{ t('settings.incomeAnchor') }}</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('settings.incomeAnchorDesc') }}</p>
 
           <div class="space-y-4">
@@ -568,7 +568,7 @@ function cycleLabel(day: number): string {
               <select
                 :value="editAnchorDay ?? ''"
                 @change="editAnchorDay = ($event.target as HTMLSelectElement).value === '' ? null : Number(($event.target as HTMLSelectElement).value)"
-                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm"
               >
                 <option value="">{{ t('settings.incomeAnchorNone') }}</option>
                 <option v-for="d in 28" :key="d" :value="d">{{ cycleLabel(d) }}</option>
@@ -583,7 +583,7 @@ function cycleLabel(day: number): string {
                 type="number"
                 min="0"
                 max="10"
-                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm"
               />
             </div>
           </div>
@@ -600,11 +600,11 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="budgetsOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="budgetsOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ t('settings.categoryBudgets') }}</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">{{ t('settings.categoryBudgets') }}</h3>
           <div class="space-y-2">
             <div v-for="catDef in getEffectiveCategories(familyStore.familySettings.categories)" :key="catDef.id" class="flex items-center gap-3">
               <span class="text-sm text-gray-700 dark:text-gray-300 flex-1 truncate">{{ categoryDisplayName(catDef.id, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
-              <input v-model="tempBudgets[catDef.id]" type="number" step="1" placeholder="₪" class="w-24 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
+              <input v-model="tempBudgets[catDef.id]" type="number" step="1" placeholder="₪" class="w-24 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2 py-1 text-sm" />
             </div>
           </div>
           <div class="flex gap-3 justify-end mt-4">
@@ -619,15 +619,15 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="paymentMethodsOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="paymentMethodsOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-xl p-6 max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ t('settings.paymentMethods') }}</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">{{ t('settings.paymentMethods') }}</h3>
           <div v-if="paymentSources.length === 0" class="text-sm text-gray-500 dark:text-gray-400">{{ t('settings.noPaymentMethods') }}</div>
           <div v-else class="space-y-2">
             <div v-for="src in paymentSources" :key="src" class="flex items-center gap-2">
               <span class="text-xs text-gray-500 dark:text-gray-400 flex-1 truncate font-mono min-w-0">{{ src }}</span>
-              <input v-model="tempPaymentLabels[src]" type="text" :placeholder="t('settings.alias')" class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
+              <input v-model="tempPaymentLabels[src]" type="text" :placeholder="t('settings.alias')" class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2 py-1 text-sm" />
               <select
                 v-model="tempPaymentOwners[src]"
-                class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm"
+                class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2 py-1 text-sm"
               >
                 <option value="shared">{{ familyStore.ownerTagNames.shared ?? t('spendings.shared') }}</option>
                 <option value="userA">{{ familyStore.ownerTagNames.userA ?? 'User A' }}</option>
@@ -647,11 +647,11 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="categoryAliasesOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="categoryAliasesOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Category Name Aliases</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">Category Name Aliases</h3>
           <div class="space-y-2">
             <div v-for="catDef in getEffectiveCategories(familyStore.familySettings.categories)" :key="catDef.id" class="flex items-center gap-3">
               <span class="text-sm text-gray-500 dark:text-gray-400 flex-1 truncate" :title="catDef.id">{{ categoryDisplayName(catDef.id, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
-              <input v-model="tempCategoryOverrides[catDef.id]" type="text" :placeholder="catDef.name" class="w-36 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-sm" />
+              <input v-model="tempCategoryOverrides[catDef.id]" type="text" :placeholder="catDef.name" class="w-36 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2 py-1 text-sm" />
             </div>
           </div>
           <div class="flex gap-3 justify-end mt-4">
@@ -666,8 +666,8 @@ function cycleLabel(day: number): string {
     <Teleport to="body">
       <div v-if="csvDialogOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="csvDialogOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ t('settings.exportCsv') }}</h3>
-          <textarea readonly :value="csvContent" class="w-full h-48 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-xs font-mono"></textarea>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">{{ t('settings.exportCsv') }}</h3>
+          <textarea readonly :value="csvContent" class="w-full h-48 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-xs font-mono"></textarea>
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="csvDialogOpen = false">{{ t('common.close') }}</button>
             <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700" @click="copyCsv">Copy</button>

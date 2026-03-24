@@ -212,10 +212,10 @@ const categoryBarOptions = {
   <div class="max-w-7xl mx-auto w-full px-4 py-6">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('statistics.title') }}</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ t('statistics.title') }}</h1>
       <select
         v-model="selectedYear"
-        class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-1.5 text-sm"
+        class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-1.5 text-sm"
       >
         <option v-for="yr in years" :key="yr" :value="yr">{{ yr }}</option>
       </select>

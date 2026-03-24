@@ -40,12 +40,12 @@ function openEdit(entry: SavingsEntry) {
           <div class="flex items-center gap-3">
             <component :is="icon('savings')" class="w-8 h-8 text-green-500" />
             <div>
-              <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('savings.liquidMoney') }}</h2>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-gray-200">{{ t('savings.liquidMoney') }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('savings.liquidMoneySubtitle') }}</p>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(savingsStore.liquidTotal) }}</div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ formatCurrency(savingsStore.liquidTotal) }}</div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-3">
@@ -78,12 +78,12 @@ function openEdit(entry: SavingsEntry) {
           <div class="flex items-center gap-3">
             <component :is="icon('lock')" class="w-8 h-8 text-purple-500" />
             <div>
-              <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('savings.lockedFunds') }}</h2>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-gray-200">{{ t('savings.lockedFunds') }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('savings.lockedFundsSubtitle') }}</p>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(savingsStore.lockedTotal) }}</div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ formatCurrency(savingsStore.lockedTotal) }}</div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-3">

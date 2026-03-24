@@ -40,7 +40,7 @@ const trackerColor = computed(() => {
   >
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2">
-        <span class="font-medium text-gray-900 dark:text-white truncate">{{ entry.name }}</span>
+        <span class="font-medium text-gray-900 dark:text-gray-200 truncate">{{ entry.name }}</span>
         <span v-if="isStale" class="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 px-1.5 py-0.5 rounded">
           ⚠️ {{ t('savings.notUpdated30Days') }}
         </span>
@@ -58,7 +58,7 @@ const trackerColor = computed(() => {
       >{{ trackerLabel }}</span>
     </div>
     <div class="flex items-center gap-2 ml-4 shrink-0">
-      <span class="font-bold text-gray-900 dark:text-white">{{ formatCurrency(entry.amount) }}</span>
+      <span class="font-bold text-gray-900 dark:text-gray-200">{{ formatCurrency(entry.amount) }}</span>
     </div>
   </div>
 </template>

@@ -61,7 +61,7 @@ function openEdit(item: InvestmentItem) {
 <template>
   <div class="max-w-7xl mx-auto w-full p-4">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('nav.investments') }}</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ t('nav.investments') }}</h1>
       <button
         class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
         @click="editingInvestment = null; addDialogOpen = true"

@@ -112,7 +112,7 @@ async function removeRule(id: string) {
           class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
           @click="router.push('/settings')"
         >←</button>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('settings.categorizationRules') }}</h1>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-200">{{ t('settings.categorizationRules') }}</h1>
         <span class="text-sm text-gray-500 dark:text-gray-400">({{ rules.length }})</span>
       </div>
       <button
@@ -130,13 +130,13 @@ async function removeRule(id: string) {
       <!-- Conditions -->
       <div class="space-y-2 mb-4">
         <div v-for="(cond, i) in editingRule.conditions" :key="i" class="flex flex-wrap items-center gap-2">
-          <select v-model="cond.field" class="w-32 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm">
+          <select v-model="cond.field" class="w-32 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm">
             <option value="description">{{ t('settings.ruleFieldDescription') }}</option>
             <option value="source">{{ t('settings.ruleFieldSource') }}</option>
             <option value="companyId">{{ t('settings.ruleFieldCompany') }}</option>
             <option value="chargedAmount">{{ t('settings.ruleFieldAmount') || 'Amount' }}</option>
           </select>
-          <select v-model="cond.operator" class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm">
+          <select v-model="cond.operator" class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm">
             <option value="contains">{{ t('settings.ruleOpContains') }}</option>
             <option value="equals">{{ t('settings.ruleOpEquals') }}</option>
             <option value="starts_with">{{ t('settings.ruleOpStartsWith') }}</option>
@@ -147,7 +147,7 @@ async function removeRule(id: string) {
           <input
             v-model="cond.value"
             type="text"
-            class="flex-1 min-w-[120px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm"
+            class="flex-1 min-w-[120px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm"
             :placeholder="t('settings.ruleValuePlaceholder')"
           />
           <button
@@ -163,7 +163,7 @@ async function removeRule(id: string) {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <div>
           <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ t('settings.ruleCategory') }}</label>
-          <select v-model="editingRule.actionCategory" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm">
+          <select v-model="editingRule.actionCategory" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm">
             <option v-for="catDef in effectiveCategories" :key="catDef.id" :value="catDef.id">{{ categoryDisplayName(catDef.id, locale, effectiveCategories) }}</option>
           </select>
         </div>
@@ -172,7 +172,7 @@ async function removeRule(id: string) {
           <input
             v-model="editingRule.actionOverrideDescription"
             type="text"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm"
             :placeholder="t('settings.optionalOverride')"
           />
         </div>

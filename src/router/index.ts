@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { auth } from '@/firebase'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -19,13 +18,8 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, _from, next) => {
-  const user = auth.currentUser
-  if (to.meta.requiresAuth !== false && !user) {
-    next('/login')
-  } else {
-    next()
-  }
-})
+// Auth routing is handled by App.vue's appState watcher.
+// No beforeEach guard needed — it causes a login flash on reload
+// because auth.currentUser is null before Firebase resolves.
 
 export default router
