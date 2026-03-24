@@ -88,6 +88,8 @@ export default {
     loansAndMortgages: 'הלוואות ומשכנתאות',
     loans: 'הלוואות',
     mortgages: 'משכנתאות',
+    loan: 'הלוואה',
+    mortgage: 'משכנתא',
     paid: 'שולם',
     remaining: 'נותר',
     totalPrefix: 'סה"כ: {amount}',

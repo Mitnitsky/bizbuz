@@ -22,6 +22,7 @@ const emit = defineEmits<{
 }>()
 
 const isEdit = ref(false)
+const dialogType = ref<LoanType>('loan')
 const name = ref('')
 const principal = ref('')
 const remaining = ref('')
@@ -30,6 +31,7 @@ const saving = ref(false)
 const error = ref('')
 
 const hasTracks = computed(() => tracks.value.length > 0)
+const isMortgage = computed(() => isEdit.value ? (props.loan?.loanType === 'mortgage') : (dialogType.value === 'mortgage'))
 
 const trackerType = ref<TrackerType | null>(null)
 const trackerDate = ref('')
@@ -123,6 +125,7 @@ watch(() => props.open, (val) => {
   if (!val) return
   if (props.loan) {
     isEdit.value = true
+    dialogType.value = props.loan.loanType
     name.value = props.loan.name
     principal.value = String(props.loan.principal)
     remaining.value = String(props.loan.remaining)
@@ -133,6 +136,7 @@ watch(() => props.open, (val) => {
     tracks.value = props.loan.tracks?.map(trackToForm) ?? []
   } else {
     isEdit.value = false
+    dialogType.value = props.defaultType ?? 'loan'
     name.value = ''
     principal.value = ''
     remaining.value = ''
@@ -183,7 +187,7 @@ async function handleSave() {
         trackerType.value === 'interval' ? trackerIntervalDays.value : null,
       )
     } else {
-      const type = props.defaultType ?? 'loan'
+      const type = dialogType.value
       await addLoan(familyId, name.value.trim(), type, p, r, serializedTracks.length > 0 ? null : (endDate.value ? new Date(endDate.value) : null), serializedTracks.length > 0 ? serializedTracks : undefined)
     }
     emit('close')
@@ -214,9 +218,29 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 flex flex-col" style="max-height: 90vh;">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 shrink-0">{{
           isEdit
-            ? (loan?.loanType === 'mortgage' ? t('loans.editMortgage') : t('loans.editLoan'))
-            : (defaultType === 'mortgage' ? t('loans.addMortgage') : t('loans.addLoan'))
+            ? (isMortgage ? t('loans.editMortgage') : t('loans.editLoan'))
+            : t('loans.addLoanMortgage')
         }}</h3>
+
+        <!-- Type tabs (only for new) -->
+        <div v-if="!isEdit" class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1 mb-4 shrink-0">
+          <button
+            type="button"
+            class="flex-1 py-1.5 text-sm font-medium rounded-md transition-colors"
+            :class="dialogType === 'loan'
+              ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400'"
+            @click="dialogType = 'loan'"
+          >{{ t('loans.loan') }}</button>
+          <button
+            type="button"
+            class="flex-1 py-1.5 text-sm font-medium rounded-md transition-colors"
+            :class="dialogType === 'mortgage'
+              ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400'"
+            @click="dialogType = 'mortgage'"
+          >{{ t('loans.mortgage') }}</button>
+        </div>
 
         <div class="overflow-y-auto flex-1" style="max-height: 60vh;">
           <div class="mb-3">
@@ -260,7 +284,7 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
           </template>
 
           <!-- Mortgage Tracks Section -->
-          <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+          <div v-if="isMortgage" class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
             <div class="flex items-center justify-between mb-3">
               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                 <span>📊</span>

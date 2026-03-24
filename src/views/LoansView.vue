@@ -21,12 +21,11 @@ let unsub: Unsubscribe | null = null
 
 const addDialogOpen = ref(false)
 const editingLoan = ref<LoanItem | null>(null)
-const activeTab = ref<LoanType>('loan')
+const addType = ref<LoanType>('loan')
 
 const loans = computed(() => allItems.value.filter((l) => l.loanType === 'loan'))
 const mortgages = computed(() => allItems.value.filter((l) => l.loanType === 'mortgage'))
-const activeItems = computed(() => activeTab.value === 'loan' ? loans.value : mortgages.value)
-const totalRemaining = computed(() => activeItems.value.reduce((s, l) => s + l.remaining, 0))
+const totalRemaining = computed(() => allItems.value.reduce((s, l) => s + l.remaining, 0))
 
 function toDate(val: unknown): Date {
   if (val instanceof Timestamp) return val.toDate()
@@ -62,6 +61,7 @@ onUnmounted(() => { unsub?.() })
 
 function openEdit(item: LoanItem) {
   editingLoan.value = item
+  addType.value = item.loanType
   addDialogOpen.value = true
 }
 
@@ -78,64 +78,57 @@ function openAdd() {
       <button
         class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
         @click="openAdd"
-      >{{ activeTab === 'mortgage' ? t('loans.addMortgage') : t('loans.addLoan') }}</button>
+      >+ {{ t('common.add') }}</button>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1 mb-4">
-      <button
-        class="flex-1 py-2 text-sm font-medium rounded-md transition-colors"
-        :class="activeTab === 'loan'
-          ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm'
-          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
-        @click="activeTab = 'loan'"
-      >
-        {{ t('loans.loans') }}
-        <span v-if="loans.length" class="ml-1 text-xs opacity-70">({{ loans.length }})</span>
-      </button>
-      <button
-        class="flex-1 py-2 text-sm font-medium rounded-md transition-colors"
-        :class="activeTab === 'mortgage'
-          ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow-sm'
-          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
-        @click="activeTab = 'mortgage'"
-      >
-        {{ t('loans.mortgages') }}
-        <span v-if="mortgages.length" class="ml-1 text-xs opacity-70">({{ mortgages.length }})</span>
-      </button>
-    </div>
-
-    <template v-if="activeItems.length > 0">
+    <template v-if="allItems.length > 0">
       <LoanSummary
         :total-remaining="totalRemaining"
-        :loan-count="activeItems.length"
+        :loan-count="allItems.length"
       />
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <LoanCard
-          v-for="item in activeItems"
-          :key="item.id"
-          :loan="item"
-          @edit="openEdit"
-        />
-      </div>
+
+      <!-- Loans section -->
+      <template v-if="loans.length > 0">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ t('loans.loans') }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <LoanCard
+            v-for="item in loans"
+            :key="item.id"
+            :loan="item"
+            @edit="openEdit"
+          />
+        </div>
+      </template>
+
+      <!-- Mortgages section -->
+      <template v-if="mortgages.length > 0">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ t('loans.mortgages') }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <LoanCard
+            v-for="item in mortgages"
+            :key="item.id"
+            :loan="item"
+            @edit="openEdit"
+          />
+        </div>
+      </template>
     </template>
 
     <template v-else>
       <div class="text-center py-16">
-        <p class="text-gray-500 dark:text-gray-400 text-lg">
-          {{ activeTab === 'mortgage' ? t('loans.noMortgages') : t('loans.noLoans') }}
-        </p>
+        <p class="text-gray-500 dark:text-gray-400 text-lg">{{ t('loans.noLoans') }}</p>
+        <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">{{ t('loans.addLoanOrMortgageToTrack') }}</p>
         <button
           class="mt-4 px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
           @click="openAdd"
-        >{{ activeTab === 'mortgage' ? t('loans.addMortgage') : t('loans.addLoan') }}</button>
+        >+ {{ t('common.add') }}</button>
       </div>
     </template>
 
     <AddLoanDialog
       :open="addDialogOpen"
       :loan="editingLoan"
-      :default-type="activeTab"
+      :default-type="addType"
       @close="addDialogOpen = false; editingLoan = null"
     />
   </div>

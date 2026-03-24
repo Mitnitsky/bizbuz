@@ -88,6 +88,8 @@ export default {
     loansAndMortgages: 'Loans & Mortgages',
     loans: 'Loans',
     mortgages: 'Mortgages',
+    loan: 'Loan',
+    mortgage: 'Mortgage',
     paid: 'Paid',
     remaining: 'Remaining',
     totalPrefix: 'Total: {amount}',
