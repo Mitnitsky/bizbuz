@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { addLoan, updateLoan, deleteLoan, updateLoanTracker } from '@/services/firestore'
@@ -28,6 +28,8 @@ const remaining = ref('')
 const endDate = ref('')
 const saving = ref(false)
 const error = ref('')
+
+const hasTracks = computed(() => tracks.value.length > 0)
 
 const trackerType = ref<TrackerType | null>(null)
 const trackerDate = ref('')
@@ -146,14 +148,22 @@ watch(() => props.open, (val) => {
 async function handleSave() {
   error.value = ''
   if (!name.value.trim()) { error.value = t('common.required'); return }
-  const p = parseFloat(principal.value)
-  const r = parseFloat(remaining.value)
-  if (isNaN(p) || isNaN(r)) { error.value = t('common.invalidNumber'); return }
+
+  const serializedTracks = tracks.value.map(trackFromForm)
+
+  let p: number
+  let r: number
+  if (serializedTracks.length > 0) {
+    p = serializedTracks.reduce((s, t) => s + t.amount, 0)
+    r = serializedTracks.reduce((s, t) => s + t.remaining, 0)
+  } else {
+    p = parseFloat(principal.value)
+    r = parseFloat(remaining.value)
+    if (isNaN(p) || isNaN(r)) { error.value = t('common.invalidNumber'); return }
+  }
 
   const familyId = authStore.familyId
   if (!familyId) return
-
-  const serializedTracks = tracks.value.map(trackFromForm)
 
   saving.value = true
   try {
@@ -162,7 +172,7 @@ async function handleSave() {
         name: name.value.trim(),
         principal: p,
         remaining: r,
-        endDate: endDate.value ? new Date(endDate.value) : null,
+        endDate: serializedTracks.length > 0 ? null : (endDate.value ? new Date(endDate.value) : null),
         tracks: serializedTracks,
       })
       await updateLoanTracker(
@@ -174,7 +184,7 @@ async function handleSave() {
       )
     } else {
       const type = props.defaultType ?? 'loan'
-      await addLoan(familyId, name.value.trim(), type, p, r, endDate.value ? new Date(endDate.value) : null, serializedTracks.length > 0 ? serializedTracks : undefined)
+      await addLoan(familyId, name.value.trim(), type, p, r, serializedTracks.length > 0 ? null : (endDate.value ? new Date(endDate.value) : null), serializedTracks.length > 0 ? serializedTracks : undefined)
     }
     emit('close')
   } catch (err) {
@@ -218,34 +228,36 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
             />
           </div>
 
-          <div class="mb-3">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.originalAmountIls') }} *</label>
-            <input
-              v-model="principal"
-              type="number"
-              step="0.01"
-              :class="inputClass"
-            />
-          </div>
+          <template v-if="!hasTracks">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.originalAmountIls') }} *</label>
+              <input
+                v-model="principal"
+                type="number"
+                step="0.01"
+                :class="inputClass"
+              />
+            </div>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.remainingAmountIls') }} *</label>
-            <input
-              v-model="remaining"
-              type="number"
-              step="0.01"
-              :class="inputClass"
-            />
-          </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.remainingAmountIls') }} *</label>
+              <input
+                v-model="remaining"
+                type="number"
+                step="0.01"
+                :class="inputClass"
+              />
+            </div>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.endDate') }}</label>
-            <input
-              v-model="endDate"
-              type="date"
-              :class="inputClass"
-            />
-          </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.endDate') }}</label>
+              <input
+                v-model="endDate"
+                type="date"
+                :class="inputClass"
+              />
+            </div>
+          </template>
 
           <!-- Mortgage Tracks Section -->
           <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
