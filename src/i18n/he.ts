@@ -30,6 +30,8 @@ export default {
     all: 'הכל',
   },
   home: {
+    greeting: 'היי {name} 👋',
+    familyDashboard: 'כספי {family}',
     cycleSpending: 'הוצאות בתקופה',
     budgetRemaining: 'נשאר מתקציב',
     setBudgetsInSettings: 'הגדר תקציבים בהגדרות',

@@ -30,6 +30,8 @@ export default {
     all: 'All',
   },
   home: {
+    greeting: 'Hey {name} 👋',
+    familyDashboard: '{family} Finance',
     cycleSpending: 'Cycle Expenses',
     budgetRemaining: 'Budget Remaining',
     setBudgetsInSettings: 'Set budgets in Settings',

@@ -169,6 +169,12 @@ onUnmounted(() => {
       class="flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 shrink-0"
       :class="sidebarExpanded ? 'w-56' : 'w-16'"
     >
+      <!-- App branding -->
+      <div class="flex items-center gap-2 px-4 pt-4 pb-2">
+        <img src="/icon.svg" alt="BizBuz" class="w-8 h-8" />
+        <span v-if="sidebarExpanded" class="text-lg font-bold text-purple-600 dark:text-purple-400">BizBuz</span>
+      </div>
+
       <button
         @click="sidebarExpanded = !sidebarExpanded"
         class="p-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 self-end"

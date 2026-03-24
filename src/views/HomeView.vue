@@ -125,13 +125,17 @@ function toggleTile(id: string) {
 }
 
 const familyName = computed(() => familyStore.family?.name ?? 'BizBuz')
+const displayName = computed(() => authStore.appUser?.displayName || authStore.appUser?.email?.split('@')[0] || '')
 </script>
 
 <template>
   <div class="max-w-7xl mx-auto w-full px-4 py-6">
     <!-- App Bar -->
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ familyName }}</h1>
+      <div>
+        <p v-if="displayName" class="text-sm text-gray-500 dark:text-gray-400">{{ t('home.greeting', { name: displayName }) }}</p>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('home.familyDashboard', { family: familyName }) }}</h1>
+      </div>
       <button
         class="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
         :title="t('home.configureTiles')"

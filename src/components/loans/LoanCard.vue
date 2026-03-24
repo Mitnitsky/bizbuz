@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
 import { useIcons } from '@/composables/useIcons'
-import { differenceInMonths, differenceInDays } from 'date-fns'
+import { differenceInMonths, differenceInDays, addMonths } from 'date-fns'
 import type { TrackerType, MortgageTrack, LoanType } from '@/types'
 
 const { t } = useI18n()
@@ -69,10 +69,23 @@ function formatTimeLeft(target: Date): string {
 }
 
 const payoffLabel = computed(() => {
-  if (!props.loan.endDate) return null
-  const now = new Date()
-  if (props.loan.endDate <= now) return t('home.overdue')
-  return t('loans.payoffIn', { text: formatTimeLeft(props.loan.endDate) })
+  // If explicit endDate, use it
+  if (props.loan.endDate) {
+    const now = new Date()
+    if (props.loan.endDate <= now) return t('home.overdue')
+    return t('loans.payoffIn', { text: formatTimeLeft(props.loan.endDate) })
+  }
+  // If tracks, derive from longest term
+  if (props.loan.tracks && props.loan.tracks.length > 0) {
+    const maxTermMonths = Math.max(...props.loan.tracks.map(tr => tr.termMonths || 0))
+    if (maxTermMonths > 0) {
+      const estimated = addMonths(props.loan.lastUpdated, maxTermMonths)
+      const now = new Date()
+      if (estimated <= now) return t('home.overdue')
+      return t('loans.payoffIn', { text: formatTimeLeft(estimated) })
+    }
+  }
+  return null
 })
 
 function indexLinkIcon(link: string): string {

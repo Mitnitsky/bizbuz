@@ -8,6 +8,8 @@
   <!-- Shield shape -->
   <path d="M256 16C156 16 56 56 56 56v200c0 140 200 240 200 240s200-100 200-240V56S356 16 256 16z" fill="url(#bg)"/>
   <path d="M256 32C164 32 72 68 72 68v188c0 128 184 222 184 222s184-94 184-222V68S348 32 256 32z" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
-  <!-- ₪ Shekel symbol -->
-  <text x="256" y="310" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="260" fill="white">₪</text>
+  <!-- ₪ Shekel — path-based for rasterization -->
+  <g transform="translate(136,110) scale(6.2)" fill="white">
+    <path d="M8 4h4a2 2 0 0 1 2 2v28a2 2 0 0 1-2 2H8V4zm16 0v32h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4zM16 8v20a4 4 0 0 0 4 4h4V12a4 4 0 0 0-4-4h-4z"/>
+  </g>
 </svg>
