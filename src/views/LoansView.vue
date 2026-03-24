@@ -7,7 +7,6 @@ import { db } from '@/firebase'
 import { extractTrackerFields } from '@/composables/useTracker'
 import { deserializeTracks } from '@/services/firestore'
 import LoanCard from '@/components/loans/LoanCard.vue'
-import LoanSummary from '@/components/loans/LoanSummary.vue'
 import AddLoanDialog from '@/components/loans/AddLoanDialog.vue'
 import type { LoanItem } from '@/components/loans/LoanCard.vue'
 import type { LoanType } from '@/types'
@@ -25,7 +24,6 @@ const addType = ref<LoanType>('loan')
 
 const loans = computed(() => allItems.value.filter((l) => l.loanType === 'loan'))
 const mortgages = computed(() => allItems.value.filter((l) => l.loanType === 'mortgage'))
-const totalRemaining = computed(() => allItems.value.reduce((s, l) => s + l.remaining, 0))
 
 function toDate(val: unknown): Date {
   if (val instanceof Timestamp) return val.toDate()
@@ -82,15 +80,10 @@ function openAdd() {
     </div>
 
     <template v-if="allItems.length > 0">
-      <LoanSummary
-        :total-remaining="totalRemaining"
-        :loan-count="allItems.length"
-      />
-
       <!-- Loans section -->
       <template v-if="loans.length > 0">
         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ t('loans.loans') }}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="space-y-4 mb-6">
           <LoanCard
             v-for="item in loans"
             :key="item.id"
@@ -103,7 +96,7 @@ function openAdd() {
       <!-- Mortgages section -->
       <template v-if="mortgages.length > 0">
         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ t('loans.mortgages') }}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-4">
           <LoanCard
             v-for="item in mortgages"
             :key="item.id"

@@ -78,6 +78,11 @@ const payoffLabel = computed(() => {
 function indexLinkIcon(link: string): string {
   return link === 'cpiLinked' ? '📈' : '📊'
 }
+
+const sortedTracks = computed(() => {
+  if (!props.loan.tracks) return []
+  return [...props.loan.tracks].sort((a, b) => b.remaining - a.remaining)
+})
 </script>
 
 <template>
@@ -130,20 +135,19 @@ function indexLinkIcon(link: string): string {
     </div>
 
     <!-- Tracks -->
-    <div v-if="loan.tracks && loan.tracks.length > 0" class="mt-2 space-y-1">
-      <div class="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-medium mb-1">
-        <span>📊</span>
-        <span>{{ t('loans.nTracks', { n: loan.tracks.length }) }}</span>
-      </div>
-      <div
-        v-for="track in loan.tracks"
-        :key="track.id"
-        class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-2 py-1"
-      >
-        <span class="font-medium text-gray-800 dark:text-gray-200 truncate max-w-[80px]">{{ track.name }}</span>
-        <span class="text-purple-600 dark:text-purple-400">{{ track.interestRate }}%</span>
-        <span>{{ indexLinkIcon(track.indexLink) }}</span>
-        <span class="ml-auto font-medium">{{ formatCurrency(track.remaining) }}</span>
+    <div v-if="loan.tracks && loan.tracks.length > 0" class="mt-3 border-t border-gray-100 dark:border-gray-700 pt-2">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('loans.tracks') }}</div>
+      <div class="space-y-1">
+        <div
+          v-for="track in sortedTracks"
+          :key="track.id"
+          class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-2 py-1"
+        >
+          <span class="font-medium text-gray-800 dark:text-gray-200 truncate max-w-[80px]">{{ track.name }}</span>
+          <span class="text-purple-600 dark:text-purple-400">{{ track.interestRate }}%</span>
+          <span>{{ indexLinkIcon(track.indexLink) }}</span>
+          <span class="ml-auto font-medium">{{ formatCurrency(track.remaining) }}</span>
+        </div>
       </div>
     </div>
 
