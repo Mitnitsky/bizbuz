@@ -2,9 +2,10 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
-import { addLoan, updateLoan, deleteLoan } from '@/services/firestore'
+import { addLoan, updateLoan, deleteLoan, updateLoanTracker } from '@/services/firestore'
 import { useConfirm } from '@/composables/useConfirm'
 import type { LoanItem } from '@/components/loans/LoanCard.vue'
+import type { TrackerType } from '@/types'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -26,6 +27,14 @@ const remaining = ref('')
 const saving = ref(false)
 const error = ref('')
 
+const trackerType = ref<TrackerType | null>(null)
+const trackerDate = ref('')
+const trackerIntervalDays = ref<number>(30)
+
+function formatDateInput(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
 watch(() => props.open, (val) => {
   if (!val) return
   if (props.loan) {
@@ -33,11 +42,17 @@ watch(() => props.open, (val) => {
     name.value = props.loan.name
     principal.value = String(props.loan.principal)
     remaining.value = String(props.loan.remaining)
+    trackerType.value = props.loan.trackerType ?? null
+    trackerDate.value = props.loan.trackerDate ? formatDateInput(props.loan.trackerDate) : ''
+    trackerIntervalDays.value = props.loan.trackerIntervalDays ?? 30
   } else {
     isEdit.value = false
     name.value = ''
     principal.value = ''
     remaining.value = ''
+    trackerType.value = null
+    trackerDate.value = ''
+    trackerIntervalDays.value = 30
   }
   error.value = ''
 })
@@ -56,6 +71,13 @@ async function handleSave() {
   try {
     if (isEdit.value && props.loan) {
       await updateLoan(familyId, props.loan.id, { name: name.value.trim(), principal: p, remaining: r })
+      await updateLoanTracker(
+        familyId,
+        props.loan.id,
+        trackerType.value,
+        trackerType.value === 'once' && trackerDate.value ? new Date(trackerDate.value) : null,
+        trackerType.value === 'interval' ? trackerIntervalDays.value : null,
+      )
     } else {
       await addLoan(familyId, name.value.trim(), p, r)
     }
@@ -109,6 +131,35 @@ async function handleDelete() {
             step="0.01"
             class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
           />
+        </div>
+
+        <!-- Tracker / Notification -->
+        <div v-if="isEdit" class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('tracker.reminder') }}</label>
+          <div class="flex gap-2 mb-2">
+            <button
+              class="flex-1 py-1.5 text-xs rounded-lg border transition-colors"
+              :class="trackerType === null ? 'bg-purple-600 text-white border-purple-600' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'"
+              @click="trackerType = null"
+            >{{ t('tracker.none') }}</button>
+            <button
+              class="flex-1 py-1.5 text-xs rounded-lg border transition-colors"
+              :class="trackerType === 'once' ? 'bg-purple-600 text-white border-purple-600' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'"
+              @click="trackerType = 'once'"
+            >{{ t('tracker.once') }}</button>
+            <button
+              class="flex-1 py-1.5 text-xs rounded-lg border transition-colors"
+              :class="trackerType === 'interval' ? 'bg-purple-600 text-white border-purple-600' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'"
+              @click="trackerType = 'interval'"
+            >{{ t('tracker.interval') }}</button>
+          </div>
+          <div v-if="trackerType === 'once'" class="mb-2">
+            <input v-model="trackerDate" type="date" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm" />
+          </div>
+          <div v-if="trackerType === 'interval'" class="flex items-center gap-2 mb-2">
+            <input v-model.number="trackerIntervalDays" type="number" min="1" class="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm" />
+            <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('tracker.days') }}</span>
+          </div>
         </div>
 
         <p v-if="error" class="text-red-500 text-sm mb-3">{{ error }}</p>

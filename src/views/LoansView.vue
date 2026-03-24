@@ -4,13 +4,10 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { collection, orderBy, query, onSnapshot, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase'
-import { updateLoanTracker } from '@/services/firestore'
 import { extractTrackerFields } from '@/composables/useTracker'
 import LoanCard from '@/components/loans/LoanCard.vue'
 import LoanSummary from '@/components/loans/LoanSummary.vue'
 import AddLoanDialog from '@/components/loans/AddLoanDialog.vue'
-import TrackerDialog from '@/components/TrackerDialog.vue'
-import type { TrackerType } from '@/types'
 import type { LoanItem } from '@/components/loans/LoanCard.vue'
 import type { Unsubscribe } from 'firebase/firestore'
 
@@ -22,8 +19,6 @@ let unsub: Unsubscribe | null = null
 
 const addDialogOpen = ref(false)
 const editingLoan = ref<LoanItem | null>(null)
-const trackerDialogOpen = ref(false)
-const trackerTarget = ref<LoanItem | null>(null)
 
 const totalRemaining = computed(() => loans.value.reduce((s, l) => s + l.remaining, 0))
 
@@ -56,30 +51,9 @@ onMounted(() => {
 
 onUnmounted(() => { unsub?.() })
 
-function openTracker(item: LoanItem) {
-  trackerTarget.value = item
-  trackerDialogOpen.value = true
-}
-
 function openEdit(item: LoanItem) {
   editingLoan.value = item
   addDialogOpen.value = true
-}
-
-async function saveTracker(payload: { trackerType: TrackerType | null; trackerDate: Date | null; trackerIntervalDays: number | null }) {
-  if (!trackerTarget.value || !authStore.familyId) return
-  try {
-    await updateLoanTracker(
-      authStore.familyId,
-      trackerTarget.value.id,
-      payload.trackerType,
-      payload.trackerDate,
-      payload.trackerIntervalDays,
-    )
-  } catch {
-    // silent
-  }
-  trackerDialogOpen.value = false
 }
 </script>
 
@@ -103,7 +77,6 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           v-for="loan in loans"
           :key="loan.id"
           :loan="loan"
-          @open-tracker="openTracker"
           @edit="openEdit"
         />
       </div>
@@ -121,13 +94,5 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
     </template>
 
     <AddLoanDialog :open="addDialogOpen" :loan="editingLoan" @close="addDialogOpen = false; editingLoan = null" />
-    <TrackerDialog
-      :open="trackerDialogOpen"
-      :tracker-type="trackerTarget?.trackerType"
-      :tracker-date="trackerTarget?.trackerDate"
-      :tracker-interval-days="trackerTarget?.trackerIntervalDays"
-      @close="trackerDialogOpen = false"
-      @save="saveTracker"
-    />
   </div>
 </template>

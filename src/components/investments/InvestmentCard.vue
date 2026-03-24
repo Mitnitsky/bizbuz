@@ -25,7 +25,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'openTracker', item: InvestmentItem): void
+  (e: 'edit', item: InvestmentItem): void
 }>()
 
 const gainLossPct = computed(() => {
@@ -55,7 +55,7 @@ const trackerColor = computed(() => {
 <template>
   <div
     class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 cursor-pointer hover:shadow-md transition-shadow"
-    @click="emit('openTracker', investment)"
+    @click="emit('edit', investment)"
   >
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">

@@ -25,7 +25,6 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'openTracker', item: LoanItem): void
   (e: 'edit', item: LoanItem): void
 }>()
 
@@ -54,17 +53,11 @@ const trackerColor = computed(() => {
 <template>
   <div
     class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 cursor-pointer hover:shadow-md transition-shadow"
-    @click="emit('openTracker', loan)"
+    @click="emit('edit', loan)"
   >
     <div class="flex items-center gap-2 mb-2">
       <span class="text-lg font-bold text-gray-900 dark:text-white">{{ loan.name }}</span>
       <component :is="icon('loans')" class="w-4 h-4 text-gray-500" />
-      <div class="flex-1" />
-      <button
-        class="text-gray-400 hover:text-purple-500 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-        @click.stop="emit('edit', loan)"
-        :title="t('common.edit')"
-      ><component :is="icon('edit')" class="w-4 h-4" /></button>
     </div>
 
     <span

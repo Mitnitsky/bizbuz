@@ -5,17 +5,14 @@ import { differenceInDays } from 'date-fns'
 import type { SavingsEntry } from '@/types'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
-import { useIcons } from '@/composables/useIcons'
 
 const { t } = useI18n()
-const { icon } = useIcons()
 
 const props = defineProps<{
   entry: SavingsEntry
 }>()
 
 const emit = defineEmits<{
-  (e: 'openTracker', entry: SavingsEntry): void
   (e: 'edit', entry: SavingsEntry): void
 }>()
 
@@ -39,7 +36,7 @@ const trackerColor = computed(() => {
 <template>
   <div
     class="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-    @click="emit('openTracker', entry)"
+    @click="emit('edit', entry)"
   >
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2">
@@ -61,11 +58,6 @@ const trackerColor = computed(() => {
       >{{ trackerLabel }}</span>
     </div>
     <div class="flex items-center gap-2 ml-4 shrink-0">
-      <button
-        class="text-gray-400 hover:text-purple-500 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-        @click.stop="emit('edit', entry)"
-        :title="t('common.edit')"
-      ><component :is="icon('edit')" class="w-4 h-4" /></button>
       <span class="font-bold text-gray-900 dark:text-white">{{ formatCurrency(entry.amount) }}</span>
     </div>
   </div>

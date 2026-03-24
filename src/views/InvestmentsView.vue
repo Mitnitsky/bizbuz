@@ -4,13 +4,10 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { collection, orderBy, query, onSnapshot, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase'
-import { updateInvestmentTracker } from '@/services/firestore'
 import { extractTrackerFields } from '@/composables/useTracker'
 import InvestmentCard from '@/components/investments/InvestmentCard.vue'
 import InvestmentSummary from '@/components/investments/InvestmentSummary.vue'
 import AddInvestmentDialog from '@/components/investments/AddInvestmentDialog.vue'
-import TrackerDialog from '@/components/TrackerDialog.vue'
-import type { TrackerType } from '@/types'
 import type { InvestmentItem } from '@/components/investments/InvestmentCard.vue'
 import type { Unsubscribe } from 'firebase/firestore'
 
@@ -21,8 +18,7 @@ const investments = ref<InvestmentItem[]>([])
 let unsub: Unsubscribe | null = null
 
 const addDialogOpen = ref(false)
-const trackerDialogOpen = ref(false)
-const trackerTarget = ref<InvestmentItem | null>(null)
+const editingInvestment = ref<InvestmentItem | null>(null)
 
 const totalInvested = computed(() => investments.value.reduce((s, i) => s + i.investedAmount, 0))
 const totalCurrentValue = computed(() => investments.value.reduce((s, i) => s + i.currentValue, 0))
@@ -56,25 +52,9 @@ onMounted(() => {
 
 onUnmounted(() => { unsub?.() })
 
-function openTracker(item: InvestmentItem) {
-  trackerTarget.value = item
-  trackerDialogOpen.value = true
-}
-
-async function saveTracker(payload: { trackerType: TrackerType | null; trackerDate: Date | null; trackerIntervalDays: number | null }) {
-  if (!trackerTarget.value || !authStore.familyId) return
-  try {
-    await updateInvestmentTracker(
-      authStore.familyId,
-      trackerTarget.value.id,
-      payload.trackerType,
-      payload.trackerDate,
-      payload.trackerIntervalDays,
-    )
-  } catch {
-    // silent
-  }
-  trackerDialogOpen.value = false
+function openEdit(item: InvestmentItem) {
+  editingInvestment.value = item
+  addDialogOpen.value = true
 }
 </script>
 
@@ -84,7 +64,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('nav.investments') }}</h1>
       <button
         class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
-        @click="addDialogOpen = true"
+        @click="editingInvestment = null; addDialogOpen = true"
       >{{ t('investments.addInvestment') }}</button>
     </div>
 
@@ -99,7 +79,7 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           v-for="inv in investments"
           :key="inv.id"
           :investment="inv"
-          @open-tracker="openTracker"
+          @edit="openEdit"
         />
       </div>
     </template>
@@ -111,14 +91,6 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       </div>
     </template>
 
-    <AddInvestmentDialog :open="addDialogOpen" @close="addDialogOpen = false" />
-    <TrackerDialog
-      :open="trackerDialogOpen"
-      :tracker-type="trackerTarget?.trackerType"
-      :tracker-date="trackerTarget?.trackerDate"
-      :tracker-interval-days="trackerTarget?.trackerIntervalDays"
-      @close="trackerDialogOpen = false"
-      @save="saveTracker"
-    />
+    <AddInvestmentDialog :open="addDialogOpen" :investment="editingInvestment" @close="addDialogOpen = false; editingInvestment = null" />
   </div>
 </template>

@@ -466,6 +466,27 @@ export async function addInvestment(
   })
 }
 
+export async function updateInvestment(
+  familyId: string,
+  id: string,
+  name: string,
+  investedAmount: number,
+  currentValue: number,
+): Promise<void> {
+  const ref = doc(db, 'families', familyId, 'investments', id)
+  await updateDoc(ref, {
+    name,
+    invested_amount: investedAmount,
+    current_value: currentValue,
+    last_updated: serverTimestamp(),
+  })
+}
+
+export async function deleteInvestment(familyId: string, id: string): Promise<void> {
+  const { deleteDoc: firestoreDeleteDoc } = await import('firebase/firestore')
+  await firestoreDeleteDoc(doc(db, 'families', familyId, 'investments', id))
+}
+
 export async function updateInvestmentTracker(
   familyId: string,
   docId: string,

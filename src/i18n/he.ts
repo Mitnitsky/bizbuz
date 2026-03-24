@@ -298,4 +298,11 @@ export default {
     save: 'שמירה',
     cancel: 'ביטול',
   },
+  tracker: {
+    reminder: 'תזכורת עדכון',
+    none: 'ללא',
+    once: 'חד פעמי',
+    interval: 'חוזר',
+    days: 'ימים',
+  },
 }

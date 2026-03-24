@@ -2,18 +2,14 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSavingsStore } from '@/stores/savings'
-import { useAuthStore } from '@/stores/auth'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useIcons } from '@/composables/useIcons'
-import { updateSavingsTracker } from '@/services/firestore'
 import SavingsEntryCard from '@/components/savings/SavingsEntryCard.vue'
 import AddSavingsDialog from '@/components/savings/AddSavingsDialog.vue'
-import TrackerDialog from '@/components/TrackerDialog.vue'
-import type { SavingsEntry, SavingsType, TrackerType } from '@/types'
+import type { SavingsEntry, SavingsType } from '@/types'
 
 const { t } = useI18n()
 const savingsStore = useSavingsStore()
-const authStore = useAuthStore()
 const { icon } = useIcons()
 
 const liquidOpen = ref(true)
@@ -21,9 +17,6 @@ const lockedOpen = ref(true)
 const addDialogOpen = ref(false)
 const addDialogType = ref<SavingsType>('liquid')
 const editingEntry = ref<SavingsEntry | null>(null)
-
-const trackerDialogOpen = ref(false)
-const trackerTarget = ref<SavingsEntry | null>(null)
 
 function openAddDialog(type: SavingsType) {
   editingEntry.value = null
@@ -35,27 +28,6 @@ function openEdit(entry: SavingsEntry) {
   editingEntry.value = entry
   addDialogType.value = entry.savingsType
   addDialogOpen.value = true
-}
-
-function openTracker(entry: SavingsEntry) {
-  trackerTarget.value = entry
-  trackerDialogOpen.value = true
-}
-
-async function saveTracker(payload: { trackerType: TrackerType | null; trackerDate: Date | null; trackerIntervalDays: number | null }) {
-  if (!trackerTarget.value || !authStore.familyId) return
-  try {
-    await updateSavingsTracker(
-      authStore.familyId,
-      trackerTarget.value.id,
-      payload.trackerType,
-      payload.trackerDate,
-      payload.trackerIntervalDays,
-    )
-  } catch {
-    // silent
-  }
-  trackerDialogOpen.value = false
 }
 </script>
 
@@ -94,7 +66,6 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           v-for="entry in savingsStore.liquidEntries"
           :key="entry.id"
           :entry="entry"
-          @open-tracker="openTracker"
           @edit="openEdit"
         />
       </div>
@@ -133,7 +104,6 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
           v-for="entry in savingsStore.lockedEntries"
           :key="entry.id"
           :entry="entry"
-          @open-tracker="openTracker"
           @edit="openEdit"
         />
       </div>
@@ -145,14 +115,6 @@ async function saveTracker(payload: { trackerType: TrackerType | null; trackerDa
       :initial-type="addDialogType"
       :entry="editingEntry"
       @close="addDialogOpen = false; editingEntry = null"
-    />
-    <TrackerDialog
-      :open="trackerDialogOpen"
-      :tracker-type="trackerTarget?.trackerType"
-      :tracker-date="trackerTarget?.trackerDate"
-      :tracker-interval-days="trackerTarget?.trackerIntervalDays"
-      @close="trackerDialogOpen = false"
-      @save="saveTracker"
     />
   </div>
 </template>

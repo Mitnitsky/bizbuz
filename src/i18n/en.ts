@@ -298,4 +298,11 @@ export default {
     save: 'Save',
     cancel: 'Cancel',
   },
+  tracker: {
+    reminder: 'Update Reminder',
+    none: 'None',
+    once: 'Once',
+    interval: 'Recurring',
+    days: 'days',
+  },
 }
