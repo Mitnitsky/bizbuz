@@ -1,15 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#9333ea"/>
+      <stop offset="0%" stop-color="#a855f7"/>
       <stop offset="100%" stop-color="#7e22ce"/>
     </linearGradient>
   </defs>
-  <!-- Shield shape -->
-  <path d="M256 16C156 16 56 56 56 56v200c0 140 200 240 200 240s200-100 200-240V56S356 16 256 16z" fill="url(#bg)"/>
-  <path d="M256 32C164 32 72 68 72 68v188c0 128 184 222 184 222s184-94 184-222V68S348 32 256 32z" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
-  <!-- ₪ Shekel — path-based for rasterization -->
-  <g transform="translate(136,110) scale(6.2)" fill="white">
-    <path d="M8 4h4a2 2 0 0 1 2 2v28a2 2 0 0 1-2 2H8V4zm16 0v32h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4zM16 8v20a4 4 0 0 0 4 4h4V12a4 4 0 0 0-4-4h-4z"/>
+  <!-- Full background (no white edges) -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Shield outline (subtle) -->
+  <path d="M256 72c-80 0-160 32-160 32v168c0 112 160 192 160 192s160-80 160-192V104S336 72 256 72z" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6"/>
+  <!-- ₪ Shekel symbol — large, centered -->
+  <g transform="translate(128,120)" fill="white">
+    <rect x="0" y="0" width="40" height="272" rx="8"/>
+    <rect x="216" y="0" width="40" height="272" rx="8"/>
+    <path d="M40 32h56c44 0 80 36 80 80v128h-40V112c0-22-18-40-40-40H40V32z"/>
+    <path d="M216 240h-56c-44 0-80-36-80-80V32h40v128c0 22 18 40 40 40h56v40z"/>
   </g>
 </svg>
