@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
 import { useIcons } from '@/composables/useIcons'
+import { differenceInMonths, differenceInDays } from 'date-fns'
 import type { TrackerType } from '@/types'
 
 const { t } = useI18n()
@@ -14,6 +15,7 @@ export interface LoanItem {
   name: string
   principal: number
   remaining: number
+  endDate?: Date
   lastUpdated: Date
   trackerType?: TrackerType
   trackerDate?: Date
@@ -38,8 +40,8 @@ const daysLeft = computed(() => trackerDaysRemaining(props.loan, props.loan.last
 
 const trackerLabel = computed(() => {
   if (daysLeft.value === null) return null
-  if (daysLeft.value < 0) return t('home.overdue')
-  return t('home.daysLeft', { n: daysLeft.value })
+  if (daysLeft.value < 0) return t('tracker.updateOverdue')
+  return t('tracker.updateIn', { n: daysLeft.value })
 })
 
 const trackerColor = computed(() => {
@@ -47,6 +49,28 @@ const trackerColor = computed(() => {
   return daysLeft.value < 0
     ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
     : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+})
+
+function formatTimeLeft(target: Date): string {
+  const now = new Date()
+  const months = differenceInMonths(target, now)
+  if (months <= 0) {
+    const days = differenceInDays(target, now)
+    if (days <= 0) return t('home.overdue')
+    return `${days}d`
+  }
+  const years = Math.floor(months / 12)
+  const rem = months % 12
+  if (years > 0 && rem > 0) return `${years}y ${rem}m`
+  if (years > 0) return `${years}y`
+  return `${rem}m`
+}
+
+const payoffLabel = computed(() => {
+  if (!props.loan.endDate) return null
+  const now = new Date()
+  if (props.loan.endDate <= now) return t('home.overdue')
+  return t('loans.payoffIn', { text: formatTimeLeft(props.loan.endDate) })
 })
 </script>
 
@@ -60,11 +84,20 @@ const trackerColor = computed(() => {
       <component :is="icon('loans')" class="w-4 h-4 text-gray-500" />
     </div>
 
-    <span
-      v-if="trackerLabel"
-      class="inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3"
-      :class="trackerColor"
-    >{{ trackerLabel }}</span>
+    <div class="flex flex-wrap gap-1.5 mb-3">
+      <span
+        v-if="trackerLabel"
+        class="inline-block text-xs font-medium px-2 py-0.5 rounded-full"
+        :class="trackerColor"
+      >{{ trackerLabel }}</span>
+      <span
+        v-if="payoffLabel"
+        class="inline-block text-xs font-medium px-2 py-0.5 rounded-full"
+        :class="payoffLabel === t('home.overdue')
+          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'"
+      >{{ payoffLabel }}</span>
+    </div>
 
     <!-- Progress bar -->
     <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3">
@@ -92,6 +125,9 @@ const trackerColor = computed(() => {
 
     <div class="text-xs text-gray-500 dark:text-gray-400">
       {{ t('loans.totalPrefix', { amount: formatCurrency(loan.principal) }) }}
+    </div>
+    <div v-if="loan.endDate" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+      {{ t('loans.endsOn', { date: formatDateShort(loan.endDate) }) }}
     </div>
     <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
       {{ t('home.lastUpdated') }}: {{ formatDateShort(loan.lastUpdated) }}

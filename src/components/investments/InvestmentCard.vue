@@ -40,8 +40,8 @@ const daysLeft = computed(() => trackerDaysRemaining(props.investment, props.inv
 
 const trackerLabel = computed(() => {
   if (daysLeft.value === null) return null
-  if (daysLeft.value < 0) return t('home.overdue')
-  return t('home.daysLeft', { n: daysLeft.value })
+  if (daysLeft.value < 0) return t('tracker.updateOverdue')
+  return t('tracker.updateIn', { n: daysLeft.value })
 })
 
 const trackerColor = computed(() => {

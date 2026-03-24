@@ -24,6 +24,7 @@ const isEdit = ref(false)
 const name = ref('')
 const principal = ref('')
 const remaining = ref('')
+const endDate = ref('')
 const saving = ref(false)
 const error = ref('')
 
@@ -42,6 +43,7 @@ watch(() => props.open, (val) => {
     name.value = props.loan.name
     principal.value = String(props.loan.principal)
     remaining.value = String(props.loan.remaining)
+    endDate.value = props.loan.endDate ? formatDateInput(props.loan.endDate) : ''
     trackerType.value = props.loan.trackerType ?? null
     trackerDate.value = props.loan.trackerDate ? formatDateInput(props.loan.trackerDate) : ''
     trackerIntervalDays.value = props.loan.trackerIntervalDays ?? 30
@@ -50,6 +52,7 @@ watch(() => props.open, (val) => {
     name.value = ''
     principal.value = ''
     remaining.value = ''
+    endDate.value = ''
     trackerType.value = null
     trackerDate.value = ''
     trackerIntervalDays.value = 30
@@ -70,7 +73,12 @@ async function handleSave() {
   saving.value = true
   try {
     if (isEdit.value && props.loan) {
-      await updateLoan(familyId, props.loan.id, { name: name.value.trim(), principal: p, remaining: r })
+      await updateLoan(familyId, props.loan.id, {
+        name: name.value.trim(),
+        principal: p,
+        remaining: r,
+        endDate: endDate.value ? new Date(endDate.value) : null,
+      })
       await updateLoanTracker(
         familyId,
         props.loan.id,
@@ -79,7 +87,7 @@ async function handleSave() {
         trackerType.value === 'interval' ? trackerIntervalDays.value : null,
       )
     } else {
-      await addLoan(familyId, name.value.trim(), p, r)
+      await addLoan(familyId, name.value.trim(), p, r, endDate.value ? new Date(endDate.value) : null)
     }
     emit('close')
   } catch (err) {
@@ -129,6 +137,15 @@ async function handleDelete() {
             v-model="remaining"
             type="number"
             step="0.01"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('loans.endDate') }}</label>
+          <input
+            v-model="endDate"
+            type="date"
             class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
           />
         </div>

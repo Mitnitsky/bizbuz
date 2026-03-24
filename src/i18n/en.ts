@@ -98,6 +98,9 @@ export default {
     editLoan: 'Edit Loan',
     originalAmountIls: 'Original Amount (₪)',
     remainingAmountIls: 'Remaining Amount (₪)',
+    endDate: 'Payoff Date',
+    endsOn: 'Ends {date}',
+    payoffIn: '{text} to payoff',
   },
   investments: {
     invested: 'Invested',
@@ -304,5 +307,7 @@ export default {
     once: 'Once',
     interval: 'Recurring',
     days: 'days',
+    updateIn: '🔔 Update in {n}d',
+    updateOverdue: '🔔 Update overdue',
   },
 }

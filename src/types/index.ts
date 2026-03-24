@@ -131,6 +131,7 @@ export interface LoanEntry {
   name: string
   principal: number
   remaining: number
+  endDate?: Date
   lastUpdated: Date
   trackerType?: TrackerType
   trackerDate?: Date

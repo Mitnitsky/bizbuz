@@ -98,6 +98,9 @@ export default {
     editLoan: 'עריכת הלוואה',
     originalAmountIls: 'סכום מקורי (₪)',
     remainingAmountIls: 'יתרה (₪)',
+    endDate: 'תאריך סיום',
+    endsOn: 'מסתיים {date}',
+    payoffIn: '{text} לסיום',
   },
   investments: {
     invested: 'הושקע',
@@ -304,5 +307,7 @@ export default {
     once: 'חד פעמי',
     interval: 'חוזר',
     days: 'ימים',
+    updateIn: '🔔 עדכן בעוד {n} י׳',
+    updateOverdue: '🔔 עדכון באיחור',
   },
 }

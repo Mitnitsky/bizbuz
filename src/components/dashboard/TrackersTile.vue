@@ -98,8 +98,8 @@ function typeLabel(type: string): string {
 
 function daysLabel(days: number | null): string {
   if (days === null) return ''
-  if (days < 0) return t('home.overdue')
-  return t('home.daysLeft', { n: days })
+  if (days < 0) return t('tracker.updateOverdue')
+  return t('tracker.updateIn', { n: days })
 }
 </script>
 

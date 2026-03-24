@@ -510,26 +510,33 @@ export async function addLoan(
   name: string,
   principal: number,
   remaining: number,
+  endDate?: Date | null,
 ): Promise<void> {
   const ref = collection(db, 'families', familyId, 'loans')
-  await setDoc(doc(ref), {
+  const data: Record<string, unknown> = {
     name,
     principal,
     remaining,
     last_updated: serverTimestamp(),
-  })
+  }
+  if (endDate) data.end_date = Timestamp.fromDate(endDate)
+  await setDoc(doc(ref), data)
 }
 
 export async function updateLoan(
   familyId: string,
   id: string,
-  fields: { name?: string; principal?: number; remaining?: number },
+  fields: { name?: string; principal?: number; remaining?: number; endDate?: Date | null },
 ): Promise<void> {
   const ref = doc(db, 'families', familyId, 'loans', id)
-  await updateDoc(ref, {
-    ...fields,
+  const { endDate, ...rest } = fields
+  const data: Record<string, unknown> = {
+    ...rest,
     last_updated: serverTimestamp(),
-  })
+  }
+  if (endDate === null) data.end_date = deleteField()
+  else if (endDate) data.end_date = Timestamp.fromDate(endDate)
+  await updateDoc(ref, data)
 }
 
 export async function updateLoanTracker(
@@ -792,6 +799,7 @@ export function loanFromFirestore(docSnap: QueryDocumentSnapshot<DocumentData>):
     name: d.name ?? '',
     principal: d.principal ?? 0,
     remaining: d.remaining ?? 0,
+    endDate: d.end_date ? toDate(d.end_date) : undefined,
     lastUpdated: toDate(d.last_updated),
     ...tracker,
   }

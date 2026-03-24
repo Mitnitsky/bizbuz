@@ -42,6 +42,7 @@ onMounted(() => {
         name: d.name ?? '',
         principal: d.principal ?? 0,
         remaining: d.remaining ?? 0,
+        endDate: d.end_date ? toDate(d.end_date) : undefined,
         lastUpdated: toDate(d.last_updated),
         ...tracker,
       }
