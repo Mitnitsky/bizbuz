@@ -7,7 +7,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
-import { TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories, isSharedCategory } from '@/composables/useCategories'
+import { TRANSFER_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
 import { updateCategoryOrder, updateUserPreferences } from '@/services/firestore'
 import draggable from 'vuedraggable'
@@ -107,7 +107,8 @@ function toggleExpandAll() {
 const ownerFilteredTransactions = computed(() => {
   const filter = uiStore.ownerFilter
   if (filter === 'all') return txnStore.cycleTransactions
-  return txnStore.cycleTransactions.filter(t => t.ownerTag === filter)
+  // Include transactions owned by this user AND shared transactions
+  return txnStore.cycleTransactions.filter(t => t.ownerTag === filter || t.ownerTag === 'shared')
 })
 
 // Total spending for filtered transactions (expenses only, excludes transfers)
@@ -121,11 +122,8 @@ const filteredTotalSpending = computed(() => {
 
 // --- Category grouping ---
 const categorizedTransactions = computed(() => {
-  const isUserFilter = uiStore.ownerFilter !== 'all'
-  const cats = familyStore.familySettings.categories
   return ownerFilteredTransactions.value.filter(t => {
     if (t.status === 'pending_categorization') return false
-    if (isUserFilter && isSharedCategory(t.category, cats)) return false
     return true
   })
 })

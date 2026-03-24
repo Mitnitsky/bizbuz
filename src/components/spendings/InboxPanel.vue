@@ -402,7 +402,6 @@ function onLeave(el: Element, done: () => void) {
         <div v-if="inboxTransactions.length === 0" class="flex flex-col items-center justify-center py-12 px-4 text-center">
           <span class="text-3xl mb-2">✓</span>
           <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('spendings.inboxZero') }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('spendings.allCategorized') }}</p>
         </div>
         <TransitionGroup
           v-else
