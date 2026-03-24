@@ -1,19 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#a855f7"/>
       <stop offset="100%" stop-color="#7e22ce"/>
     </linearGradient>
   </defs>
-  <!-- Full background (no white edges) -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- Shield outline (subtle) -->
-  <path d="M256 72c-80 0-160 32-160 32v168c0 112 160 192 160 192s160-80 160-192V104S336 72 256 72z" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6"/>
-  <!-- ₪ Shekel symbol — large, centered -->
-  <g transform="translate(128,120)" fill="white">
-    <rect x="0" y="0" width="40" height="272" rx="8"/>
-    <rect x="216" y="0" width="40" height="272" rx="8"/>
-    <path d="M40 32h56c44 0 80 36 80 80v128h-40V112c0-22-18-40-40-40H40V32z"/>
-    <path d="M216 240h-56c-44 0-80-36-80-80V32h40v128c0 22 18 40 40 40h56v40z"/>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g fill="white" transform="translate(96,96)">
+    <rect x="0" y="0" width="48" height="320" rx="12"/>
+    <rect x="272" y="0" width="48" height="320" rx="12"/>
+    <path d="M48 36h80c48 0 88 40 88 88v160h-48V124c0-28-22-48-48-48H48V36z"/>
+    <path d="M272 284h-80c-48 0-88-40-88-88V36h48v160c0 28 22 48 48 48h72v40z"/>
   </g>
 </svg>
