@@ -31,6 +31,7 @@ import type {
   OwnerTag,
   InvestmentEntry,
   LoanEntry,
+  LoanType,
   MortgageTrack,
   IndexLink,
   RateType,
@@ -548,6 +549,7 @@ export function deserializeTracks(data: unknown[]): MortgageTrack[] {
 export async function addLoan(
   familyId: string,
   name: string,
+  loanType: LoanType,
   principal: number,
   remaining: number,
   endDate?: Date | null,
@@ -556,6 +558,7 @@ export async function addLoan(
   const ref = collection(db, 'families', familyId, 'loans')
   const data: Record<string, unknown> = {
     name,
+    loan_type: loanType,
     principal,
     remaining,
     last_updated: serverTimestamp(),
@@ -842,11 +845,13 @@ export function loanFromFirestore(docSnap: QueryDocumentSnapshot<DocumentData>):
   return {
     id: docSnap.id,
     name: d.name ?? '',
+    loanType: (d.loan_type as LoanType) ?? 'loan',
     principal: d.principal ?? 0,
     remaining: d.remaining ?? 0,
     endDate: d.end_date ? toDate(d.end_date) : undefined,
     lastUpdated: toDate(d.last_updated),
     ...tracker,
+    tracks: d.tracks ? deserializeTracks(d.tracks as unknown[]) : undefined,
   }
 }
 

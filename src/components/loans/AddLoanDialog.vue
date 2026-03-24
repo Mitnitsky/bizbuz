@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { addLoan, updateLoan, deleteLoan, updateLoanTracker } from '@/services/firestore'
 import { useConfirm } from '@/composables/useConfirm'
 import type { LoanItem } from '@/components/loans/LoanCard.vue'
-import type { TrackerType, MortgageTrack, IndexLink, RateType, PaymentMethod } from '@/types'
+import type { TrackerType, MortgageTrack, IndexLink, RateType, PaymentMethod, LoanType } from '@/types'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -14,6 +14,7 @@ const { confirm } = useConfirm()
 const props = defineProps<{
   open: boolean
   loan?: LoanItem | null
+  defaultType?: LoanType
 }>()
 
 const emit = defineEmits<{
@@ -172,7 +173,8 @@ async function handleSave() {
         trackerType.value === 'interval' ? trackerIntervalDays.value : null,
       )
     } else {
-      await addLoan(familyId, name.value.trim(), p, r, endDate.value ? new Date(endDate.value) : null, serializedTracks.length > 0 ? serializedTracks : undefined)
+      const type = props.defaultType ?? 'loan'
+      await addLoan(familyId, name.value.trim(), type, p, r, endDate.value ? new Date(endDate.value) : null, serializedTracks.length > 0 ? serializedTracks : undefined)
     }
     emit('close')
   } catch (err) {
@@ -200,7 +202,11 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 flex flex-col" style="max-height: 90vh;">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 shrink-0">{{ isEdit ? t('loans.editLoan') : t('loans.addLoanMortgage') }}</h3>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 shrink-0">{{
+          isEdit
+            ? (loan?.loanType === 'mortgage' ? t('loans.editMortgage') : t('loans.editLoan'))
+            : (defaultType === 'mortgage' ? t('loans.addMortgage') : t('loans.addLoan'))
+        }}</h3>
 
         <div class="overflow-y-auto flex-1" style="max-height: 60vh;">
           <div class="mb-3">

@@ -144,9 +144,12 @@ export interface MortgageTrack {
   monthlyPayment?: number
 }
 
+export type LoanType = 'loan' | 'mortgage'
+
 export interface LoanEntry {
   id: string
   name: string
+  loanType: LoanType
   principal: number
   remaining: number
   endDate?: Date

@@ -5,7 +5,7 @@ import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
 import { useIcons } from '@/composables/useIcons'
 import { differenceInMonths, differenceInDays } from 'date-fns'
-import type { TrackerType, MortgageTrack } from '@/types'
+import type { TrackerType, MortgageTrack, LoanType } from '@/types'
 
 const { t } = useI18n()
 const { icon } = useIcons()
@@ -13,6 +13,7 @@ const { icon } = useIcons()
 export interface LoanItem {
   id: string
   name: string
+  loanType: LoanType
   principal: number
   remaining: number
   endDate?: Date
