@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { collection, orderBy, query, onSnapshot, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase'
 import { extractTrackerFields } from '@/composables/useTracker'
+import { deserializeTracks } from '@/services/firestore'
 import LoanCard from '@/components/loans/LoanCard.vue'
 import LoanSummary from '@/components/loans/LoanSummary.vue'
 import AddLoanDialog from '@/components/loans/AddLoanDialog.vue'
@@ -45,6 +46,7 @@ onMounted(() => {
         endDate: d.end_date ? toDate(d.end_date) : undefined,
         lastUpdated: toDate(d.last_updated),
         ...tracker,
+        tracks: d.tracks ? deserializeTracks(d.tracks as unknown[]) : undefined,
       }
     })
   })

@@ -31,6 +31,10 @@ import type {
   OwnerTag,
   InvestmentEntry,
   LoanEntry,
+  MortgageTrack,
+  IndexLink,
+  RateType,
+  PaymentMethod,
 } from '@/types'
 import { extractTrackerFields } from '@/composables/useTracker'
 import { LEGACY_NAME_TO_ID } from '@/composables/useCategories'
@@ -505,12 +509,49 @@ export async function updateInvestmentTracker(
 
 // ---------- Loans ----------
 
+function serializeTracks(tracks: MortgageTrack[]): Record<string, unknown>[] {
+  return tracks.map((t) => ({
+    id: t.id,
+    name: t.name,
+    amount: t.amount,
+    remaining: t.remaining,
+    interest_rate: t.interestRate,
+    index_link: t.indexLink,
+    rate_type: t.rateType,
+    ...(t.variableIntervalYears != null ? { variable_interval_years: t.variableIntervalYears } : {}),
+    payment_method: t.paymentMethod,
+    term_months: t.termMonths,
+    ...(t.monthlyPayment != null ? { monthly_payment: t.monthlyPayment } : {}),
+  }))
+}
+
+export function deserializeTracks(data: unknown[]): MortgageTrack[] {
+  if (!Array.isArray(data)) return []
+  return data.map((raw: unknown) => {
+    const t = raw as Record<string, unknown>
+    return {
+      id: (t.id as string) ?? '',
+      name: (t.name as string) ?? '',
+      amount: (t.amount as number) ?? 0,
+      remaining: (t.remaining as number) ?? 0,
+      interestRate: (t.interest_rate as number) ?? 0,
+      indexLink: (t.index_link as IndexLink) ?? 'notLinked',
+      rateType: (t.rate_type as RateType) ?? 'fixed',
+      ...(t.variable_interval_years != null ? { variableIntervalYears: t.variable_interval_years as number } : {}),
+      paymentMethod: (t.payment_method as PaymentMethod) ?? 'spitzer',
+      termMonths: (t.term_months as number) ?? 0,
+      ...(t.monthly_payment != null ? { monthlyPayment: t.monthly_payment as number } : {}),
+    }
+  })
+}
+
 export async function addLoan(
   familyId: string,
   name: string,
   principal: number,
   remaining: number,
   endDate?: Date | null,
+  tracks?: MortgageTrack[],
 ): Promise<void> {
   const ref = collection(db, 'families', familyId, 'loans')
   const data: Record<string, unknown> = {
@@ -520,22 +561,26 @@ export async function addLoan(
     last_updated: serverTimestamp(),
   }
   if (endDate) data.end_date = Timestamp.fromDate(endDate)
+  if (tracks && tracks.length > 0) data.tracks = serializeTracks(tracks)
   await setDoc(doc(ref), data)
 }
 
 export async function updateLoan(
   familyId: string,
   id: string,
-  fields: { name?: string; principal?: number; remaining?: number; endDate?: Date | null },
+  fields: { name?: string; principal?: number; remaining?: number; endDate?: Date | null; tracks?: MortgageTrack[] },
 ): Promise<void> {
   const ref = doc(db, 'families', familyId, 'loans', id)
-  const { endDate, ...rest } = fields
+  const { endDate, tracks, ...rest } = fields
   const data: Record<string, unknown> = {
     ...rest,
     last_updated: serverTimestamp(),
   }
   if (endDate === null) data.end_date = deleteField()
   else if (endDate) data.end_date = Timestamp.fromDate(endDate)
+  if (tracks !== undefined) {
+    data.tracks = tracks.length > 0 ? serializeTracks(tracks) : deleteField()
+  }
   await updateDoc(ref, data)
 }
 

@@ -126,6 +126,24 @@ export interface InvestmentEntry {
   trackerIntervalDays?: number
 }
 
+export type IndexLink = 'cpiLinked' | 'notLinked'
+export type RateType = 'fixed' | 'variable'
+export type PaymentMethod = 'spitzer' | 'equalPrincipal'
+
+export interface MortgageTrack {
+  id: string
+  name: string
+  amount: number
+  remaining: number
+  interestRate: number
+  indexLink: IndexLink
+  rateType: RateType
+  variableIntervalYears?: number
+  paymentMethod: PaymentMethod
+  termMonths: number
+  monthlyPayment?: number
+}
+
 export interface LoanEntry {
   id: string
   name: string
@@ -136,4 +154,5 @@ export interface LoanEntry {
   trackerType?: TrackerType
   trackerDate?: Date
   trackerIntervalDays?: number
+  tracks?: MortgageTrack[]
 }

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { trackerDaysRemaining } from '@/composables/useTracker'
 import { useIcons } from '@/composables/useIcons'
 import { differenceInMonths, differenceInDays } from 'date-fns'
-import type { TrackerType } from '@/types'
+import type { TrackerType, MortgageTrack } from '@/types'
 
 const { t } = useI18n()
 const { icon } = useIcons()
@@ -20,6 +20,7 @@ export interface LoanItem {
   trackerType?: TrackerType
   trackerDate?: Date
   trackerIntervalDays?: number
+  tracks?: MortgageTrack[]
 }
 
 const props = defineProps<{
@@ -29,6 +30,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'edit', item: LoanItem): void
 }>()
+
+const tracksExpanded = ref(false)
 
 const paid = computed(() => props.loan.principal - props.loan.remaining)
 const paidPct = computed(() => {
@@ -72,6 +75,10 @@ const payoffLabel = computed(() => {
   if (props.loan.endDate <= now) return t('home.overdue')
   return t('loans.payoffIn', { text: formatTimeLeft(props.loan.endDate) })
 })
+
+function indexLinkIcon(link: string): string {
+  return link === 'cpiLinked' ? '📈' : '📊'
+}
 </script>
 
 <template>
@@ -123,7 +130,31 @@ const payoffLabel = computed(() => {
       </div>
     </div>
 
-    <div class="text-xs text-gray-500 dark:text-gray-400">
+    <!-- Tracks summary -->
+    <div v-if="loan.tracks && loan.tracks.length > 0" class="mt-2">
+      <button
+        class="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-medium hover:underline"
+        @click.stop="tracksExpanded = !tracksExpanded"
+      >
+        <span>📊</span>
+        <span>{{ t('loans.nTracks', { n: loan.tracks.length }) }}</span>
+        <span class="text-[10px]">{{ tracksExpanded ? '▲' : '▼' }}</span>
+      </button>
+      <div v-if="tracksExpanded" class="mt-1.5 space-y-1" @click.stop>
+        <div
+          v-for="track in loan.tracks"
+          :key="track.id"
+          class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-2 py-1"
+        >
+          <span class="font-medium text-gray-800 dark:text-gray-200 truncate max-w-[80px]">{{ track.name }}</span>
+          <span class="text-purple-600 dark:text-purple-400">{{ track.interestRate }}%</span>
+          <span>{{ indexLinkIcon(track.indexLink) }}</span>
+          <span class="ml-auto font-medium">{{ formatCurrency(track.remaining) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
       {{ t('loans.totalPrefix', { amount: formatCurrency(loan.principal) }) }}
     </div>
     <div v-if="loan.endDate" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
