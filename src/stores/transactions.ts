@@ -81,28 +81,20 @@ export const useTransactionsStore = defineStore('transactions', () => {
     return [...seen.values()].reduce((sum, t) => sum + t.chargedAmount, 0)
   })
 
-  // Descriptions seen only in the current cycle, never in prior history → "unique"
-  const uniqueDescriptions = computed(() => {
-    const cycleIds = new Set(cycleTransactions.value.map(t => t.id))
-    const historicalDescs = new Set(
+  // Descriptions that appear in already-categorized transactions → "known"
+  const knownDescriptions = computed(() => {
+    return new Set(
       visibleTransactions.value
-        .filter(t => !cycleIds.has(t.id))
+        .filter(t => t.status !== 'pending_categorization')
         .map(t => (t.description || '').trim().toLowerCase())
     )
-    const uDescs = new Set<string>()
-    for (const t of cycleTransactions.value) {
-      const desc = (t.description || '').trim().toLowerCase()
-      if (desc && !historicalDescs.has(desc)) {
-        uDescs.add(desc)
-      }
-    }
-    return uDescs
   })
 
-  // 🦄 Unique = description never seen before + still uncategorized
+  // 🦄 Unique = description never seen in any categorized transaction
   function isUniqueTransaction(txn: Transaction): boolean {
-    return txn.status === 'pending_categorization' &&
-      uniqueDescriptions.value.has((txn.description || '').trim().toLowerCase())
+    if (txn.status !== 'pending_categorization') return false
+    const desc = (txn.description || '').trim().toLowerCase()
+    return !!desc && !knownDescriptions.value.has(desc)
   }
 
   // NEW = from latest ingestion (stored in Firestore)
