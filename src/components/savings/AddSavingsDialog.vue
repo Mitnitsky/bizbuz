@@ -141,7 +141,7 @@ async function handleDelete() {
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-4">
           {{ isEdit ? t('common.edit') : (savingsType === 'liquid' ? t('savings.addLiquidAccount') : t('savings.addLockedFund')) }}
         </h3>
 
@@ -182,7 +182,7 @@ async function handleDelete() {
           <input
             v-model="name"
             type="text"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2"
           />
         </div>
 
@@ -193,7 +193,7 @@ async function handleDelete() {
             v-model="amount"
             type="number"
             step="0.01"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2"
           />
         </div>
 
@@ -203,7 +203,7 @@ async function handleDelete() {
           <input
             v-model="firmName"
             type="text"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2"
           />
         </div>
 
@@ -213,7 +213,7 @@ async function handleDelete() {
           <input
             v-model="liquidityDate"
             type="date"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2"
           />
         </div>
 
@@ -223,7 +223,7 @@ async function handleDelete() {
           <textarea
             v-model="notes"
             rows="2"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 resize-none"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 resize-none"
           />
         </div>
 
@@ -248,10 +248,10 @@ async function handleDelete() {
             >{{ t('tracker.interval') }}</button>
           </div>
           <div v-if="trackerType === 'once'" class="mb-2">
-            <input v-model="trackerDate" type="date" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm" />
+            <input v-model="trackerDate" type="date" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm" />
           </div>
           <div v-if="trackerType === 'interval'" class="flex items-center gap-2 mb-2">
-            <input v-model.number="trackerIntervalDays" type="number" min="1" class="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm" />
+            <input v-model.number="trackerIntervalDays" type="number" min="1" class="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm" />
             <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('tracker.days') }}</span>
           </div>
         </div>

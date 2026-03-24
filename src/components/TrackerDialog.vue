@@ -55,7 +55,7 @@ function handleSave() {
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-200 mb-4">{{ t('home.trackers') }}</h3>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-4">{{ t('home.trackers') }}</h3>
 
         <!-- Segmented toggle -->
         <div class="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 mb-4">
@@ -78,7 +78,7 @@ function handleSave() {
           <input
             v-model="dateValue"
             type="date"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2"
           />
         </div>
 
@@ -89,7 +89,7 @@ function handleSave() {
             v-model.number="intervalDays"
             type="number"
             min="1"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2"
           />
         </div>
 

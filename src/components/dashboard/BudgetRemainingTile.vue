@@ -40,7 +40,7 @@ const progressPct = computed(() => {
     </div>
 
     <div v-else>
-      <div class="text-2xl font-bold" :class="exceeded ? 'text-red-500' : 'text-gray-900 dark:text-gray-200'">
+      <div class="text-2xl font-bold" :class="exceeded ? 'text-red-500' : 'text-gray-900 dark:text-gray-300'">
         {{ formatCurrency(Math.abs(remaining)) }}
         <span v-if="exceeded" class="text-sm font-normal text-red-500">{{ t('home.budgetExceeded') }}</span>
       </div>

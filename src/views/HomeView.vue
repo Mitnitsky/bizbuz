@@ -134,7 +134,7 @@ const displayName = computed(() => authStore.appUser?.displayName || authStore.a
     <div class="flex items-center justify-between mb-4">
       <div>
         <p v-if="displayName" class="text-sm text-gray-500 dark:text-gray-400">{{ t('home.greeting', { name: displayName }) }}</p>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ t('home.familyDashboard', { family: familyName }) }}</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300">{{ t('home.familyDashboard', { family: familyName }) }}</h1>
       </div>
       <button
         class="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"

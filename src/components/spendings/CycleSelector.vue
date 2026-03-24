@@ -30,7 +30,7 @@ function reset() { ui.cycleOffset = 0 }
       @click="prev"
     >‹</button>
     <button
-      class="px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium text-gray-800 dark:text-gray-200 min-w-[160px] text-center"
+      class="px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium text-gray-800 dark:text-gray-300 min-w-[160px] text-center"
       @click="reset"
       :title="'Reset to current cycle'"
     >{{ cycleLabel }}</button>

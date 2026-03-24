@@ -71,14 +71,14 @@ function cardLabel(txn: Transaction) {
 
 <template>
   <div class="max-w-7xl mx-auto w-full p-4">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-200 mb-2">{{ t('installments.title') }}</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300 mb-2">{{ t('installments.title') }}</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ t('installments.subtitle') }}</p>
 
     <!-- Summary cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('installments.activeCount') }}</div>
-        <div class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ installmentItems.length }}</div>
+        <div class="text-2xl font-bold text-gray-900 dark:text-gray-300">{{ installmentItems.length }}</div>
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('installments.monthlyTotal') }}</div>
@@ -93,7 +93,7 @@ function cardLabel(txn: Transaction) {
     <!-- Sort -->
     <div class="flex items-center gap-2 mb-4">
       <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('installments.sortBy') }}:</span>
-      <select v-model="sortBy" class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2 py-1 text-sm">
+      <select v-model="sortBy" class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-2 py-1 text-sm">
         <option value="remaining">{{ t('installments.sortRemaining') }}</option>
         <option value="endDate">{{ t('installments.sortEndDate') }}</option>
         <option value="monthly">{{ t('installments.sortMonthly') }}</option>
@@ -111,7 +111,7 @@ function cardLabel(txn: Transaction) {
       <div v-for="item in sortedItems" :key="item.transaction.id" class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
-            <div class="font-medium text-gray-900 dark:text-gray-200 truncate">{{ item.transaction.overrideDescription || item.transaction.description }}</div>
+            <div class="font-medium text-gray-900 dark:text-gray-300 truncate">{{ item.transaction.overrideDescription || item.transaction.description }}</div>
             <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
               <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
               <span v-if="cardLabel(item.transaction)" class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">{{ cardLabel(item.transaction) }}</span>
@@ -119,7 +119,7 @@ function cardLabel(txn: Transaction) {
             </div>
           </div>
           <div class="text-right shrink-0">
-            <div class="text-lg font-bold text-gray-900 dark:text-gray-200">{{ formatCurrency(item.monthlyAmount) }}<span class="text-xs text-gray-500 dark:text-gray-400">/{{ t('installments.month') }}</span></div>
+            <div class="text-lg font-bold text-gray-900 dark:text-gray-300">{{ formatCurrency(item.monthlyAmount) }}<span class="text-xs text-gray-500 dark:text-gray-400">/{{ t('installments.month') }}</span></div>
             <div class="text-sm font-semibold text-purple-600 dark:text-purple-400">
               {{ item.transaction.installments!.number }}/{{ item.transaction.installments!.total }}
             </div>

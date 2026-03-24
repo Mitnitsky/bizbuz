@@ -166,7 +166,7 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
         <button class="text-sm text-purple-600 dark:text-purple-400 hover:underline mb-1" @click="router.push('/settings')">
           {{ t('categories.back') }}
         </button>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ t('categories.title') }}</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300">{{ t('categories.title') }}</h1>
       </div>
       <button
         class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
@@ -184,7 +184,7 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
           <input
             v-model="newNameHe"
             type="text"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm"
             :placeholder="t('categories.namePlaceholder')"
             dir="rtl"
           />
@@ -194,7 +194,7 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
           <input
             v-model="newNameEn"
             type="text"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2 text-sm"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm"
             :placeholder="t('categories.nameEnPlaceholder')"
           />
         </div>
@@ -224,12 +224,12 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
         <template v-if="renamingId === cat.id">
           <input
             v-model="renameHe"
-            class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-1.5 text-sm"
+            class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-1.5 text-sm"
             dir="rtl"
           />
           <input
             v-model="renameEn"
-            class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-1.5 text-sm"
+            class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-1.5 text-sm"
             placeholder="English"
           />
           <button
@@ -245,7 +245,7 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
 
         <!-- Normal mode -->
         <template v-else>
-          <span class="flex-1 text-sm text-gray-900 dark:text-gray-200">
+          <span class="flex-1 text-sm text-gray-900 dark:text-gray-300">
             {{ categoryDisplayName(cat.id, locale, categories) }}
           </span>
           <span v-if="cat.nameEn && locale !== 'en'" class="text-xs text-gray-400">{{ cat.nameEn }}</span>
@@ -280,7 +280,7 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
         :key="cat.id"
         class="flex items-center gap-3 px-4 py-3"
       >
-        <span class="flex-1 text-sm text-gray-900 dark:text-gray-200">
+        <span class="flex-1 text-sm text-gray-900 dark:text-gray-300">
           {{ categoryDisplayName(cat.id, locale, categories) }}
         </span>
         <span class="text-xs text-gray-400 font-mono">{{ cat.id }}</span>

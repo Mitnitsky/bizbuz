@@ -397,7 +397,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
                 }"
               >
                 <span class="text-xs text-gray-400 transition-transform rtl:-scale-x-100" :class="{ 'rotate-90 rtl:-rotate-90': expandedGroups.has(item.key) }">▶</span>
-                <span class="text-sm font-medium text-gray-900 dark:text-gray-200 flex-1 text-start truncate">
+                <span class="text-sm font-medium text-gray-900 dark:text-gray-300 flex-1 text-start truncate">
                   {{ categoryDisplayName(item.key, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
                 </span>
                 <span class="text-xs text-gray-500 dark:text-gray-400 tabular-nums">

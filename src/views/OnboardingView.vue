@@ -62,7 +62,7 @@ async function handleSignOut() {
       <!-- Header -->
       <div class="text-center mb-8">
         <div class="text-5xl mb-3">👨‍👩‍👧‍👦</div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-200">{{ t('auth.welcomeToBizbuz') }}</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-300">{{ t('auth.welcomeToBizbuz') }}</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('auth.signedInAs', { email: authStore.user?.email ?? '' }) }}</p>
       </div>
 
@@ -70,7 +70,7 @@ async function handleSignOut() {
       <div class="flex flex-col md:flex-row gap-6 items-stretch">
         <!-- Create Family -->
         <div class="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-200 mb-2">{{ t('auth.createFamily') }}</h2>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-300 mb-2">{{ t('auth.createFamily') }}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('auth.createFamilySubtitle') }}</p>
           <form @submit.prevent="handleCreateFamily" class="space-y-3">
             <input
@@ -78,7 +78,7 @@ async function handleSignOut() {
               type="text"
               :placeholder="t('settings.familyName')"
               required
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
             />
             <p v-if="createError" class="text-red-500 text-sm">{{ createError }}</p>
             <button
@@ -100,7 +100,7 @@ async function handleSignOut() {
 
         <!-- Join Family -->
         <div class="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-200 mb-2">{{ t('auth.joinExistingFamily') }}</h2>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-300 mb-2">{{ t('auth.joinExistingFamily') }}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('auth.gotInviteCode') }}</p>
           <form @submit.prevent="handleJoinFamily" class="space-y-3">
             <input
@@ -108,7 +108,7 @@ async function handleSignOut() {
               type="text"
               :placeholder="t('home.inviteCode')"
               required
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
             />
             <p v-if="joinError" class="text-red-500 text-sm">{{ joinError }}</p>
             <button

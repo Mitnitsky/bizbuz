@@ -48,7 +48,7 @@ async function handleSubmit() {
         <GlassIcon glass size="xl" class="mx-auto mb-3">
           <template #default="{ iconClass }"><component :is="icon('coins')" :class="[iconClass, 'text-purple-500']" /></template>
         </GlassIcon>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-200">BizBuz</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-300">BizBuz</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('auth.familyFinancialTracker') }}</p>
       </div>
 
@@ -60,7 +60,7 @@ async function handleSubmit() {
             v-model="email"
             type="email"
             required
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
           />
         </div>
 
@@ -71,7 +71,7 @@ async function handleSubmit() {
             type="password"
             required
             minlength="6"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
           />
         </div>
 

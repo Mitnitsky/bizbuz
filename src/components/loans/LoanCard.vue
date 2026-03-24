@@ -104,7 +104,7 @@ const sortedTracks = computed(() => {
     @click="emit('edit', loan)"
   >
     <div class="flex items-center gap-2 mb-2">
-      <span class="text-lg font-bold text-gray-900 dark:text-gray-200">{{ loan.name }}</span>
+      <span class="text-lg font-bold text-gray-900 dark:text-gray-300">{{ loan.name }}</span>
       <component :is="icon('loans')" class="w-4 h-4 text-gray-500" />
     </div>
 
@@ -139,7 +139,7 @@ const sortedTracks = computed(() => {
       </div>
       <div class="text-center">
         <div class="text-xs text-gray-500 dark:text-gray-400">&nbsp;</div>
-        <div class="font-bold text-gray-900 dark:text-gray-200">{{ paidPct.toFixed(0) }}%</div>
+        <div class="font-bold text-gray-900 dark:text-gray-300">{{ paidPct.toFixed(0) }}%</div>
       </div>
       <div class="text-right">
         <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('loans.remaining') }}</div>
@@ -156,7 +156,7 @@ const sortedTracks = computed(() => {
           :key="track.id"
           class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-2 py-1"
         >
-          <span class="font-medium text-gray-800 dark:text-gray-200 truncate max-w-[80px]">{{ track.name }}</span>
+          <span class="font-medium text-gray-800 dark:text-gray-300 truncate max-w-[80px]">{{ track.name }}</span>
           <span class="text-purple-600 dark:text-purple-400">{{ track.interestRate }}%</span>
           <span>{{ indexLinkIcon(track.indexLink) }}</span>
           <span class="ml-auto font-medium">{{ formatCurrency(track.remaining) }}</span>

@@ -72,7 +72,7 @@ function openAdd() {
 <template>
   <div class="max-w-7xl mx-auto w-full p-4">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ t('loans.loansAndMortgages') }}</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300">{{ t('loans.loansAndMortgages') }}</h1>
       <button
         class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
         @click="openAdd"
@@ -82,7 +82,7 @@ function openAdd() {
     <template v-if="allItems.length > 0">
       <!-- Loans section -->
       <template v-if="loans.length > 0">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ t('loans.loans') }}</h2>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-300 mb-3">{{ t('loans.loans') }}</h2>
         <div class="space-y-4 mb-6">
           <LoanCard
             v-for="item in loans"
@@ -95,7 +95,7 @@ function openAdd() {
 
       <!-- Mortgages section -->
       <template v-if="mortgages.length > 0">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ t('loans.mortgages') }}</h2>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-300 mb-3">{{ t('loans.mortgages') }}</h2>
         <div class="space-y-4">
           <LoanCard
             v-for="item in mortgages"

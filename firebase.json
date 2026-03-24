@@ -15,6 +15,12 @@
         "source": "**",
         "destination": "/index.html"
       }
+    ],
+    "headers": [
+      {
+        "source": "**/*.{svg,png,ico}",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }]
+      }
     ]
   }
 }
