@@ -122,7 +122,7 @@ const ownerFilteredTransactions = computed(() => {
 
 // Total spending for filtered transactions (expenses only, excludes transfers)
 const filteredTotalSpending = computed(() => {
-  return categorizedTransactions.value
+  return filteredCategorizedTransactions.value
     .filter(t => t.chargedAmount < 0
       && t.category !== TRANSFER_CATEGORY
       && t.category !== NON_BUDGET_CATEGORY)
@@ -137,9 +137,20 @@ const categorizedTransactions = computed(() => {
   })
 })
 
+// --- "New only" filter ---
+const showNewOnly = ref(false)
+const newTransactionCount = computed(() =>
+  categorizedTransactions.value.filter(t => t.isNew).length
+)
+
+const filteredCategorizedTransactions = computed(() => {
+  if (!showNewOnly.value) return categorizedTransactions.value
+  return categorizedTransactions.value.filter(t => t.isNew)
+})
+
 const transactionsByCategory = computed(() => {
   const map = new Map<string, Transaction[]>()
-  for (const t of categorizedTransactions.value) {
+  for (const t of filteredCategorizedTransactions.value) {
     // Skip income — we'll use the deduped list below
     if (t.category === INCOME_CATEGORY) continue
     const cat = t.category || DEFAULT_CATEGORY
@@ -289,6 +300,14 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
       <h1 class="text-lg font-bold text-gray-900 dark:text-gray-100 mr-2">{{ t('nav.spendings') }}</h1>
       <CycleSelector />
       <OwnerFilterChip v-if="showOwnerFilter && familyStore.family && familyStore.family.memberUids.length > 1" />
+      <button
+        v-if="newTransactionCount > 0"
+        class="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+        :class="showNewOnly
+          ? 'bg-emerald-600 text-white'
+          : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50'"
+        @click="showNewOnly = !showNewOnly"
+      >NEW {{ newTransactionCount }}</button>
       <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ formatCurrency(filteredTotalSpending) }}</span>
       <div class="flex-1" />
       <!-- Sort mode toggle -->
