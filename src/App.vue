@@ -327,7 +327,7 @@ watch(() => route.path, (newPath) => {
     { filter: 'brightness(1.8)', offset: 0.4 },
     { filter: 'brightness(1)', offset: 0.7 },
     { filter: 'brightness(1)', offset: 1 },
-  ], { duration: 1200, easing: 'ease-in-out' })
+  ], { duration: 400, easing: 'ease-in-out' })
 })
 
 function spawnShatterParticles() {
