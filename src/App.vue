@@ -62,12 +62,74 @@ const totalBottomTabs = computed(() => primaryTabs.value.length + 1) // +1 for M
 const activeBottomIndex = computed(() => {
   const idx = primaryTabs.value.findIndex(t => route.path === t.path)
   if (idx >= 0) return idx
-  if (isMoreActive.value || moreMenuOpen.value) return primaryTabs.value.length
+  if (moreMenuOpen.value) return primaryTabs.value.length
   return -1
 })
 
+// Touch-drag to slide bubble across tabs
+const bottomNavRef = ref<HTMLElement | null>(null)
+const dragIndex = ref<number | null>(null)
+let longPressTimer: ReturnType<typeof setTimeout> | null = null
+let isDragging = false
+let startX = 0
+
+function getTabIndexFromX(clientX: number): number {
+  const nav = bottomNavRef.value
+  if (!nav) return -1
+  const rect = nav.getBoundingClientRect()
+  const total = totalBottomTabs.value
+  const isRtl = locale.value === 'he'
+  const relX = clientX - rect.left
+  const pct = relX / rect.width
+  const rawIdx = Math.floor(pct * total)
+  const clampedIdx = Math.max(0, Math.min(total - 1, rawIdx))
+  return isRtl ? (total - 1 - clampedIdx) : clampedIdx
+}
+
+function onTouchStart(e: TouchEvent) {
+  startX = e.touches[0].clientX
+  const idx = getTabIndexFromX(startX)
+  longPressTimer = setTimeout(() => {
+    isDragging = true
+    dragIndex.value = idx
+  }, 300)
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (!isDragging) {
+    // Cancel long-press if finger moved too much before threshold
+    const dx = Math.abs(e.touches[0].clientX - startX)
+    if (dx > 10 && longPressTimer) {
+      clearTimeout(longPressTimer)
+      longPressTimer = null
+    }
+    return
+  }
+  e.preventDefault()
+  dragIndex.value = getTabIndexFromX(e.touches[0].clientX)
+}
+
+function onTouchEnd() {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null }
+  if (isDragging && dragIndex.value !== null) {
+    const idx = dragIndex.value
+    if (idx < primaryTabs.value.length) {
+      router.push(primaryTabs.value[idx].path)
+    } else {
+      moreMenuOpen.value = !moreMenuOpen.value
+    }
+  }
+  isDragging = false
+  dragIndex.value = null
+}
+
+const bubbleDisplayIndex = computed(() => {
+  if (dragIndex.value !== null) return dragIndex.value
+  return activeBottomIndex.value
+})
+
 const bubbleStyle = computed(() => {
-  const idx = activeBottomIndex.value
+  const idx = bubbleDisplayIndex.value
   if (idx < 0) return { opacity: '0' }
   const total = totalBottomTabs.value
   const widthPct = 100 / total
@@ -234,12 +296,17 @@ onUnmounted(() => {
     <!-- Bottom tab bar (narrow screens) -->
     <nav
       v-if="!isWide"
+      ref="bottomNavRef"
       class="fixed bottom-3 left-3 right-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-white/40 dark:border-gray-600/30 flex z-50 px-1 py-1 overflow-hidden"
       style="backdrop-filter: blur(40px) saturate(180%);"
+      @touchstart.passive="onTouchStart"
+      @touchmove="onTouchMove"
+      @touchend.passive="onTouchEnd"
+      @touchcancel.passive="onTouchEnd"
     >
       <!-- Sliding bubble indicator -->
       <div
-        class="absolute top-1 bottom-1 rounded-full bg-purple-500/15 dark:bg-purple-400/20 transition-all duration-300 ease-in-out pointer-events-none"
+        class="absolute top-1 bottom-1 rounded-full bg-purple-500/20 dark:bg-purple-400/25 backdrop-blur-sm transition-all duration-300 ease-in-out pointer-events-none border border-purple-500/15 dark:border-purple-400/15"
         :style="bubbleStyle"
       />
 
