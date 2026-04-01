@@ -63,8 +63,6 @@ const totalBottomTabs = computed(() => primaryTabs.value.length + 1) // +1 for M
 const activeBottomIndex = computed(() => {
   const idx = primaryTabs.value.findIndex(t => route.path === t.path)
   if (idx >= 0) return idx
-  // Show bubble on More slot when a more-item page is active or menu is open
-  if (isMoreActive.value || moreMenuOpen.value) return primaryTabs.value.length
   return -1
 })
 
@@ -137,7 +135,7 @@ const bubbleStyle = computed(() => {
   const isRtl = locale.value === 'he'
   const posIndex = isRtl ? (total - 1 - idx) : idx
   // Account for nav px-2 (0.5rem) padding on each side
-  const pad = 0.5 // rem
+  const pad = 0.375 // rem (px-1.5)
   return {
     opacity: '1',
     width: `calc((100% - ${pad * 2}rem) / ${total})`,
@@ -227,20 +225,85 @@ watch(appState, (state) => {
   }
 })
 
+// Pull-to-refresh for standalone PWA (no refresh button in Safari webapp)
+const isStandalone = ref(
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (navigator as any).standalone === true
+)
+const pullDistance = ref(0)
+const isRefreshing = ref(false)
+const PULL_THRESHOLD = 80
+let pullStartY = 0
+let isPulling = false
+
+function onPullStart(e: TouchEvent) {
+  if (!isStandalone.value || isRefreshing.value) return
+  const scrollEl = document.querySelector('main .overflow-y-auto') as HTMLElement | null
+  if (scrollEl && scrollEl.scrollTop > 0) return
+  pullStartY = e.touches[0].clientY
+  isPulling = true
+}
+
+function onPullMove(e: TouchEvent) {
+  if (!isPulling) return
+  const dy = e.touches[0].clientY - pullStartY
+  if (dy < 0) { pullDistance.value = 0; return }
+  pullDistance.value = Math.min(dy * 0.5, 120)
+  if (pullDistance.value > 10) e.preventDefault()
+}
+
+function onPullEnd() {
+  if (!isPulling) return
+  isPulling = false
+  if (pullDistance.value >= PULL_THRESHOLD) {
+    isRefreshing.value = true
+    pullDistance.value = 50
+    setTimeout(() => { window.location.reload() }, 300)
+  } else {
+    pullDistance.value = 0
+  }
+}
+
 onMounted(async () => {
   await authStore.initAuth()
   window.addEventListener('resize', onResize)
   mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
   mediaQuery.addEventListener('change', onSystemThemeChange)
+  if (isStandalone.value) {
+    document.addEventListener('touchstart', onPullStart, { passive: true })
+    document.addEventListener('touchmove', onPullMove, { passive: false })
+    document.addEventListener('touchend', onPullEnd, { passive: true })
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', onResize)
   mediaQuery?.removeEventListener('change', onSystemThemeChange)
+  if (isStandalone.value) {
+    document.removeEventListener('touchstart', onPullStart)
+    document.removeEventListener('touchmove', onPullMove)
+    document.removeEventListener('touchend', onPullEnd)
+  }
 })
 </script>
 
 <template>
+  <!-- Pull-to-refresh indicator (standalone PWA only) -->
+  <div
+    v-if="isStandalone && pullDistance > 0"
+    class="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
+    :style="{ transform: `translateY(${pullDistance - 40}px)`, opacity: Math.min(pullDistance / PULL_THRESHOLD, 1) }"
+  >
+    <div class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center">
+      <component
+        :is="icon('loader')"
+        class="w-5 h-5 text-purple-500"
+        :class="{ 'animate-spin': isRefreshing }"
+        :style="{ transform: isRefreshing ? '' : `rotate(${pullDistance * 3}deg)` }"
+      />
+    </div>
+  </div>
+
   <!-- Loading spinner -->
   <div v-if="appState === 'loading'" class="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="text-center">
@@ -300,7 +363,7 @@ onUnmounted(() => {
     <nav
       v-if="!isWide"
       ref="bottomNavRef"
-      class="fixed bottom-3 left-3 right-3 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-gray-200/80 dark:border-gray-600/30 flex z-50 px-2 py-1.5 overflow-hidden"
+      class="fixed bottom-3 left-3 right-3 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-gray-200/80 dark:border-gray-600/30 flex z-50 px-1.5 py-1 overflow-hidden"
       style="backdrop-filter: blur(40px) saturate(180%);"
       @touchstart.passive="onTouchStart"
       @touchmove="onTouchMove"
@@ -309,7 +372,7 @@ onUnmounted(() => {
     >
       <!-- Sliding bubble indicator -->
       <div
-        class="absolute top-1.5 bottom-1.5 rounded-full bg-purple-100 dark:bg-purple-400/25 transition-all duration-300 ease-in-out pointer-events-none border border-purple-200 dark:border-purple-400/15"
+        class="absolute top-1 bottom-1 rounded-full bg-purple-100 dark:bg-purple-400/25 transition-all duration-300 ease-in-out pointer-events-none border border-purple-200 dark:border-purple-400/15"
         :style="bubbleStyle"
       />
 
