@@ -71,10 +71,13 @@ const bubbleStyle = computed(() => {
   if (idx < 0) return { opacity: '0' }
   const total = totalBottomTabs.value
   const widthPct = 100 / total
+  const isRtl = locale.value === 'he'
+  const posIndex = isRtl ? (total - 1 - idx) : idx
   return {
     opacity: '1',
     width: `${widthPct}%`,
-    transform: `translateX(${idx * 100}%)`,
+    left: '0',
+    transform: `translateX(${posIndex * 100}%)`,
   }
 })
 
