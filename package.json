@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@phosphor-icons/vue": "^2.2.1",
     "@tabler/icons-vue": "^3.40.0",
     "@tailwindcss/vite": "^4.2.2",
     "@vee-validate/zod": "^4.15.1",

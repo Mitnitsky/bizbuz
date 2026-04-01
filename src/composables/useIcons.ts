@@ -13,17 +13,6 @@ import {
   Pin as LPin, Pencil as LPencil,
 } from 'lucide-vue-next'
 
-// Phosphor
-import {
-  PhHouse, PhClipboardText, PhArrowsClockwise, PhPiggyBank,
-  PhTrendUp, PhBank, PhChartBar, PhGear, PhDotsThree,
-  PhList, PhSpinnerGap, PhCoins, PhSparkle,
-  PhDotsSixVertical, PhInfo, PhCaretDown, PhCaretUp,
-  PhCaretLeft, PhCaretRight, PhLock, PhLockOpen,
-  PhTrash, PhScissors, PhBookOpen, PhPlus, PhSplitVertical,
-  PhTray, PhPushPin, PhPencilSimple,
-} from '@phosphor-icons/vue'
-
 // Tabler
 import {
   IconHome, IconClipboardList, IconRefresh, IconPigMoney,
@@ -35,7 +24,7 @@ import {
   IconInbox, IconPin, IconPencil,
 } from '@tabler/icons-vue'
 
-export type IconSetName = 'lucide' | 'phosphor' | 'tabler'
+export type IconSetName = 'lucide' | 'tabler'
 export type AppIconName =
   | 'home' | 'spendings' | 'installments' | 'savings' | 'investments'
   | 'loans' | 'statistics' | 'settings' | 'more' | 'menu' | 'loader'
@@ -77,38 +66,6 @@ const lucideIcons: IconMap = {
   edit: markRaw(LPencil),
 }
 
-const phosphorIcons: IconMap = {
-  home: markRaw(PhHouse),
-  spendings: markRaw(PhClipboardText),
-  installments: markRaw(PhArrowsClockwise),
-  savings: markRaw(PhPiggyBank),
-  investments: markRaw(PhTrendUp),
-  loans: markRaw(PhBank),
-  statistics: markRaw(PhChartBar),
-  settings: markRaw(PhGear),
-  more: markRaw(PhDotsThree),
-  menu: markRaw(PhList),
-  loader: markRaw(PhSpinnerGap),
-  coins: markRaw(PhCoins),
-  sparkles: markRaw(PhSparkle),
-  grip: markRaw(PhDotsSixVertical),
-  info: markRaw(PhInfo),
-  chevronDown: markRaw(PhCaretDown),
-  chevronUp: markRaw(PhCaretUp),
-  chevronLeft: markRaw(PhCaretLeft),
-  chevronRight: markRaw(PhCaretRight),
-  lock: markRaw(PhLock),
-  unlock: markRaw(PhLockOpen),
-  trash: markRaw(PhTrash),
-  split: markRaw(PhSplitVertical),
-  rules: markRaw(PhBookOpen),
-  plus: markRaw(PhPlus),
-  scissors: markRaw(PhScissors),
-  inbox: markRaw(PhTray),
-  pin: markRaw(PhPushPin),
-  edit: markRaw(PhPencilSimple),
-}
-
 const tablerIcons: IconMap = {
   home: markRaw(IconHome),
   spendings: markRaw(IconClipboardList),
@@ -143,13 +100,11 @@ const tablerIcons: IconMap = {
 
 const ICON_SETS: Record<IconSetName, IconMap> = {
   lucide: lucideIcons,
-  phosphor: phosphorIcons,
   tabler: tablerIcons,
 }
 
 export const ICON_SET_LABELS: Record<IconSetName, string> = {
   lucide: 'Lucide',
-  phosphor: 'Phosphor',
   tabler: 'Tabler',
 }
 

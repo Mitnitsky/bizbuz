@@ -378,28 +378,8 @@ const iconAnimations: Record<string, (svg: SVGElement) => void> = {
     const isTabler = activeSet.value === 'tabler'
     const door = findByD(svg, isTabler ? T.homeDoor : L.homeDoor)
     const house = findByD(svg, isTabler ? T.homeRoof : L.homeBody)
-    if (house || door) {
-      // Roof tips like a hat greeting — pivot bottom-right so left lifts
-      if (house) {
-        house.animate([
-          { transform: rot(21, 21, 0) },
-          { transform: rot(21, 21, 10) },
-          { transform: rot(21, 21, -3) },
-          { transform: rot(21, 21, 1) },
-          { transform: rot(21, 21, 0) },
-        ], { duration: d(0.65), easing: 'ease-in-out' })
-      }
-      if (door) {
-        door.animate([
-          { transform: sc(9, 17, 1, 1) },
-          { transform: sc(9, 17, 0.05, 1) },
-          { transform: sc(9, 17, 0.05, 1) },
-          { transform: sc(9, 17, 1, 1) },
-        ], { duration: d(0.8), easing: 'ease-in-out', delay: d(0.1) })
-      }
-    } else {
-      // Phosphor: single path — hat tip whole icon
-      svg.animate([
+    if (house) {
+      house.animate([
         { transform: rot(21, 21, 0) },
         { transform: rot(21, 21, 10) },
         { transform: rot(21, 21, -3) },
@@ -407,20 +387,17 @@ const iconAnimations: Record<string, (svg: SVGElement) => void> = {
         { transform: rot(21, 21, 0) },
       ], { duration: d(0.65), easing: 'ease-in-out' })
     }
+    if (door) {
+      door.animate([
+        { transform: sc(9, 17, 1, 1) },
+        { transform: sc(9, 17, 0.05, 1) },
+        { transform: sc(9, 17, 0.05, 1) },
+        { transform: sc(9, 17, 1, 1) },
+      ], { duration: d(0.8), easing: 'ease-in-out', delay: d(0.1) })
+    }
   },
 
   spendings(svg) {
-    const ch = svg.querySelectorAll(':scope > *')
-    if (ch.length < 4) {
-      // Phosphor: single path — page flip
-      svg.animate([
-        { transform: rot(12, 12, 0) },
-        { transform: rot(12, 12, -8) },
-        { transform: rot(12, 12, 3) },
-        { transform: rot(12, 12, 0) },
-      ], { duration: d(0.5), easing: 'ease-in-out' })
-      return
-    }
     const isTabler = activeSet.value === 'tabler'
     if (isTabler) {
       const items = [T.clipBullets[0], T.clipLines[0], T.clipBullets[1], T.clipLines[1]]
@@ -438,6 +415,7 @@ const iconAnimations: Record<string, (svg: SVGElement) => void> = {
         })
       })
     } else {
+      const ch = svg.querySelectorAll(':scope > *')
       const rows = [[ch[4], ch[2]], [ch[5], ch[3]]] as SVGElement[][]
       rows.forEach((row, ri) => {
         row.forEach(el => {
@@ -467,39 +445,27 @@ const iconAnimations: Record<string, (svg: SVGElement) => void> = {
     const isTabler = activeSet.value === 'tabler'
     const tail = findByD(svg, isTabler ? T.pigTail : L.pigTail)
     const eye = findByD(svg, isTabler ? T.pigEye : L.pigEye)
-    if (tail || eye) {
-      if (tail) {
-        tail.animate([
-          { transform: 'translateX(0)' },
-          { transform: 'translateX(-3px)' },
-          { transform: 'translateX(3px)' },
-          { transform: 'translateX(-2px)' },
-          { transform: 'translateX(2px)' },
-          { transform: 'translateX(-1px)' },
-          { transform: 'translateX(0)' },
-        ], { duration: d(0.85), easing: 'ease-in-out' })
-      }
-      if (eye) {
-        const ex = isTabler ? 15 : 16
-        const ey = isTabler ? 11 : 10
-        eye.animate([
-          { transform: sc(ex, ey, 1, 1) },
-          { transform: sc(ex, ey, 1, 0.05) },
-          { transform: sc(ex, ey, 1, 0.05) },
-          { transform: sc(ex, ey, 1, 1.2) },
-          { transform: sc(ex, ey, 1, 1) },
-        ], { duration: d(0.4), easing: 'ease-in-out', delay: d(0.15) })
-      }
-    } else {
-      // Phosphor: wiggle whole pig
-      svg.animate([
-        { transform: 'rotate(0deg)' },
-        { transform: 'rotate(-5deg)' },
-        { transform: 'rotate(4deg)' },
-        { transform: 'rotate(-3deg)' },
-        { transform: 'rotate(1deg)' },
-        { transform: 'rotate(0deg)' },
-      ], { duration: d(0.7), easing: 'ease-in-out' })
+    if (tail) {
+      tail.animate([
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-3px)' },
+        { transform: 'translateX(3px)' },
+        { transform: 'translateX(-2px)' },
+        { transform: 'translateX(2px)' },
+        { transform: 'translateX(-1px)' },
+        { transform: 'translateX(0)' },
+      ], { duration: d(0.85), easing: 'ease-in-out' })
+    }
+    if (eye) {
+      const ex = isTabler ? 15 : 16
+      const ey = isTabler ? 11 : 10
+      eye.animate([
+        { transform: sc(ex, ey, 1, 1) },
+        { transform: sc(ex, ey, 1, 0.05) },
+        { transform: sc(ex, ey, 1, 0.05) },
+        { transform: sc(ex, ey, 1, 1.2) },
+        { transform: sc(ex, ey, 1, 1) },
+      ], { duration: d(0.4), easing: 'ease-in-out', delay: d(0.15) })
     }
   },
 
@@ -525,44 +491,35 @@ const iconAnimations: Record<string, (svg: SVGElement) => void> = {
         { transform: 'translateY(-3px)' },
         { transform: 'translateY(0)' },
       ], { duration: d(0.55), easing: 'ease-in-out' })
-      if (isTabler) {
-        const wins = T.bankWindows.map(p => findByD(svg, p))
-        wins.forEach((w, i) => {
-          if (w) {
-            const cx = [8, 12, 16][i]
-            w.animate([
-              { transform: rot(cx, 17, 0) },
-              { transform: rot(cx, 17, 14) },
-              { transform: rot(cx, 17, -10) },
-              { transform: rot(cx, 17, 5) },
-              { transform: rot(cx, 17, 0) },
-            ], { duration: d(0.35), easing: 'ease-in-out', delay: d(0.35 + i * 0.1) })
-          }
-        })
-      } else {
-        const cols = L.bankCols.map(p => findByD(svg, p))
-        cols.forEach((col, i) => {
-          if (col) {
-            const cx = [6, 10, 14, 18][i]
-            col.animate([
-              { transform: rot(cx, 18, 0) },
-              { transform: rot(cx, 18, 14) },
-              { transform: rot(cx, 18, -10) },
-              { transform: rot(cx, 18, 5) },
-              { transform: rot(cx, 18, 0) },
-            ], { duration: d(0.35), easing: 'ease-in-out', delay: d(0.35 + i * 0.1) })
-          }
-        })
-      }
+    }
+    if (isTabler) {
+      const wins = T.bankWindows.map(p => findByD(svg, p))
+      wins.forEach((w, i) => {
+        if (w) {
+          const cx = [8, 12, 16][i]
+          w.animate([
+            { transform: rot(cx, 17, 0) },
+            { transform: rot(cx, 17, 14) },
+            { transform: rot(cx, 17, -10) },
+            { transform: rot(cx, 17, 5) },
+            { transform: rot(cx, 17, 0) },
+          ], { duration: d(0.35), easing: 'ease-in-out', delay: d(0.35 + i * 0.1) })
+        }
+      })
     } else {
-      // Phosphor: bounce whole bank
-      svg.animate([
-        { transform: 'translateY(0)' },
-        { transform: 'translateY(-4px)' },
-        { transform: 'translateY(1px)' },
-        { transform: 'translateY(-2px)' },
-        { transform: 'translateY(0)' },
-      ], { duration: d(0.55), easing: 'ease-in-out' })
+      const cols = L.bankCols.map(p => findByD(svg, p))
+      cols.forEach((col, i) => {
+        if (col) {
+          const cx = [6, 10, 14, 18][i]
+          col.animate([
+            { transform: rot(cx, 18, 0) },
+            { transform: rot(cx, 18, 14) },
+            { transform: rot(cx, 18, -10) },
+            { transform: rot(cx, 18, 5) },
+            { transform: rot(cx, 18, 0) },
+          ], { duration: d(0.35), easing: 'ease-in-out', delay: d(0.35 + i * 0.1) })
+        }
+      })
     }
   },
 
@@ -572,11 +529,9 @@ const iconAnimations: Record<string, (svg: SVGElement) => void> = {
     const botY = isTabler ? 20 : 17
     const delays = [0, 0.15, 0.3]
     const durations = [0.55, 0.7, 0.6]
-    let found = false
     barDefs.forEach(([prefix, cx], i) => {
       const bar = findByD(svg, prefix)
       if (bar) {
-        found = true
         bar.animate([
           { transform: sc(cx, botY, 1, 1) },
           { transform: sc(cx, botY, 1, 0.1) },
@@ -586,20 +541,9 @@ const iconAnimations: Record<string, (svg: SVGElement) => void> = {
         ], { duration: d(durations[i]), easing: 'ease-in-out', delay: d(delays[i]) })
       }
     })
-    if (!found) {
-      // Phosphor: stretch whole icon
-      svg.animate([
-        { transform: sc(12, 20, 1, 1) },
-        { transform: sc(12, 20, 1, 0.15) },
-        { transform: sc(12, 20, 1, 0.15) },
-        { transform: sc(12, 20, 1, 1.1) },
-        { transform: sc(12, 20, 1, 1) },
-      ], { duration: d(0.7), easing: 'ease-in-out' })
-    }
   },
 
   settings(svg) {
-    // Both Lucide and Tabler: ch[0]=gear, ch[1]=inner circle
     const ch = svg.querySelectorAll(':scope > *')
     const gear = ch[0] as SVGElement
     const inner = ch[1] as SVGElement
