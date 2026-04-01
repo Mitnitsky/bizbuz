@@ -315,21 +315,7 @@ function getAccentColors(): string[] {
 }
 
 function shimmer(e: PointerEvent) {
-  const target = (e.currentTarget as HTMLElement)
-  const rect = target.getBoundingClientRect()
-  const shine = document.createElement('div')
-  shine.style.cssText = `
-    position:fixed;left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;
-    width:0;height:0;border-radius:50%;pointer-events:none;z-index:100;
-    background:radial-gradient(circle, rgba(168,85,247,0.5) 0%, rgba(168,85,247,0) 70%);
-    transform:translate(-50%,-50%);
-  `
-  document.body.appendChild(shine)
-  const anim = shine.animate([
-    { width: '0px', height: '0px', opacity: 1 },
-    { width: '80px', height: '80px', opacity: 0 },
-  ], { duration: 600, easing: 'ease-out', fill: 'forwards' })
-  anim.onfinish = () => shine.remove()
+  // No-op, handled by CSS class below
 }
 
 function spawnShatterParticles() {
@@ -518,9 +504,8 @@ function onMorphEnter(el: Element, done: () => void) {
         :key="item.path"
         :to="item.path"
         class="nav-tab flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
-        :class="{ 'text-purple-600 dark:text-purple-400': route.path === item.path }"
+        :class="{ 'text-purple-600 dark:text-purple-400 nav-gloss': route.path === item.path }"
         @click="moreMenuOpen = false"
-        @pointerdown="shimmer($event)"
       >
         <component :is="icon(item.iconName)" class="w-6 h-6" />
         <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
@@ -623,5 +608,34 @@ function onMorphEnter(el: Element, done: () => void) {
 .morph-text-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* Gloss sweep on active nav tab */
+.nav-gloss {
+  position: relative;
+  overflow: hidden;
+}
+.nav-gloss::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(255,255,255,0.6) 45%,
+    rgba(255,255,255,0.8) 50%,
+    rgba(255,255,255,0.6) 55%,
+    transparent 70%,
+    transparent 100%
+  );
+  transform: translateX(-150%);
+  animation: nav-gloss-sweep 1.5s ease-in-out;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+}
+@keyframes nav-gloss-sweep {
+  0% { transform: translateX(-150%); }
+  100% { transform: translateX(150%); }
 }
 </style>
