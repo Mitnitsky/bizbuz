@@ -300,6 +300,26 @@ interface Particle {
   gravity: number
 }
 
+function shimmer(e: MouseEvent) {
+  const target = (e.currentTarget as HTMLElement)
+  const rect = target.getBoundingClientRect()
+  const shine = document.createElement('div')
+  const x = rect.width / 2
+  const y = rect.height / 2
+  shine.style.cssText = `
+    position:absolute;left:${x}px;top:${y}px;width:0;height:0;
+    border-radius:50%;pointer-events:none;z-index:0;
+    background:radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0) 70%);
+    transform:translate(-50%,-50%);
+  `
+  target.style.position = 'relative'
+  target.appendChild(shine)
+  shine.animate([
+    { width: '0px', height: '0px', opacity: 0.8 },
+    { width: '60px', height: '60px', opacity: 0 },
+  ], { duration: 500, easing: 'ease-out' }).onfinish = () => shine.remove()
+}
+
 function spawnShatterParticles() {
   const container = particleContainer.value
   if (!container) return
@@ -486,9 +506,9 @@ function onMorphEnter(el: Element, done: () => void) {
         v-for="item in primaryTabs"
         :key="item.path"
         :to="item.path"
-        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
+        class="nav-tab flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': route.path === item.path }"
-        @click="moreMenuOpen = false"
+        @click="moreMenuOpen = false; shimmer($event)"
       >
         <component :is="icon(item.iconName)" class="w-6 h-6" />
         <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
