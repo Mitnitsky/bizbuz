@@ -300,16 +300,31 @@ interface Particle {
   gravity: number
 }
 
+function getAccentColors(): string[] {
+  const s = getComputedStyle(document.documentElement)
+  const isDark = document.documentElement.classList.contains('dark')
+  const c400 = s.getPropertyValue('--color-purple-400').trim()
+  const c500 = s.getPropertyValue('--color-purple-500').trim()
+  const c600 = s.getPropertyValue('--color-purple-600').trim()
+  const c200 = s.getPropertyValue('--color-purple-200').trim()
+  const c800 = s.getPropertyValue('--color-purple-800').trim()
+  // Use oklch values if present, fallback to purple hex
+  const fallback = ['#a855f7', '#7c3aed', '#c084fc', isDark ? '#e9d5ff' : '#6b21a8']
+  const colors = [c400, c500, c600, isDark ? c200 : c800].map((c, i) => c || fallback[i])
+  return colors
+}
+
 function shimmer(e: MouseEvent) {
   const target = (e.currentTarget as HTMLElement)
   const rect = target.getBoundingClientRect()
   const shine = document.createElement('div')
   const x = rect.width / 2
   const y = rect.height / 2
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-purple-500').trim() || '#a855f7'
   shine.style.cssText = `
     position:absolute;left:${x}px;top:${y}px;width:0;height:0;
     border-radius:50%;pointer-events:none;z-index:0;
-    background:radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0) 70%);
+    background:radial-gradient(circle, color-mix(in srgb, ${accentColor} 40%, transparent) 0%, transparent 70%);
     transform:translate(-50%,-50%);
   `
   target.style.position = 'relative'
@@ -328,8 +343,7 @@ function spawnShatterParticles() {
   const cy = rect.height / 2
   const count = 16
   const particles: Particle[] = []
-  const isDark = document.documentElement.classList.contains('dark')
-  const colors = ['#a855f7', '#7c3aed', '#c084fc', isDark ? '#e9d5ff' : '#6b21a8']
+  const colors = getAccentColors()
 
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6
