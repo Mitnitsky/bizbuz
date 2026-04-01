@@ -315,6 +315,32 @@ function getAccentColors(): string[] {
 }
 
 // Shimmer is now CSS-only (nav-gloss class)
+const navTabRefs: Record<string, HTMLElement> = {}
+
+watch(() => route.path, (newPath) => {
+  const el = navTabRefs[newPath]
+  if (!el) return
+  // Remove any existing gloss overlay
+  el.querySelectorAll('.gloss-sweep').forEach(g => g.remove())
+  const gloss = document.createElement('div')
+  gloss.className = 'gloss-sweep'
+  gloss.style.cssText = `
+    position:absolute;inset:0;pointer-events:none;z-index:20;overflow:hidden;border-radius:9999px;
+  `
+  const inner = document.createElement('div')
+  inner.style.cssText = `
+    position:absolute;top:0;bottom:0;width:60%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    transform:translateX(-100%);
+  `
+  gloss.appendChild(inner)
+  el.style.position = 'relative'
+  el.appendChild(gloss)
+  inner.animate([
+    { transform: 'translateX(-100%)' },
+    { transform: 'translateX(260%)' },
+  ], { duration: 600, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => gloss.remove()
+})
 
 function spawnShatterParticles() {
   const container = particleContainer.value
@@ -501,8 +527,9 @@ function onMorphEnter(el: Element, done: () => void) {
         v-for="item in primaryTabs"
         :key="item.path"
         :to="item.path"
+        :ref="(el: any) => { if (el?.$el) navTabRefs[item.path] = el.$el }"
         class="nav-tab flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
-        :class="{ 'text-purple-600 dark:text-purple-400 nav-gloss': route.path === item.path }"
+        :class="{ 'text-purple-600 dark:text-purple-400': route.path === item.path }"
         @click="moreMenuOpen = false"
       >
         <component :is="icon(item.iconName)" class="w-6 h-6" />
@@ -606,34 +633,5 @@ function onMorphEnter(el: Element, done: () => void) {
 .morph-text-leave-to {
   opacity: 0;
   transform: translateY(-4px);
-}
-
-/* Gloss sweep on active nav tab */
-.nav-gloss {
-  position: relative;
-  overflow: hidden;
-}
-.nav-gloss::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    120deg,
-    transparent 0%,
-    transparent 30%,
-    rgba(255,255,255,0.6) 45%,
-    rgba(255,255,255,0.8) 50%,
-    rgba(255,255,255,0.6) 55%,
-    transparent 70%,
-    transparent 100%
-  );
-  transform: translateX(-150%);
-  animation: nav-gloss-sweep 1.5s ease-in-out;
-  pointer-events: none;
-  mix-blend-mode: soft-light;
-}
-@keyframes nav-gloss-sweep {
-  0% { transform: translateX(-150%); }
-  100% { transform: translateX(150%); }
 }
 </style>
