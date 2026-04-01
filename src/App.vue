@@ -57,12 +57,14 @@ const moreTabs = computed(() => {
 
 const moreMenuOpen = ref(false)
 const isMoreActive = computed(() => moreTabs.value.some(t => route.path === t.path || route.path.startsWith(t.path + '/')))
+const activeMoreItem = computed(() => moreTabs.value.find(t => route.path === t.path || route.path.startsWith(t.path + '/')))
 
 const totalBottomTabs = computed(() => primaryTabs.value.length + 1) // +1 for More button
 const activeBottomIndex = computed(() => {
   const idx = primaryTabs.value.findIndex(t => route.path === t.path)
   if (idx >= 0) return idx
-  if (moreMenuOpen.value) return primaryTabs.value.length
+  // Show bubble on More slot when a more-item page is active or menu is open
+  if (isMoreActive.value || moreMenuOpen.value) return primaryTabs.value.length
   return -1
 })
 
@@ -297,7 +299,7 @@ onUnmounted(() => {
     <nav
       v-if="!isWide"
       ref="bottomNavRef"
-      class="fixed bottom-3 left-3 right-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-white/40 dark:border-gray-600/30 flex z-50 px-1 py-1 overflow-hidden"
+      class="fixed bottom-3 left-3 right-3 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-gray-200/80 dark:border-gray-600/30 flex z-50 px-1 py-1 overflow-hidden"
       style="backdrop-filter: blur(40px) saturate(180%);"
       @touchstart.passive="onTouchStart"
       @touchmove="onTouchMove"
@@ -306,7 +308,7 @@ onUnmounted(() => {
     >
       <!-- Sliding bubble indicator -->
       <div
-        class="absolute top-1 bottom-1 rounded-full bg-purple-500/20 dark:bg-purple-400/25 backdrop-blur-sm transition-all duration-300 ease-in-out pointer-events-none border border-purple-500/15 dark:border-purple-400/15"
+        class="absolute top-1 bottom-1 rounded-full bg-purple-100 dark:bg-purple-400/25 transition-all duration-300 ease-in-out pointer-events-none border border-purple-200 dark:border-purple-400/15"
         :style="bubbleStyle"
       />
 
@@ -322,14 +324,18 @@ onUnmounted(() => {
         <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
       </router-link>
 
-      <!-- More button -->
+      <!-- More button — morphs to show active more-item when on a More page -->
       <button
-        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
+        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-all duration-300 relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': isMoreActive || moreMenuOpen }"
         @click="moreMenuOpen = !moreMenuOpen"
       >
-        <component :is="icon('more')" class="w-6 h-6" />
-        <span class="text-[10px] mt-0.5 font-medium">{{ t('nav.more') }}</span>
+        <component :is="activeMoreItem ? icon(activeMoreItem.iconName) : icon('more')" class="w-6 h-6 transition-all duration-300" />
+        <span class="text-[10px] mt-0.5 font-medium leading-tight text-center">
+          <template v-if="activeMoreItem">{{ t(activeMoreItem.labelKey) }}</template>
+          <template v-else>{{ t('nav.more') }}</template>
+        </span>
+        <span v-if="activeMoreItem" class="text-[8px] font-medium text-gray-400 dark:text-gray-500 leading-none">{{ t('nav.more') }}</span>
       </button>
     </nav>
 
