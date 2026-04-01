@@ -19,6 +19,8 @@ const prefsStore = usePreferencesStore()
 const { icon } = useIcons()
 const familyStore = useFamilyStore()
 
+const dataLoading = computed(() => !familyStore.familyLoaded)
+
 const familyId = computed(() => authStore.familyId)
 const effectiveCategories = computed(() => getEffectiveCategories(familyStore.familySettings.categories, locale.value))
 const locale = computed(() => prefsStore.locale)
@@ -124,6 +126,41 @@ function toggleAll() {
 
 <template>
   <div class="max-w-7xl mx-auto w-full p-4">
+    <!-- Skeleton loading state -->
+    <template v-if="dataLoading">
+      <div class="animate-pulse">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            <div class="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+          <div class="h-9 w-28 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+        <div v-for="i in 3" :key="i" class="mb-6">
+          <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
+          <div class="space-y-2">
+            <div v-for="j in 2" :key="j" class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1">
+                  <div class="flex gap-1.5 mb-2">
+                    <div class="h-6 w-44 bg-gray-200 dark:bg-gray-700 rounded-md" />
+                  </div>
+                  <div class="flex gap-1.5">
+                    <div class="h-6 w-56 bg-gray-200 dark:bg-gray-700 rounded-md" />
+                  </div>
+                </div>
+                <div class="flex gap-1">
+                  <div class="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  <div class="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
@@ -315,5 +352,6 @@ function toggleAll() {
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>

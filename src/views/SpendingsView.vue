@@ -28,6 +28,8 @@ const prefsStore = usePreferencesStore()
 const authStore = useAuthStore()
 const uiStore = useUiStore()
 
+const dataLoading = computed(() => !txnStore.loaded || !familyStore.familyLoaded)
+
 // --- Sort mode ---
 const SORT_MODE_KEY = 'bizbuz:categorySortMode'
 const SORT_DIR_KEY = 'bizbuz:categorySortDir'
@@ -306,6 +308,39 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
 
 <template>
   <div class="flex flex-col h-full min-h-0 overflow-hidden">
+    <!-- Skeleton loading state -->
+    <template v-if="dataLoading">
+      <div class="animate-pulse flex flex-col h-full">
+        <!-- App bar skeleton -->
+        <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+          <div class="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div class="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+          <div class="h-7 w-20 bg-gray-200 dark:bg-gray-700 rounded-full" />
+          <div class="flex-1" />
+          <div class="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+        <!-- Content skeleton -->
+        <div class="flex-1 overflow-hidden p-4 bg-gray-50 dark:bg-gray-900">
+          <div class="columns-1 min-[1000px]:columns-2 min-[1600px]:columns-3 gap-4">
+            <div v-for="i in 6" :key="i" class="mb-4 break-inside-avoid bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+              <div class="flex items-center justify-between mb-3">
+                <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div class="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+              <div class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full mb-3" />
+              <div class="space-y-2">
+                <div v-for="j in 3" :key="j" class="flex items-center justify-between">
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded" :style="{ width: (100 + j * 20) + 'px' }" />
+                  <div class="h-3 w-14 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
     <!-- App Bar -->
     <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
       <h1 class="text-lg font-bold text-gray-900 dark:text-gray-100 mr-2">{{ t('nav.spendings') }}</h1>
@@ -512,6 +547,8 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           </div>
         </div>
       </div>
+    </template>
+
     </template>
 
     <!-- Dialogs -->

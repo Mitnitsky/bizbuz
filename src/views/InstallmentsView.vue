@@ -15,6 +15,8 @@ const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const locale = computed(() => prefsStore.locale)
 
+const dataLoading = computed(() => !txnStore.loaded || !familyStore.familyLoaded)
+
 type SortKey = 'remaining' | 'endDate' | 'monthly' | 'category'
 const sortBy = ref<SortKey>('remaining')
 
@@ -103,6 +105,43 @@ async function toggleHideFromInstallments(txn: Transaction) {
 
 <template>
   <div class="max-w-7xl mx-auto w-full p-4">
+    <!-- Skeleton loading state -->
+    <template v-if="dataLoading">
+      <div class="animate-pulse">
+        <div class="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+        <div class="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded mb-6" />
+        <!-- Summary cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div v-for="i in 3" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+            <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div class="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </div>
+        <!-- Sort placeholder -->
+        <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+        <!-- Installment card placeholders -->
+        <div class="space-y-3">
+          <div v-for="i in 4" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex-1">
+                <div class="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                <div class="flex gap-2">
+                  <div class="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                  <div class="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                </div>
+              </div>
+              <div>
+                <div class="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+                <div class="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded ms-auto" />
+              </div>
+            </div>
+            <div class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full" />
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300 mb-2">{{ t('installments.title') }}</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ t('installments.subtitle') }}</p>
 
@@ -215,5 +254,6 @@ async function toggleHideFromInstallments(txn: Transaction) {
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>

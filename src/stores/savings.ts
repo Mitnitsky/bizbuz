@@ -6,6 +6,7 @@ import type { Unsubscribe } from 'firebase/firestore'
 
 export const useSavingsStore = defineStore('savings', () => {
   const entries = ref<SavingsEntry[]>([])
+  const loaded = ref(false)
   let unsub: Unsubscribe | null = null
 
   const liquidEntries = computed(() => entries.value.filter((e) => e.savingsType === 'liquid'))
@@ -15,8 +16,10 @@ export const useSavingsStore = defineStore('savings', () => {
 
   function bindSavings(familyId: string) {
     unbind()
+    loaded.value = false
     unsub = onSavings(familyId, (items) => {
       entries.value = items
+      loaded.value = true
     })
   }
 
@@ -27,6 +30,7 @@ export const useSavingsStore = defineStore('savings', () => {
 
   return {
     entries,
+    loaded,
     liquidEntries,
     lockedEntries,
     liquidTotal,

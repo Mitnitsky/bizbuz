@@ -23,6 +23,8 @@ const prefsStore = usePreferencesStore()
 const txnStore = useTransactionsStore()
 const { confirm } = useConfirm()
 
+const dataLoading = computed(() => !txnStore.loaded || !familyStore.familyLoaded)
+
 const familyId = computed(() => authStore.familyId)
 const locale = computed(() => prefsStore.locale)
 const categories = computed(() => getEffectiveCategories(familyStore.familySettings.categories, locale.value))
@@ -160,6 +162,36 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
 
 <template>
   <div class="max-w-2xl mx-auto px-4 py-6">
+    <!-- Skeleton loading state -->
+    <template v-if="dataLoading">
+      <div class="animate-pulse">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div class="h-7 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+          <div class="h-9 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow divide-y divide-gray-200 dark:divide-gray-700 mb-6">
+          <div v-for="i in 8" :key="i" class="flex items-center gap-3 px-4 py-3">
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
+            <div class="h-5 w-14 bg-gray-200 dark:bg-gray-700 rounded-full" />
+            <div class="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div class="h-4 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </div>
+        <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow divide-y divide-gray-200 dark:divide-gray-700">
+          <div v-for="i in 4" :key="i" class="flex items-center gap-3 px-4 py-3">
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
+            <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div class="h-5 w-14 bg-gray-200 dark:bg-gray-700 rounded-full" />
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -289,5 +321,6 @@ const systemCategories = computed(() => categories.value.filter(c => c.system))
         </span>
       </div>
     </div>
+    </template>
   </div>
 </template>

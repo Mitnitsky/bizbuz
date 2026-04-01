@@ -37,6 +37,8 @@ const { activeSet: activeIconSet, setIconSet, icon } = useIcons()
 const iconSetLabels = ICON_SET_LABELS
 const { activeColor: activeAccent, setAccentColor, accentColors } = useAccentColor()
 
+const dataLoading = computed(() => !transactionsStore.loaded || !familyStore.familyLoaded)
+
 // --- Dialog state ---
 const editNameOpen = ref(false)
 const editNameValue = ref('')
@@ -439,6 +441,33 @@ const navBarLabel = computed(() => {
 
 <template>
   <div class="max-w-7xl mx-auto w-full p-4">
+    <!-- Skeleton loading state -->
+    <template v-if="dataLoading">
+      <div class="animate-pulse">
+        <div class="h-7 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-6" />
+        <div class="grid grid-cols-1 min-[800px]:grid-cols-3 gap-6">
+          <div v-for="i in 3" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+            <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+            <div class="space-y-3">
+              <div v-for="j in 5" :key="j" class="flex justify-between">
+                <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div class="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            </div>
+            <div class="border-b border-gray-200 dark:border-gray-700 my-4" />
+            <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+            <div class="space-y-3">
+              <div v-for="j in 3" :key="j" class="flex justify-between">
+                <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300 mb-6">{{ t('nav.settings') }}</h1>
 
     <div class="grid grid-cols-1 min-[800px]:grid-cols-3 gap-6">
@@ -960,5 +989,6 @@ const navBarLabel = computed(() => {
         </div>
       </div>
     </Teleport>
+    </template>
   </div>
 </template>

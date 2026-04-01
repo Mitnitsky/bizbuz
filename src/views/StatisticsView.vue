@@ -28,6 +28,8 @@ const txnStore = useTransactionsStore()
 const prefsStore = usePreferencesStore()
 const familyStore = useFamilyStore()
 
+const dataLoading = computed(() => !txnStore.loaded || !familyStore.familyLoaded)
+
 const EXCLUDED_CATS = [TRANSFER_CATEGORY, NON_BUDGET_CATEGORY, EXCEPTIONAL_CATEGORY, INCOME_CATEGORY]
 const COLORS = [
   '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6',
@@ -210,6 +212,47 @@ const categoryBarOptions = {
 
 <template>
   <div class="max-w-7xl mx-auto w-full px-4 py-6">
+    <!-- Skeleton loading state -->
+    <template v-if="dataLoading">
+      <div class="animate-pulse">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="h-7 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div class="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+        <!-- Pie chart card skeleton -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 mb-6">
+          <div class="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+          <div class="flex flex-col md:flex-row gap-8 items-start">
+            <div class="w-56 h-56 bg-gray-200 dark:bg-gray-700 rounded-full shrink-0 mx-auto md:mx-0" />
+            <div class="flex-1 space-y-2">
+              <div v-for="i in 6" :key="i" class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded" :style="{ width: (120 - i * 10) + 'px' }" />
+                <div class="ms-auto h-3 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Bar chart skeleton -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 mb-6">
+          <div class="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+          <div class="h-80 w-full bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        <!-- Per-category chart skeletons -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div v-for="i in 4" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-full" />
+              <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div class="ms-auto h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
+            <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300">{{ t('statistics.title') }}</h1>
@@ -285,6 +328,7 @@ const categoryBarOptions = {
           </div>
         </div>
       </div>
+    </template>
     </template>
   </div>
 </template>

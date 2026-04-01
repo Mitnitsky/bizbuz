@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSavingsStore } from '@/stores/savings'
+import { useFamilyStore } from '@/stores/family'
 import { formatCurrency } from '@/composables/useFormatters'
 import { useIcons } from '@/composables/useIcons'
 import SavingsEntryCard from '@/components/savings/SavingsEntryCard.vue'
@@ -10,7 +11,10 @@ import type { SavingsEntry, SavingsType } from '@/types'
 
 const { t } = useI18n()
 const savingsStore = useSavingsStore()
+const familyStore = useFamilyStore()
 const { icon } = useIcons()
+
+const dataLoading = computed(() => !savingsStore.loaded || !familyStore.familyLoaded)
 
 const liquidOpen = ref(true)
 const lockedOpen = ref(true)
@@ -33,6 +37,40 @@ function openEdit(entry: SavingsEntry) {
 
 <template>
   <div class="max-w-7xl mx-auto w-full p-4 space-y-6">
+    <!-- Skeleton loading state -->
+    <template v-if="dataLoading">
+      <div class="animate-pulse space-y-6">
+        <div v-for="i in 2" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow">
+          <div class="p-5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div>
+                  <div class="h-6 w-36 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+                  <div class="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              </div>
+              <div class="h-8 w-28 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
+            <div class="flex items-center justify-between mt-3">
+              <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div class="h-9 w-28 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            </div>
+          </div>
+          <div class="border-t border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
+            <div v-for="j in 3" :key="j" class="px-5 py-4 flex items-center justify-between">
+              <div>
+                <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+                <div class="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+              <div class="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
     <!-- Liquid Money Section -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow">
       <div class="p-5">
@@ -108,6 +146,8 @@ function openEdit(entry: SavingsEntry) {
         />
       </div>
     </div>
+
+    </template>
 
     <!-- Dialogs -->
     <AddSavingsDialog
