@@ -73,6 +73,7 @@ export function transactionFromFirestore(docSnap: QueryDocumentSnapshot<Document
     hash: d.hash,
     identifier: d.identifier,
     isNew: d.is_new ?? false,
+    hiddenFromInstallments: d.hidden_from_installments ?? false,
   }
 }
 
@@ -270,6 +271,16 @@ export async function setTransactionLock(
 ): Promise<void> {
   await updateDoc(doc(db, 'families', familyId, 'transactions', txnId), {
     user_locked: locked,
+  })
+}
+
+export async function setHiddenFromInstallments(
+  familyId: string,
+  txnId: string,
+  hidden: boolean,
+): Promise<void> {
+  await updateDoc(doc(db, 'families', familyId, 'transactions', txnId), {
+    hidden_from_installments: hidden,
   })
 }
 

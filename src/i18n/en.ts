@@ -307,6 +307,12 @@ export default {
     total: 'Total',
     endsBy: 'Ends',
     payment: 'Payment {n} of {total}',
+    hide: 'Hide',
+    hideTooltip: 'Mark as recurring billing — hide from installments',
+    restore: 'Restore',
+    showHidden: 'Hidden ({n})',
+    hideHidden: 'Hide hidden',
+    hiddenTitle: 'Hidden Installments',
   },
   categories: {
     title: 'Manage Categories',

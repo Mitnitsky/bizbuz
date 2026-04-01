@@ -307,6 +307,12 @@ export default {
     total: 'סה"כ',
     endsBy: 'מסתיים',
     payment: 'תשלום {n} מתוך {total}',
+    hide: 'הסתר',
+    hideTooltip: 'סמן כחיוב חודשי קבוע — הסתר מתשלומים',
+    restore: 'שחזר',
+    showHidden: 'מוסתרים ({n})',
+    hideHidden: 'הסתר מוסתרים',
+    hiddenTitle: 'תשלומים מוסתרים',
   },
   categories: {
     title: 'ניהול קטגוריות',

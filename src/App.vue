@@ -199,39 +199,40 @@ onUnmounted(() => {
     </aside>
 
     <!-- Main content -->
-    <main class="flex flex-col flex-1 min-w-0 min-h-0" :class="{ 'pb-16': !isWide }">
+    <main class="flex flex-col flex-1 min-w-0 min-h-0" :class="{ 'pb-20': !isWide }">
       <router-view class="flex-1 min-h-0 overflow-y-auto" />
     </main>
 
     <!-- Bottom tab bar (narrow screens) -->
     <nav
       v-if="!isWide"
-      class="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 flex z-50"
+      class="fixed bottom-3 left-3 right-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-2xl shadow-lg shadow-black/10 dark:shadow-black/30 border border-white/40 dark:border-gray-600/30 flex z-50"
+      style="backdrop-filter: blur(40px) saturate(180%);"
     >
       <router-link
         v-for="item in primaryTabs"
         :key="item.path"
         :to="item.path"
-        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400"
+        class="flex-1 flex flex-col items-center py-2.5 text-gray-500 dark:text-gray-400 transition-colors"
         :class="{ 'text-purple-600 dark:text-purple-400': route.path === item.path }"
         @click="moreMenuOpen = false"
       >
-        <GlassIcon glass size="xs" :active="route.path === item.path">
+        <GlassIcon glass size="sm" :active="route.path === item.path">
           <template #default="{ iconClass }"><component :is="icon(item.iconName)" :class="iconClass" /></template>
         </GlassIcon>
-        <span class="text-[10px] mt-0.5">{{ t(item.labelKey) }}</span>
+        <span class="text-[10px] mt-1 font-medium">{{ t(item.labelKey) }}</span>
       </router-link>
 
       <!-- More button -->
       <button
-        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400"
+        class="flex-1 flex flex-col items-center py-2.5 text-gray-500 dark:text-gray-400 transition-colors"
         :class="{ 'text-purple-600 dark:text-purple-400': isMoreActive || moreMenuOpen }"
         @click="moreMenuOpen = !moreMenuOpen"
       >
-        <GlassIcon glass size="xs" :active="isMoreActive || moreMenuOpen">
+        <GlassIcon glass size="sm" :active="isMoreActive || moreMenuOpen">
           <template #default="{ iconClass }"><component :is="icon('more')" :class="iconClass" /></template>
         </GlassIcon>
-        <span class="text-[10px] mt-0.5">{{ t('nav.more') }}</span>
+        <span class="text-[10px] mt-1 font-medium">{{ t('nav.more') }}</span>
       </button>
     </nav>
 
@@ -239,7 +240,7 @@ onUnmounted(() => {
     <Teleport to="body">
       <div v-if="moreMenuOpen && !isWide" class="fixed inset-0 z-40" @click="moreMenuOpen = false">
         <div
-          class="absolute bottom-16 right-2 left-2 glass-flyout rounded-xl shadow-xl p-2"
+          class="absolute bottom-20 right-2 left-2 glass-flyout rounded-xl shadow-xl p-2"
           @click.stop
         >
           <router-link

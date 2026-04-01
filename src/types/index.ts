@@ -28,6 +28,7 @@ export interface Transaction {
   isSplit: boolean
   hiddenFromUi: boolean
   isNew?: boolean
+  hiddenFromInstallments?: boolean
   memo?: string
   categoryHint?: string
   account?: string

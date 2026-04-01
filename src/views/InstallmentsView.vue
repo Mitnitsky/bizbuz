@@ -5,6 +5,7 @@ import { useFamilyStore } from '@/stores/family'
 import { formatCurrency, formatDateShort } from '@/composables/useFormatters'
 import { categoryDisplayName, getEffectiveCategories } from '@/composables/useCategories'
 import { usePreferencesStore } from '@/stores/preferences'
+import { setHiddenFromInstallments } from '@/services/firestore'
 import { useI18n } from 'vue-i18n'
 import type { Transaction } from '@/types'
 
@@ -28,7 +29,7 @@ interface InstallmentItem {
 
 const installmentItems = computed<InstallmentItem[]>(() => {
   return txnStore.cycleTransactions
-    .filter(txn => txn.installments && txn.installments.total > 1)
+    .filter(txn => txn.installments && txn.installments.total > 1 && !txn.hiddenFromInstallments)
     .map(txn => {
       const inst = txn.installments!
       const monthly = Math.abs(txn.chargedAmount)
@@ -67,6 +68,37 @@ function cardLabel(txn: Transaction) {
   if (txn.account && labels[txn.account]) return labels[txn.account]
   return txn.account || ''
 }
+
+const hiddenCount = computed(() =>
+  txnStore.cycleTransactions.filter(t => t.installments && t.installments.total > 1 && t.hiddenFromInstallments).length
+)
+const showHidden = ref(false)
+const hiddenItems = computed<InstallmentItem[]>(() => {
+  return txnStore.cycleTransactions
+    .filter(txn => txn.installments && txn.installments.total > 1 && txn.hiddenFromInstallments)
+    .map(txn => {
+      const inst = txn.installments!
+      const monthly = Math.abs(txn.chargedAmount)
+      const remaining = inst.total - inst.number
+      const remainingAmount = remaining * monthly
+      const endDate = new Date(txn.date)
+      endDate.setMonth(endDate.getMonth() + remaining)
+      return {
+        transaction: txn,
+        monthlyAmount: monthly,
+        remainingPayments: remaining,
+        remainingAmount,
+        estimatedEndDate: endDate,
+        progress: (inst.number / inst.total) * 100,
+      }
+    })
+})
+
+async function toggleHideFromInstallments(txn: Transaction) {
+  const familyId = familyStore.family?.id
+  if (!familyId) return
+  await setHiddenFromInstallments(familyId, txn.id, !txn.hiddenFromInstallments)
+}
 </script>
 
 <template>
@@ -99,6 +131,15 @@ function cardLabel(txn: Transaction) {
         <option value="monthly">{{ t('installments.sortMonthly') }}</option>
         <option value="category">{{ t('installments.sortCategory') }}</option>
       </select>
+      <div class="flex-1" />
+      <button
+        v-if="hiddenCount > 0"
+        class="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+        :class="showHidden
+          ? 'bg-gray-600 text-white'
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'"
+        @click="showHidden = !showHidden"
+      >{{ showHidden ? t('installments.hideHidden') : t('installments.showHidden', { n: hiddenCount }) }}</button>
     </div>
 
     <!-- Installments list -->
@@ -116,6 +157,11 @@ function cardLabel(txn: Transaction) {
               <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
               <span v-if="cardLabel(item.transaction)" class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">{{ cardLabel(item.transaction) }}</span>
               <span>{{ formatDateShort(item.transaction.date, locale) }}</span>
+              <button
+                class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors"
+                @click="toggleHideFromInstallments(item.transaction)"
+                :title="t('installments.hideTooltip')"
+              >✕ {{ t('installments.hide') }}</button>
             </div>
           </div>
           <div class="text-right shrink-0">
@@ -138,6 +184,33 @@ function cardLabel(txn: Transaction) {
           <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
             <span>{{ t('installments.total') }}: {{ formatCurrency(item.transaction.installments!.total * item.monthlyAmount) }}</span>
             <span>{{ t('installments.endsBy') }} {{ formatDateShort(item.estimatedEndDate, locale) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden installments -->
+    <div v-if="showHidden && hiddenItems.length > 0" class="mt-6">
+      <h2 class="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-3">{{ t('installments.hiddenTitle') }}</h2>
+      <div class="space-y-3">
+        <div v-for="item in hiddenItems" :key="item.transaction.id" class="bg-gray-50 dark:bg-gray-800/50 rounded-xl shadow p-4 opacity-70">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-300 truncate">{{ item.transaction.overrideDescription || item.transaction.description }}</div>
+              <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700">{{ categoryDisplayName(item.transaction.category, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
+                <button
+                  class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 transition-colors"
+                  @click="toggleHideFromInstallments(item.transaction)"
+                >↩ {{ t('installments.restore') }}</button>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-lg font-bold text-gray-900 dark:text-gray-300">{{ formatCurrency(item.monthlyAmount) }}<span class="text-xs text-gray-500 dark:text-gray-400">/{{ t('installments.month') }}</span></div>
+              <div class="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                {{ item.transaction.installments!.number }}/{{ item.transaction.installments!.total }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
