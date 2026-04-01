@@ -317,18 +317,15 @@ function getAccentColors(): string[] {
 function shimmer(e: MouseEvent) {
   const target = (e.currentTarget as HTMLElement)
   const rect = target.getBoundingClientRect()
-  const shine = document.createElement('div')
-  const x = rect.width / 2
-  const y = rect.height / 2
   const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-purple-500').trim() || '#a855f7'
+  const shine = document.createElement('div')
   shine.style.cssText = `
-    position:absolute;left:${x}px;top:${y}px;width:0;height:0;
-    border-radius:50%;pointer-events:none;z-index:0;
+    position:fixed;left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;
+    width:0;height:0;border-radius:50%;pointer-events:none;z-index:100;
     background:radial-gradient(circle, color-mix(in srgb, ${accentColor} 40%, transparent) 0%, transparent 70%);
     transform:translate(-50%,-50%);
   `
-  target.style.position = 'relative'
-  target.appendChild(shine)
+  document.body.appendChild(shine)
   shine.animate([
     { width: '0px', height: '0px', opacity: 0.8 },
     { width: '60px', height: '60px', opacity: 0 },
