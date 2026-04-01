@@ -58,6 +58,17 @@ const viewMode = ref<ViewMode>(
 function setViewMode(mode: ViewMode) {
   viewMode.value = mode
   localStorage.setItem(VIEW_MODE_KEY, mode)
+  // Sync collapse state to the target view
+  if (mode === 'list') {
+    if (allCategoriesExpanded.value) {
+      expandedGroups.value = new Set(categoryItems.value.map(i => i.key))
+    } else {
+      expandedGroups.value = new Set()
+    }
+  } else {
+    // Switching to cards — sync allCategoriesExpanded from list state
+    allCategoriesExpanded.value = expandedGroups.value.size >= categoryItems.value.length
+  }
 }
 
 // List view: expanded groups
