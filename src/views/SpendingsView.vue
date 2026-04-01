@@ -103,11 +103,13 @@ const activeTab = ref<'inbox' | 'category'>('inbox')
 const inboxCollapsed = ref(false)
 
 // --- Expand/collapse all categories ---
-const allCategoriesExpanded = ref(true)
+const EXPAND_KEY = 'bizbuz:categoriesExpanded'
+const allCategoriesExpanded = ref(localStorage.getItem(EXPAND_KEY) !== 'false')
 provide('allCategoriesExpanded', allCategoriesExpanded)
 
 function toggleExpandAll() {
   allCategoriesExpanded.value = !allCategoriesExpanded.value
+  localStorage.setItem(EXPAND_KEY, String(allCategoriesExpanded.value))
   // Sync list view expanded groups
   if (allCategoriesExpanded.value) {
     expandedGroups.value = new Set(categoryItems.value.map(i => i.key))

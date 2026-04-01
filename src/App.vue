@@ -287,6 +287,110 @@ onUnmounted(() => {
     document.removeEventListener('touchend', onPullEnd)
   }
 })
+
+// --- Particle shatter animation for More icon morph ---
+const particleContainer = ref<HTMLElement | null>(null)
+
+interface Particle {
+  x: number; y: number
+  vx: number; vy: number
+  size: number
+  opacity: number
+  color: string
+  gravity: number
+}
+
+function spawnShatterParticles() {
+  const container = particleContainer.value
+  if (!container) return
+  const rect = container.getBoundingClientRect()
+  const cx = rect.width / 2
+  const cy = rect.height / 2
+  const count = 16
+  const particles: Particle[] = []
+  const isDark = document.documentElement.classList.contains('dark')
+  const colors = ['#a855f7', '#7c3aed', '#c084fc', isDark ? '#e9d5ff' : '#6b21a8']
+
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6
+    const speed = 0.8 + Math.random() * 1.5
+    particles.push({
+      x: cx + (Math.random() - 0.5) * 12,
+      y: cy + (Math.random() - 0.5) * 12,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1, // slight upward burst first
+      size: 1.5 + Math.random() * 2.5,
+      opacity: 0.8 + Math.random() * 0.2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      gravity: 0.15 + Math.random() * 0.1,
+    })
+  }
+
+  // Use a fixed-size canvas that overflows the container to let particles fall down
+  const canvas = document.createElement('canvas')
+  const canvasH = 120 // enough room to fall off
+  canvas.width = rect.width * 2
+  canvas.height = canvasH * 2
+  canvas.style.cssText = `position:absolute;top:0;left:0;width:${rect.width}px;height:${canvasH}px;pointer-events:none;z-index:50;overflow:visible;`
+  container.style.overflow = 'visible'
+  container.appendChild(canvas)
+  const ctx = canvas.getContext('2d')!
+  ctx.scale(2, 2)
+
+  const duration = 1200
+  const start = performance.now()
+
+  function frame(now: number) {
+    const elapsed = now - start
+    const progress = Math.min(elapsed / duration, 1)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    for (const p of particles) {
+      p.vy += p.gravity // gravity pulls down
+      p.x += p.vx
+      p.y += p.vy
+      p.vx *= 0.98 // air resistance
+      p.opacity = Math.max(0, 1 - progress * 1.2)
+      p.size *= 0.995
+
+      ctx.globalAlpha = p.opacity
+      ctx.fillStyle = p.color
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    if (progress < 1) requestAnimationFrame(frame)
+    else {
+      canvas.remove()
+      container!.style.overflow = ''
+    }
+  }
+
+  requestAnimationFrame(frame)
+}
+
+function onMorphLeave(el: Element, done: () => void) {
+  spawnShatterParticles()
+  const htmlEl = el as HTMLElement
+  htmlEl.style.transition = 'opacity 0.35s ease-out, transform 0.5s cubic-bezier(0.4,0,1,1)'
+  htmlEl.style.opacity = '0'
+  htmlEl.style.transform = 'scale(0.2) translateY(30px)'
+  setTimeout(done, 450)
+}
+
+function onMorphEnter(el: Element, done: () => void) {
+  // Simple fade + scale up, no particles
+  const htmlEl = el as HTMLElement
+  htmlEl.style.opacity = '0'
+  htmlEl.style.transform = 'scale(0.5)'
+  requestAnimationFrame(() => {
+    htmlEl.style.transition = 'opacity 0.3s cubic-bezier(0,0,0.2,1), transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275)'
+    htmlEl.style.opacity = '1'
+    htmlEl.style.transform = 'scale(1)'
+  })
+  setTimeout(done, 350)
+}
 </script>
 
 <template>
@@ -396,8 +500,13 @@ onUnmounted(() => {
         :class="{ 'text-purple-600 dark:text-purple-400': isMoreActive || moreMenuOpen }"
         @click="moreMenuOpen = !moreMenuOpen"
       >
-        <span class="relative w-6 h-6">
-          <Transition name="morph" mode="out-in">
+        <span ref="particleContainer" class="relative w-6 h-6">
+          <Transition
+            :css="false"
+            mode="out-in"
+            @leave="onMorphLeave"
+            @enter="onMorphEnter"
+          >
             <component
               :is="activeMoreItem ? icon(activeMoreItem.iconName) : icon('more')"
               :key="activeMoreItem?.name || 'more'"
