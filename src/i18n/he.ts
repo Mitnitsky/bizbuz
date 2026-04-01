@@ -365,7 +365,7 @@ export default {
     once: 'חד פעמי',
     interval: 'חוזר',
     days: 'ימים',
-    updateIn: '🔔 עדכן בעוד {n} י׳',
+    updateIn: '🔔 עדכן בעוד {n} ימים',
     updateOverdue: '🔔 עדכון באיחור',
   },
 }

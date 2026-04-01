@@ -130,9 +130,9 @@ export default {
     termMonths: 'Term (months)',
     monthlyPayment: 'Monthly Payment (₪)',
     nTracks: '{n} tracks',
-    daysLeft: '{n}d',
-    yearsShort: '{n}y',
-    monthsShort: '{n}m',
+    daysLeft: '{n} days',
+    yearsShort: '{n} years',
+    monthsShort: '{n} months',
   },
   investments: {
     invested: 'Invested',
@@ -365,7 +365,7 @@ export default {
     once: 'Once',
     interval: 'Recurring',
     days: 'days',
-    updateIn: '🔔 Update in {n}d',
+    updateIn: '🔔 Update in {n} days',
     updateOverdue: '🔔 Update overdue',
   },
 }
