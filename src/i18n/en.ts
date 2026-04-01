@@ -89,6 +89,10 @@ export default {
     notes: 'Notes (optional)',
     items: 'items',
   },
+  rules: {
+    collapseAll: 'Collapse All',
+    expandAll: 'Expand All',
+  },
   loans: {
     loansAndMortgages: 'Loans & Mortgages',
     loans: 'Loans',

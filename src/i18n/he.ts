@@ -89,6 +89,10 @@ export default {
     notes: 'הערות (אופציונלי)',
     items: 'פריטים',
   },
+  rules: {
+    collapseAll: 'כווץ הכל',
+    expandAll: 'הרחב הכל',
+  },
   loans: {
     loansAndMortgages: 'הלוואות ומשכנתאות',
     loans: 'הלוואות',

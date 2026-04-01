@@ -27,6 +27,7 @@ const rules = ref<Rule[]>([])
 const editingRule = ref<Rule | null>(null)
 const editingRuleIsNew = ref(false)
 const saving = ref(false)
+const collapsedCategories = ref<Set<string>>(new Set())
 let unsubRules: (() => void) | null = null
 
 onMounted(() => {
@@ -101,6 +102,24 @@ async function removeRule(id: string) {
   saving.value = true
   try { await deleteRule(familyId.value, id) } finally { saving.value = false }
 }
+
+function toggleCategory(cat: string) {
+  const s = new Set(collapsedCategories.value)
+  s.has(cat) ? s.delete(cat) : s.add(cat)
+  collapsedCategories.value = s
+}
+
+const allCollapsed = computed(() =>
+  rulesByCategory.value.length > 0 && collapsedCategories.value.size === rulesByCategory.value.length
+)
+
+function toggleAll() {
+  if (allCollapsed.value) {
+    collapsedCategories.value = new Set()
+  } else {
+    collapsedCategories.value = new Set(rulesByCategory.value.map(([cat]) => cat))
+  }
+}
 </script>
 
 <template>
@@ -119,6 +138,14 @@ async function removeRule(id: string) {
         class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors"
         @click="startNewRule"
       >+ {{ t('settings.addRule') }}</button>
+    </div>
+
+    <!-- Collapse/Expand All -->
+    <div v-if="rulesByCategory.length > 1" class="flex justify-end mb-3">
+      <button
+        class="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+        @click="toggleAll"
+      >{{ allCollapsed ? t('rules.expandAll') : t('rules.collapseAll') }}</button>
     </div>
 
     <!-- Edit / New form -->
@@ -198,11 +225,15 @@ async function removeRule(id: string) {
     <!-- Rules grouped by category -->
     <div v-else class="space-y-6">
       <div v-for="[cat, catRules] in rulesByCategory" :key="cat">
-        <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2">
+        <h2
+          class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          @click="toggleCategory(cat)"
+        >
+          <span class="transition-transform duration-200" :class="collapsedCategories.has(cat) ? (locale === 'he' ? 'rotate-180' : '-rotate-90') : (locale === 'he' ? 'rotate-90' : 'rotate-0')">▼</span>
           {{ categoryDisplayName(cat, locale, effectiveCategories) }}
           <span class="text-xs font-normal normal-case text-gray-400 dark:text-gray-500">({{ catRules.length }})</span>
         </h2>
-        <div class="space-y-2">
+        <div v-show="!collapsedCategories.has(cat)" class="space-y-2">
           <div
             v-for="rule in catRules"
             :key="rule.id"
