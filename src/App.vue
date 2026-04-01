@@ -314,9 +314,7 @@ function getAccentColors(): string[] {
   return colors
 }
 
-function shimmer(e: PointerEvent) {
-  // No-op, handled by CSS class below
-}
+// Shimmer is now CSS-only (nav-gloss class)
 
 function spawnShatterParticles() {
   const container = particleContainer.value
