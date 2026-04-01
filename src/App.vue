@@ -134,14 +134,15 @@ const bubbleStyle = computed(() => {
   const idx = bubbleDisplayIndex.value
   if (idx < 0) return { opacity: '0' }
   const total = totalBottomTabs.value
-  const widthPct = 100 / total
   const isRtl = locale.value === 'he'
   const posIndex = isRtl ? (total - 1 - idx) : idx
+  // Account for nav px-2 (0.5rem) padding on each side
+  const pad = 0.5 // rem
   return {
     opacity: '1',
-    width: `${widthPct}%`,
-    left: '0',
-    transform: `translateX(${posIndex * 100}%)`,
+    width: `calc((100% - ${pad * 2}rem) / ${total})`,
+    left: `calc(${pad}rem + (100% - ${pad * 2}rem) * ${posIndex} / ${total})`,
+    transform: 'none',
   }
 })
 
@@ -299,7 +300,7 @@ onUnmounted(() => {
     <nav
       v-if="!isWide"
       ref="bottomNavRef"
-      class="fixed bottom-3 left-3 right-3 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-gray-200/80 dark:border-gray-600/30 flex z-50 px-1 py-1 overflow-hidden"
+      class="fixed bottom-3 left-3 right-3 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-gray-200/80 dark:border-gray-600/30 flex z-50 px-2 py-1.5 overflow-hidden"
       style="backdrop-filter: blur(40px) saturate(180%);"
       @touchstart.passive="onTouchStart"
       @touchmove="onTouchMove"
@@ -308,7 +309,7 @@ onUnmounted(() => {
     >
       <!-- Sliding bubble indicator -->
       <div
-        class="absolute top-1 bottom-1 rounded-full bg-purple-100 dark:bg-purple-400/25 transition-all duration-300 ease-in-out pointer-events-none border border-purple-200 dark:border-purple-400/15"
+        class="absolute top-1.5 bottom-1.5 rounded-full bg-purple-100 dark:bg-purple-400/25 transition-all duration-300 ease-in-out pointer-events-none border border-purple-200 dark:border-purple-400/15"
         :style="bubbleStyle"
       />
 
