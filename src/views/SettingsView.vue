@@ -444,7 +444,7 @@ const navBarLabel = computed(() => {
     <div class="grid grid-cols-1 min-[800px]:grid-cols-3 gap-6">
       <!-- Column 1: Account & Family -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 pb-1.5 border-b border-purple-200 dark:border-purple-800">{{ t('settings.profile') }}</h3>
+        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3">{{ t('settings.profile') }}</h3>
 
         <div class="space-y-3 text-sm">
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('auth.email') }}</span><span class="text-gray-900 dark:text-gray-300">{{ email }}</span></div>
@@ -475,7 +475,7 @@ const navBarLabel = computed(() => {
 
         <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
 
-        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 pb-1.5 border-b border-purple-200 dark:border-purple-800">{{ t('settings.familySettings') }}</h3>
+        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3">{{ t('settings.familySettings') }}</h3>
 
         <div class="space-y-4">
           <!-- Family Name -->
@@ -500,7 +500,7 @@ const navBarLabel = computed(() => {
 
       <!-- Column 2: Categories & Rules -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 pb-1.5 border-b border-purple-200 dark:border-purple-800">{{ t('settings.categories') }}</h3>
+        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3">{{ t('settings.categories') }}</h3>
 
         <div class="space-y-4">
           <!-- Manage Categories -->
@@ -524,7 +524,7 @@ const navBarLabel = computed(() => {
 
         <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
 
-        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 pb-1.5 border-b border-purple-200 dark:border-purple-800">{{ t('settings.automation') }}</h3>
+        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3">{{ t('settings.automation') }}</h3>
 
         <div class="space-y-4">
           <!-- Categorization Rules -->
@@ -543,7 +543,7 @@ const navBarLabel = computed(() => {
 
       <!-- Column 3: Appearance & Display -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 pb-1.5 border-b border-purple-200 dark:border-purple-800">{{ t('settings.appearance') }}</h3>
+        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3">{{ t('settings.appearance') }}</h3>
 
         <div class="space-y-5">
           <!-- Language -->
@@ -598,7 +598,7 @@ const navBarLabel = computed(() => {
 
         <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
 
-        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 pb-1.5 border-b border-purple-200 dark:border-purple-800">{{ t('settings.display') }}</h3>
+        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3">{{ t('settings.display') }}</h3>
 
         <div class="space-y-5">
           <!-- Show Owner Filter -->
@@ -655,7 +655,7 @@ const navBarLabel = computed(() => {
 
         <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
 
-        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3 pb-1.5 border-b border-purple-200 dark:border-purple-800">{{ t('settings.layout') }}</h3>
+        <h3 class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-3">{{ t('settings.layout') }}</h3>
 
         <div class="space-y-4">
           <!-- Dashboard Tiles -->
