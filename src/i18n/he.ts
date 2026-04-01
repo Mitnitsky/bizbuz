@@ -33,7 +33,7 @@ export default {
   },
   home: {
     greeting: 'היי {name} 👋',
-    familyDashboard: 'כספי {family}',
+    familyDashboard: 'תקציב משפחת {family}',
     cycleSpending: 'הוצאות בתקופה',
     budgetRemaining: 'נשאר מתקציב',
     setBudgetsInSettings: 'הגדר תקציבים בהגדרות',
