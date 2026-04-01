@@ -527,13 +527,14 @@ function onMorphEnter(el: Element, done: () => void) {
         v-for="item in primaryTabs"
         :key="item.path"
         :to="item.path"
-        :ref="(el: any) => { if (el?.$el) navTabRefs[item.path] = el.$el }"
         class="nav-tab flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': route.path === item.path }"
         @click="moreMenuOpen = false"
       >
-        <component :is="icon(item.iconName)" class="w-6 h-6" />
-        <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
+        <span :ref="(el: any) => { if (el) navTabRefs[item.path] = el }" class="relative flex flex-col items-center">
+          <component :is="icon(item.iconName)" class="w-6 h-6" />
+          <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
+        </span>
       </router-link>
 
       <!-- More button — morphs to show active more-item when on a More page -->
