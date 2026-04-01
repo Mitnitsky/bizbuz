@@ -29,6 +29,7 @@ export default {
     selected: 'selected',
     all: 'All',
     new: 'NEW',
+    loading: 'Loading...',
   },
   home: {
     greeting: 'Hey {name} 👋',

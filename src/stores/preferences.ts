@@ -6,8 +6,9 @@ import { i18n } from '@/i18n'
 import type { Unsubscribe } from 'firebase/firestore'
 
 export const usePreferencesStore = defineStore('preferences', () => {
+  const savedLocale = localStorage.getItem('bizbuz-locale') || 'en'
   const userPreferences = ref<UserPreferences | null>(null)
-  const locale = ref('en')
+  const locale = ref(savedLocale)
   const themeMode = ref('system')
 
   let unsub: Unsubscribe | null = null

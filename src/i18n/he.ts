@@ -29,6 +29,7 @@ export default {
     selected: 'נבחרו',
     all: 'הכל',
     new: 'חדש',
+    loading: 'טוען...',
   },
   home: {
     greeting: 'היי {name} 👋',

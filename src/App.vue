@@ -312,7 +312,7 @@ onUnmounted(() => {
       <GlassIcon glass size="xl" class="mx-auto mb-4">
         <template #default="{ iconClass }"><component :is="icon('loader')" :class="[iconClass, 'animate-spin text-purple-500']" /></template>
       </GlassIcon>
-      <div class="animate-pulse text-gray-500 dark:text-gray-400">Loading...</div>
+      <div class="animate-pulse text-gray-500 dark:text-gray-400">{{ t('common.loading') }}</div>
     </div>
   </div>
 
