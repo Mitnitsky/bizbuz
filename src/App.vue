@@ -329,17 +329,17 @@ watch(() => route.path, (newPath) => {
   `
   const inner = document.createElement('div')
   inner.style.cssText = `
-    position:absolute;top:0;bottom:0;width:60%;
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
-    transform:translateX(-100%);
+    position:absolute;width:120%;height:120%;
+    background:linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.7) 50%, transparent 60%);
+    transform:translate(-120%,-120%);
   `
   gloss.appendChild(inner)
   el.style.position = 'relative'
   el.appendChild(gloss)
   inner.animate([
-    { transform: 'translateX(-100%)' },
-    { transform: 'translateX(260%)' },
-  ], { duration: 600, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => gloss.remove()
+    { transform: 'translate(-120%,-120%)' },
+    { transform: 'translate(120%,120%)' },
+  ], { duration: 1800, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => gloss.remove()
 })
 
 function spawnShatterParticles() {
