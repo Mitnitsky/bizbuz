@@ -63,6 +63,8 @@ const totalBottomTabs = computed(() => primaryTabs.value.length + 1) // +1 for M
 const activeBottomIndex = computed(() => {
   const idx = primaryTabs.value.findIndex(t => route.path === t.path)
   if (idx >= 0) return idx
+  // Show bubble on More slot when a more-item is active
+  if (isMoreActive.value) return primaryTabs.value.length
   return -1
 })
 
@@ -390,15 +392,25 @@ onUnmounted(() => {
 
       <!-- More button — morphs to show active more-item when on a More page -->
       <button
-        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-all duration-300 relative z-10"
+        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': isMoreActive || moreMenuOpen }"
         @click="moreMenuOpen = !moreMenuOpen"
       >
-        <component :is="activeMoreItem ? icon(activeMoreItem.iconName) : icon('more')" class="w-6 h-6 transition-all duration-300" />
-        <span class="text-[10px] mt-0.5 font-medium leading-tight text-center">
-          <template v-if="activeMoreItem">{{ t(activeMoreItem.labelKey) }}</template>
-          <template v-else>{{ t('nav.more') }}</template>
+        <span class="relative w-6 h-6">
+          <Transition name="morph" mode="out-in">
+            <component
+              :is="activeMoreItem ? icon(activeMoreItem.iconName) : icon('more')"
+              :key="activeMoreItem?.name || 'more'"
+              class="w-6 h-6 absolute inset-0"
+            />
+          </Transition>
         </span>
+        <Transition name="morph-text" mode="out-in">
+          <span v-if="activeMoreItem" :key="activeMoreItem.name" class="text-[10px] mt-0.5 font-medium leading-tight text-center">
+            {{ t(activeMoreItem.labelKey) }}
+          </span>
+          <span v-else key="more" class="text-[10px] mt-0.5 font-medium">{{ t('nav.more') }}</span>
+        </Transition>
         <span v-if="activeMoreItem" class="text-[8px] font-medium text-gray-400 dark:text-gray-500 leading-none">{{ t('nav.more') }}</span>
       </button>
     </nav>
@@ -442,5 +454,33 @@ onUnmounted(() => {
   background: linear-gradient(135deg, rgba(31,41,55,0.85), rgba(31,41,55,0.7));
   border-color: rgba(255,255,255,0.08);
   box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Icon morph: scale + rotate */
+.morph-enter-active,
+.morph-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.morph-enter-from {
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+}
+.morph-leave-to {
+  opacity: 0;
+  transform: scale(0.5) rotate(90deg);
+}
+
+/* Text morph: slide + fade */
+.morph-text-enter-active,
+.morph-text-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.morph-text-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.morph-text-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
