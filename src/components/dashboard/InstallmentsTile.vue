@@ -11,7 +11,7 @@ const txnStore = useTransactionsStore()
 
 const installments = computed(() => {
   return txnStore.cycleTransactions
-    .filter(txn => txn.installments && txn.installments.total > 1)
+    .filter(txn => txn.installments && txn.installments.total > 1 && !txn.hiddenFromInstallments)
 })
 
 const count = computed(() => installments.value.length)
