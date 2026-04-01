@@ -314,20 +314,19 @@ function getAccentColors(): string[] {
   return colors
 }
 
-// Gloss sweep on nav tab selection
+// Bounce animation on nav tab selection (like Telegram)
 const navTabRefs: Record<string, HTMLElement> = {}
 
 watch(() => route.path, (newPath) => {
   const el = navTabRefs[newPath]
   if (!el) return
-  // Animate a brightness flash sweep on the icon+text
   el.animate([
-    { filter: 'brightness(1)', offset: 0 },
-    { filter: 'brightness(1)', offset: 0.15 },
-    { filter: 'brightness(1.8)', offset: 0.4 },
-    { filter: 'brightness(1)', offset: 0.7 },
-    { filter: 'brightness(1)', offset: 1 },
-  ], { duration: 400, easing: 'ease-in-out' })
+    { transform: 'scale(1)', offset: 0 },
+    { transform: 'scale(0.75)', offset: 0.3 },
+    { transform: 'scale(1.15)', offset: 0.65 },
+    { transform: 'scale(0.95)', offset: 0.8 },
+    { transform: 'scale(1)', offset: 1 },
+  ], { duration: 450, easing: 'ease-in-out' })
 })
 
 function spawnShatterParticles() {
