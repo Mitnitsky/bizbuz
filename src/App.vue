@@ -231,7 +231,7 @@ onUnmounted(() => {
     <!-- Bottom tab bar (narrow screens) -->
     <nav
       v-if="!isWide"
-      class="fixed bottom-3 left-3 right-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-white/40 dark:border-gray-600/30 flex z-50 px-1 py-1 relative overflow-hidden"
+      class="fixed bottom-3 left-3 right-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-white/40 dark:border-gray-600/30 flex z-50 px-1 py-1 overflow-hidden"
       style="backdrop-filter: blur(40px) saturate(180%);"
     >
       <!-- Sliding bubble indicator -->
