@@ -21,7 +21,7 @@ const prefsStore = usePreferencesStore()
 const txnStore = useTransactionsStore()
 const savingsStore = useSavingsStore()
 const { t, locale } = useI18n()
-const { icon } = useIcons()
+const { icon, activeSet } = useIcons()
 
 const sidebarExpanded = ref(true)
 const isWide = ref(window.innerWidth >= 800)
@@ -317,82 +317,271 @@ function getAccentColors(): string[] {
 // Contextual icon animations per tab (Telegram-style)
 const navTabRefs: Record<string, HTMLElement> = {}
 
-const iconAnimations: Record<string, Keyframe[]> = {
-  home: [ // gentle bounce like settling in
-    { transform: 'translateY(0)' },
-    { transform: 'translateY(-4px)' },
-    { transform: 'translateY(1px)' },
-    { transform: 'translateY(-1px)' },
-    { transform: 'translateY(0)' },
-  ],
-  spendings: [ // flip like flipping through pages
-    { transform: 'rotateY(0deg)' },
-    { transform: 'rotateY(180deg)' },
-    { transform: 'rotateY(360deg)' },
-  ],
-  installments: [ // horizontal shake like counting
-    { transform: 'translateX(0)' },
-    { transform: 'translateX(-3px)' },
-    { transform: 'translateX(3px)' },
-    { transform: 'translateX(-2px)' },
-    { transform: 'translateX(2px)' },
-    { transform: 'translateX(0)' },
-  ],
-  savings: [ // wiggle like coins jingling
-    { transform: 'rotate(0deg)' },
-    { transform: 'rotate(-12deg)' },
-    { transform: 'rotate(10deg)' },
-    { transform: 'rotate(-8deg)' },
-    { transform: 'rotate(5deg)' },
-    { transform: 'rotate(0deg)' },
-  ],
-  investments: [ // thrust upward like chart rising
-    { transform: 'translateY(0) scale(1)' },
-    { transform: 'translateY(-5px) scale(1.15)' },
-    { transform: 'translateY(-2px) scale(1.05)' },
-    { transform: 'translateY(0) scale(1)' },
-  ],
-  loans: [ // pendulum swing like a scale
-    { transform: 'rotate(0deg)' },
-    { transform: 'rotate(15deg)' },
-    { transform: 'rotate(-12deg)' },
-    { transform: 'rotate(8deg)' },
-    { transform: 'rotate(-4deg)' },
-    { transform: 'rotate(0deg)' },
-  ],
-  statistics: [ // stretch up like bars growing
-    { transform: 'scaleY(1)' },
-    { transform: 'scaleY(0.6)' },
-    { transform: 'scaleY(1.2)' },
-    { transform: 'scaleY(0.9)' },
-    { transform: 'scaleY(1)' },
-  ],
-  settings: [ // gear spin
-    { transform: 'rotate(0deg)' },
-    { transform: 'rotate(180deg)' },
-  ],
+// Per-part contextual icon animations (Telegram-style)
+// All animations normalized to ~1.5s total duration
+// Base durations are written as fractions of 1500ms
+const ANIM_DURATION = 1500
+const d = (fraction: number) => fraction * ANIM_DURATION // e.g. d(0.5) = 750ms
+// Helper: set up SVG element for CSS transforms
+// Rotate around a custom point (cx,cy) in SVG viewBox coords
+function rot(cx: number, cy: number, deg: number) {
+  return `translate(${cx}px,${cy}px) rotate(${deg}deg) translate(${-cx}px,${-cy}px)`
+}
+// Scale around a custom point
+function sc(cx: number, cy: number, sx: number, sy = sx) {
+  return `translate(${cx}px,${cy}px) scale(${sx},${sy}) translate(${-cx}px,${-cy}px)`
 }
 
-// Fallback bounce for unknown icons
-const defaultAnim: Keyframe[] = [
-  { transform: 'scale(1)' },
-  { transform: 'scale(0.8)' },
-  { transform: 'scale(1.1)' },
-  { transform: 'scale(1)' },
-]
+// Helper: find SVG child by path data prefix
+function findByD(svg: SVGElement, prefix: string): SVGElement | null {
+  for (const child of svg.children) {
+    const dAttr = child.getAttribute('d')
+    if (dAttr && dAttr.startsWith(prefix)) return child as SVGElement
+  }
+  return null
+}
+
+// Lucide path prefixes for findByD
+const L = {
+  homeDoor: 'M15 21',
+  homeBody: 'M3 10',
+  pigEye: 'M16 10',
+  pigTail: 'M2 8',
+  bankRoof: 'M11.12',
+  bankBase: 'M3 22',
+  bankCols: ['M6 18', 'M10 18', 'M14 18', 'M18 18'],
+  statBars: [['M18 17', 18], ['M13 17', 13], ['M8 17', 8]] as [string, number][],
+}
+// Tabler path prefixes
+const T = {
+  homeRoof: 'M5 12l',
+  homeWalls: 'M5 12v',
+  homeDoor: 'M9 21',
+  pigEye: 'M15 11',
+  pigTail: 'M5.173',
+  pigBody: 'M16 4v',
+  bankFloor: 'M3 21',
+  bankBeam: 'M3 10',
+  bankRoof: 'M5 6',
+  bankWalls: ['M4 10', 'M20 10'],
+  bankWindows: ['M8 14', 'M12 14', 'M16 14'],
+  statBars: [['M3 13', 5], ['M15 9', 17], ['M9 5', 11]] as [string, number][],
+  statBase: 'M4 20',
+  clipBody: 'M9 5h',
+  clipClip: 'M9 5a',
+  clipBullets: ['M9 12', 'M9 16'],
+  clipLines: ['M13 12', 'M13 16'],
+}
+
+const iconAnimations: Record<string, (svg: SVGElement) => void> = {
+  home(svg) {
+    const isTabler = activeSet.value === 'tabler'
+    const door = findByD(svg, isTabler ? T.homeDoor : L.homeDoor)
+    if (door) {
+      // Door opens (hinges left) then closes
+      const hx = isTabler ? 9 : 9
+      door.animate([
+        { transform: sc(hx, 17, 1, 1) },
+        { transform: sc(hx, 17, 0.05, 1) },
+        { transform: sc(hx, 17, 0.05, 1) },
+        { transform: sc(hx, 17, 1, 1) },
+      ], { duration: d(0.8), easing: 'ease-in-out' })
+    }
+  },
+
+  spendings(svg) {
+    const isTabler = activeSet.value === 'tabler'
+    if (isTabler) {
+      // Tabler: ch[2]=bullet1, ch[3]=line1, ch[4]=bullet2, ch[5]=line2
+      const items = [T.clipBullets[0], T.clipLines[0], T.clipBullets[1], T.clipLines[1]]
+        .map(p => findByD(svg, p))
+      const rows = [[items[0], items[1]], [items[2], items[3]]]
+      rows.forEach((row, ri) => {
+        row.forEach(el => {
+          if (el) {
+            el.animate([
+              { opacity: '0', transform: 'translateX(-6px)' },
+              { opacity: '1', transform: 'translateX(1px)' },
+              { opacity: '1', transform: 'translateX(0)' },
+            ], { duration: d(0.35), easing: 'ease-out', delay: d(ri * 0.2) })
+          }
+        })
+      })
+    } else {
+      // Lucide: ch[2]=line1, ch[3]=line2, ch[4]=bullet1, ch[5]=bullet2
+      const ch = svg.querySelectorAll(':scope > *')
+      const rows = [[ch[4], ch[2]], [ch[5], ch[3]]] as SVGElement[][]
+      rows.forEach((row, ri) => {
+        row.forEach(el => {
+          if (el) {
+            el.animate([
+              { opacity: '0', transform: 'translateX(-6px)' },
+              { opacity: '1', transform: 'translateX(1px)' },
+              { opacity: '1', transform: 'translateX(0)' },
+            ], { duration: d(0.35), easing: 'ease-out', delay: d(ri * 0.2) })
+          }
+        })
+      })
+    }
+  },
+
+  installments(svg) {
+    const ch = svg.querySelectorAll(':scope > *')
+    ;[...ch].forEach(el => {
+      (el as SVGElement).animate([
+        { transform: rot(12, 12, 0) },
+        { transform: rot(12, 12, 360) },
+      ], { duration: d(0.9), easing: 'cubic-bezier(0.4, 0, 0.2, 1)' })
+    })
+  },
+
+  savings(svg) {
+    const isTabler = activeSet.value === 'tabler'
+    const tail = findByD(svg, isTabler ? T.pigTail : L.pigTail)
+    const eye = findByD(svg, isTabler ? T.pigEye : L.pigEye)
+    if (tail) {
+      tail.animate([
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-3px)' },
+        { transform: 'translateX(3px)' },
+        { transform: 'translateX(-2px)' },
+        { transform: 'translateX(2px)' },
+        { transform: 'translateX(-1px)' },
+        { transform: 'translateX(0)' },
+      ], { duration: d(0.85), easing: 'ease-in-out' })
+    }
+    if (eye) {
+      const ex = isTabler ? 15 : 16
+      const ey = isTabler ? 11 : 10
+      eye.animate([
+        { transform: sc(ex, ey, 1, 1) },
+        { transform: sc(ex, ey, 1, 0.05) },
+        { transform: sc(ex, ey, 1, 0.05) },
+        { transform: sc(ex, ey, 1, 1.2) },
+        { transform: sc(ex, ey, 1, 1) },
+      ], { duration: d(0.4), easing: 'ease-in-out', delay: d(0.15) })
+    }
+  },
+
+  investments(svg) {
+    svg.animate([
+      { transform: 'translate(0,0) scale(1)' },
+      { transform: 'translate(-4px,4px) scale(0.4)' },
+      { transform: 'translate(-5px,5px) scale(0.3)' },
+      { transform: 'translate(2px,-2px) scale(1.12)' },
+      { transform: 'translate(0,0) scale(1.03)' },
+      { transform: 'translate(0,0) scale(1)' },
+    ], { duration: d(0.85), easing: 'ease-in-out' })
+  },
+
+  loans(svg) {
+    const isTabler = activeSet.value === 'tabler'
+    // Find roof
+    const roof = findByD(svg, isTabler ? T.bankRoof : L.bankRoof)
+    if (roof) {
+      roof.animate([
+        { transform: 'translateY(0)' },
+        { transform: 'translateY(-6px)' },
+        { transform: 'translateY(1px)' },
+        { transform: 'translateY(-3px)' },
+        { transform: 'translateY(0)' },
+      ], { duration: d(0.55), easing: 'ease-in-out' })
+    }
+    // Find columns/windows
+    if (isTabler) {
+      // Tabler: windows at M8 14, M12 14, M16 14
+      const wins = T.bankWindows.map(p => findByD(svg, p))
+      wins.forEach((w, i) => {
+        if (w) {
+          const cx = [8, 12, 16][i]
+          w.animate([
+            { transform: rot(cx, 17, 0) },
+            { transform: rot(cx, 17, 14) },
+            { transform: rot(cx, 17, -10) },
+            { transform: rot(cx, 17, 5) },
+            { transform: rot(cx, 17, 0) },
+          ], { duration: d(0.35), easing: 'ease-in-out', delay: d(0.35 + i * 0.1) })
+        }
+      })
+    } else {
+      // Lucide: columns at M6 18, M10 18, M14 18, M18 18
+      const cols = L.bankCols.map(p => findByD(svg, p))
+      cols.forEach((col, i) => {
+        if (col) {
+          const cx = [6, 10, 14, 18][i]
+          col.animate([
+            { transform: rot(cx, 18, 0) },
+            { transform: rot(cx, 18, 14) },
+            { transform: rot(cx, 18, -10) },
+            { transform: rot(cx, 18, 5) },
+            { transform: rot(cx, 18, 0) },
+          ], { duration: d(0.35), easing: 'ease-in-out', delay: d(0.35 + i * 0.1) })
+        }
+      })
+    }
+  },
+
+  statistics(svg) {
+    const isTabler = activeSet.value === 'tabler'
+    const barDefs = isTabler ? T.statBars : L.statBars
+    const botY = isTabler ? 20 : 17
+    barDefs.forEach(([prefix, cx]) => {
+      const bar = findByD(svg, prefix)
+      if (bar) {
+        bar.animate([
+          { transform: sc(cx, botY, 1, 1) },
+          { transform: sc(cx, botY, 1, 0.1) },
+          { transform: sc(cx, botY, 1, 0.1) },
+          { transform: sc(cx, botY, 1, 1.15) },
+          { transform: sc(cx, botY, 1, 1) },
+        ], { duration: d(0.7), easing: 'ease-in-out' })
+      }
+    })
+  },
+
+  settings(svg) {
+    // Both Lucide and Tabler: ch[0]=gear, ch[1]=inner circle
+    const ch = svg.querySelectorAll(':scope > *')
+    const gear = ch[0] as SVGElement
+    const inner = ch[1] as SVGElement
+    if (gear) {
+      gear.animate([
+        { transform: rot(12, 12, 0) },
+        { transform: rot(12, 12, 65) },
+        { transform: rot(12, 12, 58) },
+        { transform: rot(12, 12, 60) },
+      ], { duration: d(0.7), easing: 'ease-out' })
+    }
+    if (inner) {
+      inner.animate([
+        { transform: sc(12, 12, 1) },
+        { transform: sc(12, 12, 0.6) },
+        { transform: sc(12, 12, 1.1) },
+        { transform: sc(12, 12, 1) },
+      ], { duration: d(0.6), easing: 'ease-in-out' })
+    }
+  },
+}
+
+function defaultIconAnim(svg: SVGElement) {
+  svg.animate([
+    { transform: 'scale(1)' },
+    { transform: 'scale(0.85)' },
+    { transform: 'scale(1.05)' },
+    { transform: 'scale(1)' },
+  ], { duration: d(0.5), easing: 'ease-in-out' })
+}
 
 watch(() => route.path, (newPath) => {
   const el = navTabRefs[newPath]
   if (!el) return
-  // Find which icon name this tab uses
-  const tab = primaryTabs.value.find(t => t.path === newPath)
+  const tab = navItems.find(t => t.path === newPath)
   const iconName = tab?.iconName || ''
-  const keyframes = iconAnimations[iconName] || defaultAnim
-  // Only animate the icon (first child), not the label
-  const iconEl = el.querySelector('svg') as HTMLElement | null
-  if (iconEl) {
-    iconEl.animate(keyframes, { duration: 500, easing: 'ease-in-out' })
-  }
+  const svg = el.querySelector('svg') as SVGElement | null
+  if (!svg) return
+  const animFn = iconAnimations[iconName]
+  if (animFn) animFn(svg)
+  else defaultIconAnim(svg)
 })
 
 function spawnShatterParticles() {
@@ -577,7 +766,7 @@ function onMorphEnter(el: Element, done: () => void) {
       />
 
       <router-link
-        v-for="item in primaryTabs"
+        v-for="item in navItems"
         :key="item.path"
         :to="item.path"
         class="nav-tab flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
@@ -585,7 +774,7 @@ function onMorphEnter(el: Element, done: () => void) {
         @click="moreMenuOpen = false"
       >
         <span :ref="(el: any) => { if (el) navTabRefs[item.path] = el }" class="relative flex flex-col items-center">
-          <component :is="icon(item.iconName)" class="w-6 h-6" />
+          <component :is="icon(item.iconName)" class="w-8 h-8" />
           <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
         </span>
       </router-link>
