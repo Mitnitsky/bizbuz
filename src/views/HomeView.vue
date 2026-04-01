@@ -112,7 +112,11 @@ const displayName = computed(() => {
   <div class="max-w-7xl mx-auto w-full px-4 py-6">
     <!-- App Bar -->
     <div class="flex items-center justify-between mb-4">
-      <div>
+      <div v-if="dataLoading" class="animate-pulse">
+        <div class="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+        <div class="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+      <div v-else>
         <p v-if="displayName" class="text-sm text-gray-500 dark:text-gray-400">{{ t('home.greeting', { name: displayName.split(' ')[0] }) }}</p>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300">{{ t('home.familyDashboard', { family: familyName }) }}</h1>
       </div>
