@@ -587,6 +587,7 @@ watch(() => route.path, (newPath) => {
   else defaultIconAnim(svg)
 })
 
+
 function spawnShatterParticles() {
   const container = particleContainer.value
   if (!container) return
@@ -666,7 +667,6 @@ function onMorphLeave(el: Element, done: () => void) {
 }
 
 function onMorphEnter(el: Element, done: () => void) {
-  // Simple fade + scale up, no particles
   const htmlEl = el as HTMLElement
   htmlEl.style.opacity = '0'
   htmlEl.style.transform = 'scale(0.5)'
@@ -675,7 +675,19 @@ function onMorphEnter(el: Element, done: () => void) {
     htmlEl.style.opacity = '1'
     htmlEl.style.transform = 'scale(1)'
   })
-  setTimeout(done, 350)
+  setTimeout(() => {
+    done()
+    // After morph-in completes, play the per-part icon animation
+    const moreItem = activeMoreItem.value
+    if (moreItem) {
+      const svg = el as SVGElement
+      if (svg && svg.tagName === 'svg') {
+        const animFn = iconAnimations[moreItem.iconName]
+        if (animFn) animFn(svg)
+        else defaultIconAnim(svg)
+      }
+    }
+  }, 350)
 }
 </script>
 
