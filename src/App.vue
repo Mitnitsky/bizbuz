@@ -317,19 +317,19 @@ function getAccentColors(): string[] {
 function shimmer(e: PointerEvent) {
   const target = (e.currentTarget as HTMLElement)
   const rect = target.getBoundingClientRect()
-  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-purple-500').trim() || '#a855f7'
   const shine = document.createElement('div')
   shine.style.cssText = `
     position:fixed;left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;
     width:0;height:0;border-radius:50%;pointer-events:none;z-index:100;
-    background:radial-gradient(circle, color-mix(in srgb, ${accentColor} 50%, transparent) 0%, transparent 70%);
+    background:radial-gradient(circle, rgba(168,85,247,0.5) 0%, rgba(168,85,247,0) 70%);
     transform:translate(-50%,-50%);
   `
   document.body.appendChild(shine)
-  shine.animate([
+  const anim = shine.animate([
     { width: '0px', height: '0px', opacity: 1 },
-    { width: '70px', height: '70px', opacity: 0 },
-  ], { duration: 500, easing: 'ease-out' }).onfinish = () => shine.remove()
+    { width: '80px', height: '80px', opacity: 0 },
+  ], { duration: 600, easing: 'ease-out', fill: 'forwards' })
+  anim.onfinish = () => shine.remove()
 }
 
 function spawnShatterParticles() {
