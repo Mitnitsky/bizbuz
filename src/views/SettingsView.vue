@@ -17,6 +17,7 @@ import {
   updateCategoryNameOverrides,
   updateFamilyName,
   updateHiddenDashboardTiles,
+  updateDashboardTileOrder,
   getAllTransactions,
   onRules,
 } from '@/services/firestore'
@@ -324,11 +325,36 @@ const TILE_LABELS: Record<string, string> = {
 }
 
 const tempHiddenTiles = ref<Set<string>>(new Set())
+const tempTileOrder = ref<string[]>([])
 
 function openDashboardTiles() {
   tempHiddenTiles.value = new Set(prefsStore.userPreferences?.hiddenDashboardTiles ?? [])
+  const savedOrder = prefsStore.userPreferences?.dashboardTileOrder
+  if (savedOrder && savedOrder.length > 0) {
+    const missing = ([...ALL_TILES] as string[]).filter(t => !savedOrder.includes(t))
+    tempTileOrder.value = [...savedOrder, ...missing]
+  } else {
+    tempTileOrder.value = [...ALL_TILES]
+  }
   dashboardTilesOpen.value = true
 }
+
+const visibleTilesList = computed({
+  get() {
+    return tempTileOrder.value
+      .filter(id => !tempHiddenTiles.value.has(id))
+      .map(id => ({ id }))
+  },
+  set(newList: Array<{ id: string }>) {
+    const visibleIds = newList.map(t => t.id)
+    const hiddenIds = tempTileOrder.value.filter(id => tempHiddenTiles.value.has(id))
+    tempTileOrder.value = [...visibleIds, ...hiddenIds]
+  }
+})
+
+const hiddenTilesList = computed(() => {
+  return tempTileOrder.value.filter(id => tempHiddenTiles.value.has(id))
+})
 
 function toggleDashboardTile(id: string) {
   const next = new Set(tempHiddenTiles.value)
@@ -342,6 +368,7 @@ async function saveDashboardTiles() {
   saving.value = true
   try {
     await updateHiddenDashboardTiles(familyId.value, uid.value, [...tempHiddenTiles.value])
+    await updateDashboardTileOrder(familyId.value, uid.value, tempTileOrder.value)
     dashboardTilesOpen.value = false
   } catch { /* silent */ } finally { saving.value = false }
 }
@@ -406,7 +433,7 @@ async function saveNavBar() {
 const navBarLabel = computed(() => {
   const order = prefsStore.userPreferences?.navBarOrder
   const count = order?.length || DEFAULT_NAV_ORDER.length
-  return `${count} tabs`
+  return t('settings.nTabs', { n: count })
 })
 </script>
 
@@ -479,7 +506,7 @@ const navBarLabel = computed(() => {
           <!-- Manage Categories -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="$router.push('/settings/categories')">
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.manageCategories') }}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400">→</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ locale === 'he' ? '←' : '→' }}</span>
           </div>
 
           <!-- Category Budgets -->
@@ -503,7 +530,7 @@ const navBarLabel = computed(() => {
           <!-- Categorization Rules -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="$router.push('/settings/rules')">
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.categorizationRules') }}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400">{{ rules.length }} {{ t('settings.rulesCount') }} →</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ rules.length }} {{ t('settings.rulesCount') }} {{ locale === 'he' ? '←' : '→' }}</span>
           </div>
 
           <!-- Payment Methods -->
@@ -886,22 +913,44 @@ const navBarLabel = computed(() => {
           <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-1">{{ t('settings.dashboardTiles') }}</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('settings.dashboardTilesDesc') }}</p>
 
-          <div class="space-y-2">
-            <label
-              v-for="tileId in ALL_TILES"
-              :key="tileId"
-              class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
-              :class="{ 'opacity-50': ALWAYS_VISIBLE.includes(tileId) }"
+          <!-- Visible tiles (draggable) -->
+          <div class="mb-3">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">{{ t('settings.visible') }}</div>
+            <draggable
+              v-model="visibleTilesList"
+              item-key="id"
+              handle=".drag-handle"
+              :animation="200"
+              class="space-y-1"
             >
-              <input
-                type="checkbox"
-                :checked="!tempHiddenTiles.has(tileId)"
-                :disabled="ALWAYS_VISIBLE.includes(tileId)"
-                class="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500"
-                @change="toggleDashboardTile(tileId)"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t(TILE_LABELS[tileId]) }}</span>
-            </label>
+              <template #item="{ element }">
+                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/50">
+                  <span class="drag-handle cursor-grab text-gray-400 dark:text-gray-500">⠿</span>
+                  <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ t(TILE_LABELS[element.id]) }}</span>
+                  <button
+                    v-if="!ALWAYS_VISIBLE.includes(element.id)"
+                    class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 text-sm"
+                    @click="toggleDashboardTile(element.id)"
+                  >✕</button>
+                </div>
+              </template>
+            </draggable>
+          </div>
+
+          <!-- Hidden tiles -->
+          <div v-if="hiddenTilesList.length > 0">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">{{ t('settings.hidden') }}</div>
+            <div class="space-y-1">
+              <div
+                v-for="tileId in hiddenTilesList"
+                :key="tileId"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                @click="toggleDashboardTile(tileId)"
+              >
+                <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ t(TILE_LABELS[tileId]) }}</span>
+                <span class="text-gray-400 text-sm">+</span>
+              </div>
+            </div>
           </div>
 
           <div class="flex gap-3 justify-end mt-4">
