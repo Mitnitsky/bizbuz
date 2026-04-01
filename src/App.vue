@@ -314,7 +314,7 @@ function getAccentColors(): string[] {
   return colors
 }
 
-function shimmer(e: MouseEvent) {
+function shimmer(e: PointerEvent) {
   const target = (e.currentTarget as HTMLElement)
   const rect = target.getBoundingClientRect()
   const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-purple-500').trim() || '#a855f7'
@@ -322,13 +322,13 @@ function shimmer(e: MouseEvent) {
   shine.style.cssText = `
     position:fixed;left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;
     width:0;height:0;border-radius:50%;pointer-events:none;z-index:100;
-    background:radial-gradient(circle, color-mix(in srgb, ${accentColor} 40%, transparent) 0%, transparent 70%);
+    background:radial-gradient(circle, color-mix(in srgb, ${accentColor} 50%, transparent) 0%, transparent 70%);
     transform:translate(-50%,-50%);
   `
   document.body.appendChild(shine)
   shine.animate([
-    { width: '0px', height: '0px', opacity: 0.8 },
-    { width: '60px', height: '60px', opacity: 0 },
+    { width: '0px', height: '0px', opacity: 1 },
+    { width: '70px', height: '70px', opacity: 0 },
   ], { duration: 500, easing: 'ease-out' }).onfinish = () => shine.remove()
 }
 
@@ -509,7 +509,7 @@ function onMorphEnter(el: Element, done: () => void) {
     >
       <!-- Sliding bubble indicator -->
       <div
-        class="absolute top-1 bottom-1 rounded-full bg-purple-100 dark:bg-purple-400/25 transition-all duration-300 ease-in-out pointer-events-none border border-purple-200 dark:border-purple-400/15"
+        class="absolute top-1 bottom-1 rounded-full bg-black/[0.06] dark:bg-white/[0.08] transition-all duration-300 ease-in-out pointer-events-none"
         :style="bubbleStyle"
       />
 
@@ -519,7 +519,8 @@ function onMorphEnter(el: Element, done: () => void) {
         :to="item.path"
         class="nav-tab flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': route.path === item.path }"
-        @click="moreMenuOpen = false; shimmer($event)"
+        @click="moreMenuOpen = false"
+        @pointerdown="shimmer($event)"
       >
         <component :is="icon(item.iconName)" class="w-6 h-6" />
         <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
