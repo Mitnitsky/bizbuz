@@ -19,6 +19,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
         locale.value = prefs.locale
         themeMode.value = prefs.themeMode
         i18n.global.locale.value = prefs.locale as 'en' | 'he'
+        localStorage.setItem('bizbuz-locale', prefs.locale)
       }
     },
     { deep: true },

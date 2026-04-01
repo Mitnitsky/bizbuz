@@ -54,7 +54,7 @@ function openEdit(entry: SavingsEntry) {
             @click="liquidOpen = !liquidOpen"
           >
             <component :is="liquidOpen ? icon('chevronUp') : icon('chevronDown')" class="w-3.5 h-3.5 inline" />
-            {{ savingsStore.liquidEntries.length }} items</button>
+            {{ savingsStore.liquidEntries.length }} {{ t('savings.items') }}</button>
           <button
             class="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
             @click="openAddDialog('liquid')"
@@ -92,7 +92,7 @@ function openEdit(entry: SavingsEntry) {
             @click="lockedOpen = !lockedOpen"
           >
             <component :is="lockedOpen ? icon('chevronUp') : icon('chevronDown')" class="w-3.5 h-3.5 inline" />
-            {{ savingsStore.lockedEntries.length }} items</button>
+            {{ savingsStore.lockedEntries.length }} {{ t('savings.items') }}</button>
           <button
             class="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700"
             @click="openAddDialog('locked')"

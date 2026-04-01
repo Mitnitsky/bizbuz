@@ -118,7 +118,7 @@ function onLongPress() {
       <div class="flex items-center gap-1.5">
         <span class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ displayTitle }}</span>
         <span v-if="isUnique" class="px-1 py-0.5 rounded text-[10px] leading-none font-bold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 flex-shrink-0" title="First time seen">🦄</span>
-        <span v-if="isNew" class="px-1 py-0.5 rounded text-[10px] leading-none font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex-shrink-0">NEW</span>
+        <span v-if="isNew" class="px-1 py-0.5 rounded text-[10px] leading-none font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex-shrink-0">{{ t('common.new') }}</span>
         <component v-if="isAutoCategorized" :is="icon('sparkles')" class="w-3.5 h-3.5 text-purple-400 flex-shrink-0" title="Auto-categorized" />
         <span
           v-if="transaction.isSplit"

@@ -59,13 +59,13 @@ function formatTimeLeft(target: Date): string {
   if (months <= 0) {
     const days = differenceInDays(target, now)
     if (days <= 0) return t('home.overdue')
-    return `${days}d`
+    return t('loans.daysLeft', { n: days })
   }
   const years = Math.floor(months / 12)
   const rem = months % 12
-  if (years > 0 && rem > 0) return `${years}y ${rem}m`
-  if (years > 0) return `${years}y`
-  return `${rem}m`
+  if (years > 0 && rem > 0) return `${t('loans.yearsShort', { n: years })} ${t('loans.monthsShort', { n: rem })}`
+  if (years > 0) return t('loans.yearsShort', { n: years })
+  return t('loans.monthsShort', { n: rem })
 }
 
 const payoffLabel = computed(() => {

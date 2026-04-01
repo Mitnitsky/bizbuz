@@ -182,15 +182,18 @@ export async function getAppUser(uid: string): Promise<AppUser | null> {
     email: d.email,
     familyId: d.family_id,
     displayName: d.display_name,
+    displayNameHe: d.display_name_he,
   }
 }
 
-export async function updateDisplayName(uid: string, familyId: string, name: string): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), { display_name: name })
+export async function updateDisplayName(uid: string, familyId: string, name: string, nameHe?: string): Promise<void> {
+  const userUpdate: Record<string, any> = { display_name: name }
+  if (nameHe !== undefined) userUpdate.display_name_he = nameHe
+  await updateDoc(doc(db, 'users', uid), userUpdate)
   if (familyId) {
-    await updateDoc(doc(db, 'families', familyId), {
-      [`member_display_names.${uid}`]: name,
-    })
+    const familyUpdate: Record<string, any> = { [`member_display_names.${uid}`]: name }
+    if (nameHe !== undefined) familyUpdate[`member_display_names_he.${uid}`] = nameHe
+    await updateDoc(doc(db, 'families', familyId), familyUpdate)
   }
 }
 
@@ -732,8 +735,10 @@ export async function updateCategoryOrder(familyId: string, uid: string, order: 
   await updateUserPreferences(familyId, uid, { category_order: order })
 }
 
-export async function updateFamilyName(familyId: string, name: string): Promise<void> {
-  await updateDoc(doc(db, 'families', familyId), { name })
+export async function updateFamilyName(familyId: string, name: string, nameHe?: string): Promise<void> {
+  const data: Record<string, unknown> = { name }
+  if (nameHe !== undefined) data.name_he = nameHe
+  await updateDoc(doc(db, 'families', familyId), data)
 }
 
 // ---------- Real-time listeners ----------
@@ -779,9 +784,11 @@ export function onFamily(
     callback({
       id: snap.id,
       name: d.name ?? '',
+      nameHe: d.name_he,
       createdBy: d.created_by ?? '',
       memberUids: d.member_uids ?? [],
       memberDisplayNames: d.member_display_names ?? {},
+      memberDisplayNamesHe: d.member_display_names_he,
       ingestSecret: d.ingest_secret,
     })
   }, (error) => {

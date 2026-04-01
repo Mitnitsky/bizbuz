@@ -16,6 +16,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>BizBuz</title>
+    <script>
+      // Set dir/lang early to avoid LTR→RTL flash
+      (function(){var l=localStorage.getItem('bizbuz-locale');if(l==='he'){document.documentElement.dir='rtl';document.documentElement.lang='he'}})();
+    </script>
   </head>
   <body>
     <div id="app"></div>

@@ -16,6 +16,7 @@ import {
   updatePaymentMethodOwners,
   updateCategoryNameOverrides,
   updateFamilyName,
+  updateHiddenDashboardTiles,
   getAllTransactions,
   onRules,
 } from '@/services/firestore'
@@ -48,6 +49,9 @@ const categoryAliasesOpen = ref(false)
 const csvDialogOpen = ref(false)
 const csvContent = ref('')
 const saving = ref(false)
+const dashboardTilesOpen = ref(false)
+const editNameHeValue = ref('')
+const editFamilyNameHeValue = ref('')
 const rules = ref<Rule[]>([])
 let unsubRules: (() => void) | null = null
 
@@ -63,7 +67,8 @@ const familyId = computed(() => authStore.familyId)
 const uid = computed(() => authStore.user?.uid)
 const email = computed(() => authStore.appUser?.email ?? '')
 const displayName = computed(() => authStore.appUser?.displayName ?? '')
-const familyName = computed(() => familyStore.family?.name ?? '')
+const displayNameHe = computed(() => authStore.appUser?.displayNameHe ?? '')
+const familyName = computed(() => familyStore.familyName)
 const memberCount = computed(() => familyStore.family?.memberUids.length ?? 0)
 const inviteCode = computed(() => (familyStore.family?.id ?? '').slice(0, 8).toUpperCase())
 const locale = computed(() => prefsStore.locale)
@@ -126,13 +131,14 @@ async function toggleCategoryHints() {
 // --- Display Name ---
 function openEditName() {
   editNameValue.value = displayName.value
+  editNameHeValue.value = displayNameHe.value
   editNameOpen.value = true
 }
 async function saveDisplayName() {
   if (!uid.value) return
   saving.value = true
   try {
-    await updateDisplayName(uid.value, familyId.value ?? '', editNameValue.value.trim())
+    await updateDisplayName(uid.value, familyId.value ?? '', editNameValue.value.trim(), editNameHeValue.value.trim() || undefined)
     await authStore.refreshAppUser()
     editNameOpen.value = false
   } catch { /* silent */ } finally { saving.value = false }
@@ -148,14 +154,15 @@ function copyFamilyId() {
   }
 }
 function openEditFamilyName() {
-  editFamilyNameValue.value = familyName.value
+  editFamilyNameValue.value = familyStore.family?.name ?? ''
+  editFamilyNameHeValue.value = familyStore.family?.nameHe ?? ''
   editFamilyNameOpen.value = true
 }
 async function saveFamilyName() {
   if (!familyId.value) return
   saving.value = true
   try {
-    await updateFamilyName(familyId.value, editFamilyNameValue.value.trim())
+    await updateFamilyName(familyId.value, editFamilyNameValue.value.trim(), editFamilyNameHeValue.value.trim() || undefined)
     editFamilyNameOpen.value = false
   } catch { /* silent */ } finally { saving.value = false }
 }
@@ -300,6 +307,50 @@ function cycleLabel(day: number): string {
   return t('settings.day', { n: day })
 }
 
+// --- Dashboard Tiles ---
+const ALL_TILES = ['uncategorized', 'cycle_spend', 'income', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+const ALWAYS_VISIBLE = ['cycle_spend']
+
+const TILE_LABELS: Record<string, string> = {
+  cycle_spend: 'home.cycleExpenses',
+  income: 'home.income',
+  uncategorized: 'home.uncategorized',
+  category_pie: 'home.categoryPie',
+  budget_remaining: 'home.budgetRemaining',
+  exceptional: 'home.exceptional',
+  installments: 'home.futurePayments',
+  budgets: 'home.budgets',
+  trackers: 'home.trackers',
+}
+
+const tempHiddenTiles = ref<Set<string>>(new Set())
+
+function openDashboardTiles() {
+  tempHiddenTiles.value = new Set(prefsStore.userPreferences?.hiddenDashboardTiles ?? [])
+  dashboardTilesOpen.value = true
+}
+
+function toggleDashboardTile(id: string) {
+  const next = new Set(tempHiddenTiles.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  tempHiddenTiles.value = next
+}
+
+async function saveDashboardTiles() {
+  if (!familyId.value || !uid.value) return
+  saving.value = true
+  try {
+    await updateHiddenDashboardTiles(familyId.value, uid.value, [...tempHiddenTiles.value])
+    dashboardTilesOpen.value = false
+  } catch { /* silent */ } finally { saving.value = false }
+}
+
+const dashboardTilesLabel = computed(() => {
+  const hidden = prefsStore.userPreferences?.hiddenDashboardTiles ?? []
+  return `${ALL_TILES.length - hidden.length}/${ALL_TILES.length}`
+})
+
 // --- Rules (count only, editor is now at /settings/rules) ---
 
 // --- Navigation Bar ---
@@ -364,16 +415,15 @@ const navBarLabel = computed(() => {
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-300 mb-6">{{ t('nav.settings') }}</h1>
 
     <div class="grid grid-cols-1 min-[800px]:grid-cols-3 gap-6">
-      <!-- Column 1: Profile -->
+      <!-- Column 1: Account & Family -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-300 mb-1">{{ t('settings.profile') }}</h2>
-        <div class="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('settings.profile') }}</h3>
 
         <div class="space-y-3 text-sm">
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('auth.email') }}</span><span class="text-gray-900 dark:text-gray-300">{{ email }}</span></div>
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.editDisplayName') }}</span><span class="text-gray-900 dark:text-gray-300">{{ displayName }}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.familyName') }}</span><span class="text-gray-900 dark:text-gray-300">{{ familyName }}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Members</span><span class="text-gray-900 dark:text-gray-300">{{ memberCount }}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.displayNameHe') }}</span><span class="text-gray-900 dark:text-gray-300">{{ displayNameHe }}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('settings.members') }}</span><span class="text-gray-900 dark:text-gray-300">{{ memberCount }}</span></div>
           <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ t('home.inviteCode') }}</span><span class="font-mono text-gray-900 dark:text-gray-300">{{ inviteCode }}</span></div>
           <div class="flex justify-between items-center">
             <span class="text-gray-500 dark:text-gray-400">Family ID</span>
@@ -385,7 +435,7 @@ const navBarLabel = computed(() => {
               <span
                 v-if="copiedFamilyId"
                 class="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap"
-              >Copied!</span>
+              >{{ t('settings.copied') }}</span>
             </span>
           </div>
         </div>
@@ -395,14 +445,18 @@ const navBarLabel = computed(() => {
           <button class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700" @click="exportCsv">{{ t('settings.exportCsv') }}</button>
           <button class="w-full px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700" @click="handleSignOut">{{ t('common.signOut') }}</button>
         </div>
-      </div>
 
-      <!-- Column 2: Family Settings -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-300 mb-1">{{ t('settings.familySettings') }}</h2>
-        <div class="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
+        <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
+
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('settings.familySettings') }}</h3>
 
         <div class="space-y-4">
+          <!-- Family Name -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openEditFamilyName">
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.familyName') }}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ familyName }}</span>
+          </div>
+
           <!-- Billing Cycle -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openBillingCycle">
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.billingCycleStartDay') }}</span>
@@ -414,6 +468,19 @@ const navBarLabel = computed(() => {
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.incomeAnchor') }}</span>
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ incomeAnchorLabel() }}</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Column 2: Categories & Rules -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('settings.categories') }}</h3>
+
+        <div class="space-y-4">
+          <!-- Manage Categories -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="$router.push('/settings/categories')">
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.manageCategories') }}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">→</span>
+          </div>
 
           <!-- Category Budgets -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openBudgets">
@@ -421,42 +488,35 @@ const navBarLabel = computed(() => {
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('settings.nCategories', { n: budgetCount }) }}</span>
           </div>
 
-          <!-- Payment Methods -->
-          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openPaymentMethods">
-            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.paymentMethods') }}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400">{{ paymentLabelCount > 0 ? t('settings.nLabelsConfigured', { n: paymentLabelCount }) : t('settings.noPaymentMethods') }}</span>
-          </div>
-
           <!-- Category Aliases -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openCategoryAliases">
-            <span class="text-sm text-gray-700 dark:text-gray-300">Category Name Aliases</span>
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.categoryAliases') }}</span>
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ categoryOverrideCount > 0 ? t('settings.nLabelsConfigured', { n: categoryOverrideCount }) : t('settings.noLabelsConfigured') }}</span>
           </div>
+        </div>
 
-          <!-- Manage Categories -->
-          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="$router.push('/settings/categories')">
-            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.manageCategories') }}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400">→</span>
-          </div>
+        <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
 
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('settings.automation') }}</h3>
+
+        <div class="space-y-4">
           <!-- Categorization Rules -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="$router.push('/settings/rules')">
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.categorizationRules') }}</span>
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ rules.length }} {{ t('settings.rulesCount') }} →</span>
           </div>
 
-          <!-- Family Name -->
-          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openEditFamilyName">
-            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.familyName') }}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400">{{ familyName }}</span>
+          <!-- Payment Methods -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openPaymentMethods">
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.paymentMethods') }}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ paymentLabelCount > 0 ? t('settings.nLabelsConfigured', { n: paymentLabelCount }) : t('settings.noPaymentMethods') }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Column 3: User Settings -->
+      <!-- Column 3: Appearance & Display -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-300 mb-1">{{ t('settings.userSettings') }}</h2>
-        <div class="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('settings.appearance') }}</h3>
 
         <div class="space-y-5">
           <!-- Language -->
@@ -507,7 +567,13 @@ const navBarLabel = computed(() => {
               />
             </div>
           </div>
+        </div>
 
+        <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
+
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('settings.display') }}</h3>
+
+        <div class="space-y-5">
           <!-- Show Owner Filter -->
           <div class="flex items-center justify-between">
             <div>
@@ -558,6 +624,21 @@ const navBarLabel = computed(() => {
               ></div>
             </label>
           </div>
+        </div>
+
+        <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
+
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('settings.layout') }}</h3>
+
+        <div class="space-y-4">
+          <!-- Dashboard Tiles -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openDashboardTiles">
+            <div>
+              <div class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.dashboardTiles') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.dashboardTilesDesc') }}</div>
+            </div>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ dashboardTilesLabel }}</span>
+          </div>
 
           <!-- Navigation Bar -->
           <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openNavBarSettings">
@@ -578,7 +659,8 @@ const navBarLabel = computed(() => {
       <div v-if="editNameOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="editNameOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
           <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-4">{{ t('settings.editDisplayName') }}</h3>
-          <input v-model="editNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 mb-4" />
+          <input v-model="editNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 mb-3" :placeholder="t('settings.editDisplayName')" />
+          <input v-model="editNameHeValue" type="text" dir="rtl" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 mb-4" :placeholder="t('settings.displayNameHe')" />
           <div class="flex gap-3 justify-end">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="editNameOpen = false">{{ t('common.cancel') }}</button>
             <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveDisplayName">{{ t('common.save') }}</button>
@@ -592,7 +674,8 @@ const navBarLabel = computed(() => {
       <div v-if="editFamilyNameOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="editFamilyNameOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
           <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-4">{{ t('settings.editFamilyName') }}</h3>
-          <input v-model="editFamilyNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 mb-4" />
+          <input v-model="editFamilyNameValue" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 mb-3" :placeholder="t('settings.familyName')" />
+          <input v-model="editFamilyNameHeValue" type="text" dir="rtl" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 mb-4" :placeholder="t('settings.familyNameHe')" />
           <div class="flex gap-3 justify-end">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="editFamilyNameOpen = false">{{ t('common.cancel') }}</button>
             <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveFamilyName">{{ t('common.save') }}</button>
@@ -713,7 +796,7 @@ const navBarLabel = computed(() => {
     <Teleport to="body">
       <div v-if="categoryAliasesOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="categoryAliasesOpen = false">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-4">Category Name Aliases</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-4">{{ t('settings.categoryAliases') }}</h3>
           <div class="space-y-2">
             <div v-for="catDef in getEffectiveCategories(familyStore.familySettings.categories)" :key="catDef.id" class="flex items-center gap-3">
               <span class="text-sm text-gray-500 dark:text-gray-400 flex-1 truncate" :title="catDef.id">{{ categoryDisplayName(catDef.id, locale, getEffectiveCategories(familyStore.familySettings.categories)) }}</span>
@@ -736,7 +819,7 @@ const navBarLabel = computed(() => {
           <textarea readonly :value="csvContent" class="w-full h-48 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-xs font-mono"></textarea>
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="csvDialogOpen = false">{{ t('common.close') }}</button>
-            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700" @click="copyCsv">Copy</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700" @click="copyCsv">{{ t('settings.copy') }}</button>
           </div>
         </div>
       </div>
@@ -751,7 +834,7 @@ const navBarLabel = computed(() => {
 
           <!-- Selected tabs (draggable) -->
           <div class="mb-3">
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">Bottom bar</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">{{ t('settings.navBarBottomBar') }}</div>
             <draggable
               v-model="navBarDragList"
               item-key="name"
@@ -772,7 +855,7 @@ const navBarLabel = computed(() => {
 
           <!-- Available items (not selected) -->
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">Available</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">{{ t('settings.navBarAvailable') }}</div>
             <div class="space-y-1">
               <div
                 v-for="item in allNavItems.filter(i => !navBarSelected.includes(i.name))"
@@ -791,6 +874,39 @@ const navBarLabel = computed(() => {
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="navBarDialogOpen = false">{{ t('common.cancel') }}</button>
             <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveNavBar">{{ t('common.save') }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Dashboard Tiles -->
+    <Teleport to="body">
+      <div v-if="dashboardTilesOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="dashboardTilesOpen = false">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 max-h-[80vh] overflow-y-auto">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-1">{{ t('settings.dashboardTiles') }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('settings.dashboardTilesDesc') }}</p>
+
+          <div class="space-y-2">
+            <label
+              v-for="tileId in ALL_TILES"
+              :key="tileId"
+              class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+              :class="{ 'opacity-50': ALWAYS_VISIBLE.includes(tileId) }"
+            >
+              <input
+                type="checkbox"
+                :checked="!tempHiddenTiles.has(tileId)"
+                :disabled="ALWAYS_VISIBLE.includes(tileId)"
+                class="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500"
+                @change="toggleDashboardTile(tileId)"
+              />
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t(TILE_LABELS[tileId]) }}</span>
+            </label>
+          </div>
+
+          <div class="flex gap-3 justify-end mt-4">
+            <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="dashboardTilesOpen = false">{{ t('common.cancel') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveDashboardTiles">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>

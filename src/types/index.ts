@@ -42,9 +42,11 @@ export interface Transaction {
 export interface Family {
   id: string
   name: string
+  nameHe?: string
   createdBy: string
   memberUids: string[]
   memberDisplayNames: Record<string, string>
+  memberDisplayNamesHe?: Record<string, string>
   ingestSecret?: string
 }
 
@@ -53,6 +55,7 @@ export interface AppUser {
   email: string
   familyId?: string
   displayName?: string
+  displayNameHe?: string
 }
 
 export interface SavingsEntry {

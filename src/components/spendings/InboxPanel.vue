@@ -346,7 +346,7 @@ function onLeave(el: Element, done: () => void) {
               ? 'bg-emerald-600 text-white'
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             @click="inboxFilter = inboxFilter === 'new' ? 'all' : 'new'"
-          >NEW</button>
+          >{{ t('common.new') }}</button>
         </div>
         <button
           v-if="inboxCount > 0"

@@ -307,7 +307,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           ? 'bg-emerald-600 text-white'
           : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50'"
         @click="showNewOnly = !showNewOnly"
-      >NEW {{ newTransactionCount }}</button>
+      >{{ t('common.new') }} {{ newTransactionCount }}</button>
       <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ formatCurrency(filteredTotalSpending) }}</span>
       <div class="flex-1" />
       <!-- Sort mode toggle -->
