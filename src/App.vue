@@ -37,21 +37,46 @@ const navItems = [
   { path: '/settings', name: 'settings', iconName: 'settings' as const, labelKey: 'nav.settings' },
 ]
 
-// Mobile bottom bar: 4 primary tabs + "More" flyout
-const primaryTabs = [
-  { path: '/', name: 'home', iconName: 'home' as const, labelKey: 'nav.home' },
-  { path: '/spendings', name: 'spendings', iconName: 'spendings' as const, labelKey: 'nav.spendings' },
-  { path: '/statistics', name: 'statistics', iconName: 'statistics' as const, labelKey: 'nav.statistics' },
-]
-const moreTabs = [
-  { path: '/installments', name: 'installments', iconName: 'installments' as const, labelKey: 'nav.installments' },
-  { path: '/savings', name: 'savings', iconName: 'savings' as const, labelKey: 'nav.savings' },
-  { path: '/investments', name: 'investments', iconName: 'investments' as const, labelKey: 'nav.investments' },
-  { path: '/loans', name: 'loans', iconName: 'loans' as const, labelKey: 'nav.loans' },
-  { path: '/settings', name: 'settings', iconName: 'settings' as const, labelKey: 'nav.settings' },
-]
+// Mobile bottom bar: primary tabs from user preferences + "More" flyout
+const DEFAULT_NAV_ORDER = ['home', 'spendings', 'statistics']
+const MAX_PRIMARY_TABS = 4
+
+const primaryTabs = computed(() => {
+  const order = prefsStore.userPreferences?.navBarOrder?.length
+    ? prefsStore.userPreferences.navBarOrder.slice(0, MAX_PRIMARY_TABS)
+    : DEFAULT_NAV_ORDER
+  return order
+    .map(name => navItems.find(item => item.name === name))
+    .filter((item): item is typeof navItems[number] => !!item)
+})
+
+const moreTabs = computed(() => {
+  const primaryNames = new Set(primaryTabs.value.map(t => t.name))
+  return navItems.filter(item => !primaryNames.has(item.name))
+})
+
 const moreMenuOpen = ref(false)
-const isMoreActive = computed(() => moreTabs.some(t => route.path === t.path || route.path.startsWith(t.path + '/')))
+const isMoreActive = computed(() => moreTabs.value.some(t => route.path === t.path || route.path.startsWith(t.path + '/')))
+
+const totalBottomTabs = computed(() => primaryTabs.value.length + 1) // +1 for More button
+const activeBottomIndex = computed(() => {
+  const idx = primaryTabs.value.findIndex(t => route.path === t.path)
+  if (idx >= 0) return idx
+  if (isMoreActive.value || moreMenuOpen.value) return primaryTabs.value.length
+  return -1
+})
+
+const bubbleStyle = computed(() => {
+  const idx = activeBottomIndex.value
+  if (idx < 0) return { opacity: '0' }
+  const total = totalBottomTabs.value
+  const widthPct = 100 / total
+  return {
+    opacity: '1',
+    width: `${widthPct}%`,
+    transform: `translateX(${idx * 100}%)`,
+  }
+})
 
 const appState = computed<'loading' | 'login' | 'onboarding' | 'app'>(() => {
   if (authStore.loading) return 'loading'
@@ -206,33 +231,35 @@ onUnmounted(() => {
     <!-- Bottom tab bar (narrow screens) -->
     <nav
       v-if="!isWide"
-      class="fixed bottom-3 left-3 right-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-2xl shadow-lg shadow-black/10 dark:shadow-black/30 border border-white/40 dark:border-gray-600/30 flex z-50"
+      class="fixed bottom-3 left-3 right-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-full shadow-lg shadow-black/10 dark:shadow-black/30 border border-white/40 dark:border-gray-600/30 flex z-50 px-1 py-1 relative overflow-hidden"
       style="backdrop-filter: blur(40px) saturate(180%);"
     >
+      <!-- Sliding bubble indicator -->
+      <div
+        class="absolute top-1 bottom-1 rounded-full bg-purple-500/15 dark:bg-purple-400/20 transition-all duration-300 ease-in-out pointer-events-none"
+        :style="bubbleStyle"
+      />
+
       <router-link
         v-for="item in primaryTabs"
         :key="item.path"
         :to="item.path"
-        class="flex-1 flex flex-col items-center py-2.5 text-gray-500 dark:text-gray-400 transition-colors"
+        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': route.path === item.path }"
         @click="moreMenuOpen = false"
       >
-        <GlassIcon glass size="sm" :active="route.path === item.path">
-          <template #default="{ iconClass }"><component :is="icon(item.iconName)" :class="iconClass" /></template>
-        </GlassIcon>
-        <span class="text-[10px] mt-1 font-medium">{{ t(item.labelKey) }}</span>
+        <component :is="icon(item.iconName)" class="w-6 h-6" />
+        <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
       </router-link>
 
       <!-- More button -->
       <button
-        class="flex-1 flex flex-col items-center py-2.5 text-gray-500 dark:text-gray-400 transition-colors"
+        class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 transition-colors relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': isMoreActive || moreMenuOpen }"
         @click="moreMenuOpen = !moreMenuOpen"
       >
-        <GlassIcon glass size="sm" :active="isMoreActive || moreMenuOpen">
-          <template #default="{ iconClass }"><component :is="icon('more')" :class="iconClass" /></template>
-        </GlassIcon>
-        <span class="text-[10px] mt-1 font-medium">{{ t('nav.more') }}</span>
+        <component :is="icon('more')" class="w-6 h-6" />
+        <span class="text-[10px] mt-0.5 font-medium">{{ t('nav.more') }}</span>
       </button>
     </nav>
 

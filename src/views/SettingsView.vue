@@ -24,13 +24,14 @@ import { formatDate } from '@/composables/useFormatters'
 import { useIcons, ICON_SET_LABELS } from '@/composables/useIcons'
 import { useAccentColor } from '@/composables/useAccentColor'
 import type { Transaction, Rule } from '@/types'
+import draggable from 'vuedraggable'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const transactionsStore = useTransactionsStore()
-const { activeSet: activeIconSet, setIconSet } = useIcons()
+const { activeSet: activeIconSet, setIconSet, icon } = useIcons()
 const iconSetLabels = ICON_SET_LABELS
 const { activeColor: activeAccent, setAccentColor, accentColors } = useAccentColor()
 
@@ -300,6 +301,62 @@ function cycleLabel(day: number): string {
 }
 
 // --- Rules (count only, editor is now at /settings/rules) ---
+
+// --- Navigation Bar ---
+
+const allNavItems = [
+  { name: 'home', labelKey: 'nav.home', iconName: 'home' as const },
+  { name: 'spendings', labelKey: 'nav.spendings', iconName: 'spendings' as const },
+  { name: 'installments', labelKey: 'nav.installments', iconName: 'installments' as const },
+  { name: 'savings', labelKey: 'nav.savings', iconName: 'savings' as const },
+  { name: 'investments', labelKey: 'nav.investments', iconName: 'investments' as const },
+  { name: 'loans', labelKey: 'nav.loans', iconName: 'loans' as const },
+  { name: 'statistics', labelKey: 'nav.statistics', iconName: 'statistics' as const },
+  { name: 'settings', labelKey: 'nav.settings', iconName: 'settings' as const },
+]
+const DEFAULT_NAV_ORDER = ['home', 'spendings', 'statistics']
+const MAX_PRIMARY_TABS = 4
+
+const navBarSelected = ref<string[]>([])
+const navBarDialogOpen = ref(false)
+
+const navBarDragList = computed({
+  get: () => navBarSelected.value.map(name => allNavItems.find(i => i.name === name)!).filter(Boolean),
+  set: (items) => { navBarSelected.value = items.map(i => i.name) },
+})
+
+function openNavBarSettings() {
+  const current = prefsStore.userPreferences?.navBarOrder?.length
+    ? [...prefsStore.userPreferences.navBarOrder]
+    : [...DEFAULT_NAV_ORDER]
+  // Filter out names that no longer exist
+  navBarSelected.value = current.filter(n => allNavItems.some(i => i.name === n))
+  navBarDialogOpen.value = true
+}
+
+function toggleNavItem(name: string) {
+  const idx = navBarSelected.value.indexOf(name)
+  if (idx >= 0) {
+    navBarSelected.value.splice(idx, 1)
+  } else if (navBarSelected.value.length < MAX_PRIMARY_TABS) {
+    navBarSelected.value.push(name)
+  }
+}
+
+async function saveNavBar() {
+  if (!familyId.value || !uid.value) return
+  saving.value = true
+  try {
+    await updateUserPreferences(familyId.value, uid.value, { nav_bar_order: navBarSelected.value })
+    navBarDialogOpen.value = false
+  } catch { /* silent */ } finally { saving.value = false }
+}
+
+const navBarLabel = computed(() => {
+  const order = prefsStore.userPreferences?.navBarOrder
+  const count = order?.length || DEFAULT_NAV_ORDER.length
+  return `${count} tabs`
+})
 </script>
 
 <template>
@@ -501,6 +558,15 @@ function cycleLabel(day: number): string {
               ></div>
             </label>
           </div>
+
+          <!-- Navigation Bar -->
+          <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded-lg" @click="openNavBarSettings">
+            <div>
+              <div class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.navBar') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.navBarDesc') }}</div>
+            </div>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ navBarLabel }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -671,6 +737,60 @@ function cycleLabel(day: number): string {
           <div class="flex gap-3 justify-end mt-4">
             <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="csvDialogOpen = false">{{ t('common.close') }}</button>
             <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700" @click="copyCsv">Copy</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Navigation Bar -->
+    <Teleport to="body">
+      <div v-if="navBarDialogOpen" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="navBarDialogOpen = false">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 max-h-[80vh] overflow-y-auto">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-gray-300 mb-1">{{ t('settings.navBar') }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('settings.navBarDesc') }}</p>
+
+          <!-- Selected tabs (draggable) -->
+          <div class="mb-3">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">Bottom bar</div>
+            <draggable
+              v-model="navBarDragList"
+              item-key="name"
+              handle=".drag-handle"
+              :animation="200"
+              class="space-y-1"
+            >
+              <template #item="{ element }">
+                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/50">
+                  <span class="drag-handle cursor-grab text-gray-400 dark:text-gray-500">⠿</span>
+                  <component :is="icon(element.iconName)" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ t(element.labelKey) }}</span>
+                  <button class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 text-sm" @click="toggleNavItem(element.name)">✕</button>
+                </div>
+              </template>
+            </draggable>
+          </div>
+
+          <!-- Available items (not selected) -->
+          <div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium uppercase tracking-wider">Available</div>
+            <div class="space-y-1">
+              <div
+                v-for="item in allNavItems.filter(i => !navBarSelected.includes(i.name))"
+                :key="item.name"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                :class="{ 'opacity-50 cursor-not-allowed': navBarSelected.length >= MAX_PRIMARY_TABS }"
+                @click="toggleNavItem(item.name)"
+              >
+                <component :is="icon(item.iconName)" class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ t(item.labelKey) }}</span>
+                <span v-if="navBarSelected.length < MAX_PRIMARY_TABS" class="text-gray-400 text-sm">+</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 justify-end mt-4">
+            <button class="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" @click="navBarDialogOpen = false">{{ t('common.cancel') }}</button>
+            <button class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" :disabled="saving" @click="saveNavBar">{{ t('common.save') }}</button>
           </div>
         </div>
       </div>

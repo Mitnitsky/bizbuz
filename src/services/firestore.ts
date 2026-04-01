@@ -829,6 +829,7 @@ export function onUserPreferences(
       themeMode: d.theme_mode ?? 'system',
       categoryOrder: d.category_order ?? [],
       pinnedCategories: d.pinned_categories ?? [],
+      navBarOrder: d.nav_bar_order ?? [],
     })
   }, (error) => {
     console.error('[onUserPreferences] Firestore error:', error.message)

@@ -200,6 +200,8 @@ export default {
     addCondition: 'הוסף תנאי',
     overrideTo: 'הצג כ',
     defaultRule: 'ברירת מחדל',
+    navBar: 'סרגל ניווט',
+    navBarDesc: 'בחר וסדר את הלשוניות בסרגל התחתון (עד 4)',
   },
   spendings: {
     addTransaction: 'הוסף עסקה',

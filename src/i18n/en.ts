@@ -200,6 +200,8 @@ export default {
     addCondition: 'Add condition',
     overrideTo: 'Display as',
     defaultRule: 'Default',
+    navBar: 'Navigation Bar',
+    navBarDesc: 'Choose and reorder bottom bar tabs (max 4)',
   },
   spendings: {
     addTransaction: 'Add Transaction',

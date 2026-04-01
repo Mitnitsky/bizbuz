@@ -81,6 +81,7 @@ export interface UserPreferences {
   themeMode: string
   categoryOrder: string[]
   pinnedCategories: string[]
+  navBarOrder: string[]
 }
 
 export interface CategoryDef {
