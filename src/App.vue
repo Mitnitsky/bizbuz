@@ -314,32 +314,20 @@ function getAccentColors(): string[] {
   return colors
 }
 
-// Shimmer is now CSS-only (nav-gloss class)
+// Gloss sweep on nav tab selection
 const navTabRefs: Record<string, HTMLElement> = {}
 
 watch(() => route.path, (newPath) => {
   const el = navTabRefs[newPath]
   if (!el) return
-  // Remove any existing gloss overlay
-  el.querySelectorAll('.gloss-sweep').forEach(g => g.remove())
-  const gloss = document.createElement('div')
-  gloss.className = 'gloss-sweep'
-  gloss.style.cssText = `
-    position:absolute;inset:0;pointer-events:none;z-index:20;overflow:hidden;border-radius:9999px;
-  `
-  const inner = document.createElement('div')
-  inner.style.cssText = `
-    position:absolute;width:120%;height:120%;
-    background:linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.7) 50%, transparent 60%);
-    transform:translate(-120%,-120%);
-  `
-  gloss.appendChild(inner)
-  el.style.position = 'relative'
-  el.appendChild(gloss)
-  inner.animate([
-    { transform: 'translate(-120%,-120%)' },
-    { transform: 'translate(120%,120%)' },
-  ], { duration: 1800, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => gloss.remove()
+  // Animate a brightness flash sweep on the icon+text
+  el.animate([
+    { filter: 'brightness(1)', offset: 0 },
+    { filter: 'brightness(1)', offset: 0.15 },
+    { filter: 'brightness(1.8)', offset: 0.4 },
+    { filter: 'brightness(1)', offset: 0.7 },
+    { filter: 'brightness(1)', offset: 1 },
+  ], { duration: 1200, easing: 'ease-in-out' })
 })
 
 function spawnShatterParticles() {
