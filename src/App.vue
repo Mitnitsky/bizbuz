@@ -314,19 +314,85 @@ function getAccentColors(): string[] {
   return colors
 }
 
-// Bounce animation on nav tab selection (like Telegram)
+// Contextual icon animations per tab (Telegram-style)
 const navTabRefs: Record<string, HTMLElement> = {}
+
+const iconAnimations: Record<string, Keyframe[]> = {
+  home: [ // gentle bounce like settling in
+    { transform: 'translateY(0)' },
+    { transform: 'translateY(-4px)' },
+    { transform: 'translateY(1px)' },
+    { transform: 'translateY(-1px)' },
+    { transform: 'translateY(0)' },
+  ],
+  spendings: [ // flip like flipping through pages
+    { transform: 'rotateY(0deg)' },
+    { transform: 'rotateY(180deg)' },
+    { transform: 'rotateY(360deg)' },
+  ],
+  installments: [ // horizontal shake like counting
+    { transform: 'translateX(0)' },
+    { transform: 'translateX(-3px)' },
+    { transform: 'translateX(3px)' },
+    { transform: 'translateX(-2px)' },
+    { transform: 'translateX(2px)' },
+    { transform: 'translateX(0)' },
+  ],
+  savings: [ // wiggle like coins jingling
+    { transform: 'rotate(0deg)' },
+    { transform: 'rotate(-12deg)' },
+    { transform: 'rotate(10deg)' },
+    { transform: 'rotate(-8deg)' },
+    { transform: 'rotate(5deg)' },
+    { transform: 'rotate(0deg)' },
+  ],
+  investments: [ // thrust upward like chart rising
+    { transform: 'translateY(0) scale(1)' },
+    { transform: 'translateY(-5px) scale(1.15)' },
+    { transform: 'translateY(-2px) scale(1.05)' },
+    { transform: 'translateY(0) scale(1)' },
+  ],
+  loans: [ // pendulum swing like a scale
+    { transform: 'rotate(0deg)' },
+    { transform: 'rotate(15deg)' },
+    { transform: 'rotate(-12deg)' },
+    { transform: 'rotate(8deg)' },
+    { transform: 'rotate(-4deg)' },
+    { transform: 'rotate(0deg)' },
+  ],
+  statistics: [ // stretch up like bars growing
+    { transform: 'scaleY(1)' },
+    { transform: 'scaleY(0.6)' },
+    { transform: 'scaleY(1.2)' },
+    { transform: 'scaleY(0.9)' },
+    { transform: 'scaleY(1)' },
+  ],
+  settings: [ // gear spin
+    { transform: 'rotate(0deg)' },
+    { transform: 'rotate(180deg)' },
+  ],
+}
+
+// Fallback bounce for unknown icons
+const defaultAnim: Keyframe[] = [
+  { transform: 'scale(1)' },
+  { transform: 'scale(0.8)' },
+  { transform: 'scale(1.1)' },
+  { transform: 'scale(1)' },
+]
 
 watch(() => route.path, (newPath) => {
   const el = navTabRefs[newPath]
   if (!el) return
-  el.animate([
-    { transform: 'scale(1)', offset: 0 },
-    { transform: 'scale(0.75)', offset: 0.3 },
-    { transform: 'scale(1.15)', offset: 0.65 },
-    { transform: 'scale(0.95)', offset: 0.8 },
-    { transform: 'scale(1)', offset: 1 },
-  ], { duration: 450, easing: 'ease-in-out' })
+  // Find which icon name this tab uses
+  const tab = primaryTabs.value.find(t => t.path === newPath)
+  const iconName = tab?.iconName || ''
+  const keyframes = iconAnimations[iconName] || defaultAnim
+  // Only animate the icon (first child), not the label
+  const iconEl = el.querySelector('svg') as HTMLElement | null
+  if (iconEl) {
+    iconEl.animate(keyframes, { duration: 500, easing: 'ease-in-out' })
+  }
 })
 
 function spawnShatterParticles() {
