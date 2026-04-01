@@ -8,6 +8,7 @@ import type { Unsubscribe } from 'firebase/firestore'
 export const useFamilyStore = defineStore('family', () => {
   const { t, locale } = useI18n()
   const family = ref<Family | null>(null)
+  const familyLoaded = ref(false)
   const familySettings = ref<FamilySettings>({
     cycleStartDay: 1,
     incomeAnchorDay: null,
@@ -61,9 +62,11 @@ export const useFamilyStore = defineStore('family', () => {
 
   async function bindFamily(familyId: string) {
     unbind()
+    familyLoaded.value = false
 
     unsubFamily = onFamily(familyId, async (f) => {
       family.value = f
+      familyLoaded.value = true
     })
 
     unsubSettings = onFamilySettings(familyId, (s) => {
@@ -80,6 +83,7 @@ export const useFamilyStore = defineStore('family', () => {
 
   return {
     family,
+    familyLoaded,
     familySettings,
     memberNames,
     familyName,

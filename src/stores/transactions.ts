@@ -11,6 +11,7 @@ import type { Unsubscribe } from 'firebase/firestore'
 
 export const useTransactionsStore = defineStore('transactions', () => {
   const transactions = ref<Transaction[]>([])
+  const loaded = ref(false)
   let unsub: Unsubscribe | null = null
 
   const visibleTransactions = computed(() => {
@@ -136,10 +137,12 @@ export const useTransactionsStore = defineStore('transactions', () => {
 
   function bindTransactions(familyId: string) {
     unbind()
+    loaded.value = false
     console.log('[transactions store] binding to family:', familyId)
     unsub = onTransactions(familyId, (txns) => {
       console.log('[transactions store] received', txns.length, 'transactions')
       transactions.value = txns
+      loaded.value = true
     })
   }
 
@@ -150,6 +153,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
 
   return {
     transactions,
+    loaded,
     visibleTransactions,
     cycleTransactions,
     inboxTransactions,

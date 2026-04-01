@@ -99,6 +99,7 @@ function onDragEnd() {
 }
 
 const familyName = computed(() => familyStore.familyName || 'BizBuz')
+const dataLoading = computed(() => !txnStore.loaded || !familyStore.familyLoaded)
 const displayName = computed(() => {
   const user = authStore.appUser
   if (!user) return ''
@@ -117,6 +118,18 @@ const displayName = computed(() => {
       </div>
     </div>
 
+    <!-- Skeleton while loading -->
+    <template v-if="dataLoading">
+      <div class="mb-6 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+      <div v-for="i in 4" :key="i" class="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow p-5 animate-pulse">
+        <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
+        <div class="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+        <div class="h-3 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+    </template>
+
+    <!-- Loaded content -->
+    <template v-else>
     <!-- Cycle Selector -->
     <CycleSelector class="mb-6" />
 
@@ -139,5 +152,6 @@ const displayName = computed(() => {
         </div>
       </template>
     </draggable>
+    </template>
   </div>
 </template>
