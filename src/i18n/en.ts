@@ -199,6 +199,7 @@ export default {
     ruleFieldDescription: 'Description',
     ruleFieldSource: 'Source',
     ruleFieldCompany: 'Company',
+    ruleFieldAmount: 'Amount',
     ruleOpContains: 'contains',
     ruleOpEquals: 'equals',
     ruleOpStartsWith: 'starts with',

@@ -148,10 +148,10 @@ function toggleAll() {
       >{{ allCollapsed ? t('rules.expandAll') : t('rules.collapseAll') }}</button>
     </div>
 
-    <!-- Edit / New form -->
-    <div v-if="editingRule" class="border border-purple-300 dark:border-purple-700 rounded-xl p-5 mb-6 bg-purple-50/50 dark:bg-purple-900/20">
+    <!-- Edit / New form (only shown at top for NEW rules) -->
+    <div v-if="editingRule && editingRuleIsNew" ref="editFormRef" class="border border-purple-300 dark:border-purple-700 rounded-xl p-5 mb-6 bg-purple-50/50 dark:bg-purple-900/20">
       <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
-        {{ editingRuleIsNew ? t('settings.newRule') : t('settings.editRule') }}
+        {{ t('settings.newRule') }}
       </h3>
 
       <!-- Conditions -->
@@ -161,7 +161,7 @@ function toggleAll() {
             <option value="description">{{ t('settings.ruleFieldDescription') }}</option>
             <option value="source">{{ t('settings.ruleFieldSource') }}</option>
             <option value="companyId">{{ t('settings.ruleFieldCompany') }}</option>
-            <option value="chargedAmount">{{ t('settings.ruleFieldAmount') || 'Amount' }}</option>
+            <option value="chargedAmount">{{ t('settings.ruleFieldAmount') }}</option>
           </select>
           <select v-model="cond.operator" class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm">
             <option value="contains">{{ t('settings.ruleOpContains') }}</option>
@@ -234,11 +234,53 @@ function toggleAll() {
           <span class="text-xs font-normal normal-case text-gray-400 dark:text-gray-500">({{ catRules.length }})</span>
         </h2>
         <div v-show="!collapsedCategories.has(cat)" class="space-y-2">
-          <div
-            v-for="rule in catRules"
-            :key="rule.id"
-            class="flex items-start justify-between gap-3 p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow"
-          >
+          <template v-for="rule in catRules" :key="rule.id">
+            <!-- Inline edit form for this rule -->
+            <div v-if="editingRule && !editingRuleIsNew && editingRule.id === rule.id" class="border border-purple-300 dark:border-purple-700 rounded-xl p-5 bg-purple-50/50 dark:bg-purple-900/20">
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">{{ t('settings.editRule') }}</h3>
+              <div class="space-y-2 mb-4">
+                <div v-for="(cond, i) in editingRule.conditions" :key="i" class="flex flex-wrap items-center gap-2">
+                  <select v-model="cond.field" class="w-32 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm">
+                    <option value="description">{{ t('settings.ruleFieldDescription') }}</option>
+                    <option value="source">{{ t('settings.ruleFieldSource') }}</option>
+                    <option value="companyId">{{ t('settings.ruleFieldCompany') }}</option>
+                    <option value="chargedAmount">{{ t('settings.ruleFieldAmount') }}</option>
+                  </select>
+                  <select v-model="cond.operator" class="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm">
+                    <option value="contains">{{ t('settings.ruleOpContains') }}</option>
+                    <option value="equals">{{ t('settings.ruleOpEquals') }}</option>
+                    <option value="starts_with">{{ t('settings.ruleOpStartsWith') }}</option>
+                    <option value="not_in">{{ t('settings.ruleOpNotIn') }}</option>
+                    <option value="greater_than">></option>
+                    <option value="less_than">&lt;</option>
+                  </select>
+                  <input v-model="cond.value" type="text" class="flex-1 min-w-[120px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm" :placeholder="t('settings.ruleValuePlaceholder')" />
+                  <button v-if="editingRule.conditions.length > 1" class="text-red-500 hover:text-red-700 text-sm px-2 py-1" @click="removeCondition(i)">✕</button>
+                </div>
+              </div>
+              <button class="text-sm text-purple-600 dark:text-purple-400 hover:underline mb-4 block" @click="addCondition">+ {{ t('settings.addCondition') }}</button>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ t('settings.ruleCategory') }}</label>
+                  <select v-model="editingRule.actionCategory" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm">
+                    <option v-for="catDef in effectiveCategories" :key="catDef.id" :value="catDef.id">{{ categoryDisplayName(catDef.id, locale, effectiveCategories) }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ t('settings.ruleOverrideDesc') }}</label>
+                  <input v-model="editingRule.actionOverrideDescription" type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 px-3 py-2 text-sm" :placeholder="t('settings.optionalOverride')" />
+                </div>
+              </div>
+              <div class="flex gap-2 justify-end">
+                <button class="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm" @click="editingRule = null">{{ t('common.cancel') }}</button>
+                <button class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 disabled:opacity-50" :disabled="saving || !editingRule.actionCategory || editingRule.conditions.some(c => !c.value)" @click="saveRule">{{ t('common.save') }}</button>
+              </div>
+            </div>
+            <!-- Rule display row -->
+            <div
+              v-else
+              class="flex items-start justify-between gap-3 p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow"
+            >
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span v-if="rule.isDefault" class="px-2 py-0.5 rounded text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-medium">{{ t('settings.defaultRule') }}</span>
@@ -269,6 +311,7 @@ function toggleAll() {
               >🗑️</button>
             </div>
           </div>
+          </template>
         </div>
       </div>
     </div>

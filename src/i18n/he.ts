@@ -199,6 +199,7 @@ export default {
     ruleFieldDescription: 'תיאור',
     ruleFieldSource: 'מקור',
     ruleFieldCompany: 'חברה',
+    ruleFieldAmount: 'סכום',
     ruleOpContains: 'מכיל',
     ruleOpEquals: 'שווה',
     ruleOpStartsWith: 'מתחיל ב',
