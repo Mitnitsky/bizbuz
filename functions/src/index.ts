@@ -236,5 +236,43 @@ export const ingest = functions.https.onRequest(async (req, res) => {
     }
   }
 
+  // Send push notifications if any transactions were processed
+  if (results.processed > 0) {
+    try {
+      const tokensSnap = await familyRef.collection("fcm_tokens").get();
+      if (!tokensSnap.empty) {
+        const tokens = tokensSnap.docs.map((d) => d.data().token as string);
+        const message: admin.messaging.MulticastMessage = {
+          tokens,
+          data: {
+            title: "BizBuz – ביזבוז",
+            body: `${results.processed} new transactions imported`,
+            tag: "bizbuz-ingest",
+            url: "/spendings",
+          },
+          webpush: {
+            headers: {"Urgency": "high"},
+            fcmOptions: {link: "/spendings"},
+          },
+        };
+        const sendResult = await admin.messaging().sendEachForMulticast(message);
+        // Clean up invalid tokens
+        const tokensToDelete: string[] = [];
+        sendResult.responses.forEach((resp, idx) => {
+          if (resp.error &&
+            (resp.error.code === "messaging/invalid-registration-token" ||
+             resp.error.code === "messaging/registration-token-not-registered")) {
+            tokensToDelete.push(tokens[idx]);
+          }
+        });
+        for (const token of tokensToDelete) {
+          await familyRef.collection("fcm_tokens").doc(token).delete();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to send push notifications:", err);
+    }
+  }
+
   res.status(200).send(results);
 });

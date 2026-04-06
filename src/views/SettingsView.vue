@@ -25,6 +25,7 @@ import { getEffectiveCategories, categoryDisplayName } from '@/composables/useCa
 import { formatDate } from '@/composables/useFormatters'
 import { useIcons, ICON_SET_LABELS } from '@/composables/useIcons'
 import { useAccentColor } from '@/composables/useAccentColor'
+import { useNotifications } from '@/composables/useNotifications'
 import type { Transaction, Rule } from '@/types'
 import draggable from 'vuedraggable'
 
@@ -36,6 +37,10 @@ const transactionsStore = useTransactionsStore()
 const { activeSet: activeIconSet, setIconSet, icon } = useIcons()
 const iconSetLabels = ICON_SET_LABELS
 const { activeColor: activeAccent, setAccentColor, accentColors } = useAccentColor()
+const {
+  notificationsEnabled, notificationPermission, isLoading: notifLoading,
+  requestPermissionAndSubscribe, unsubscribe: unsubNotifications, checkExistingSubscription,
+} = useNotifications()
 
 const dataLoading = computed(() => !transactionsStore.loaded || !familyStore.familyLoaded)
 
@@ -62,6 +67,7 @@ onMounted(() => {
   if (familyId.value) {
     unsubRules = onRules(familyId.value, (r) => { rules.value = r })
   }
+  checkExistingSubscription()
 })
 onUnmounted(() => { unsubRules?.() })
 
@@ -129,6 +135,15 @@ async function togglePaymentSource() {
 async function toggleCategoryHints() {
   if (!familyId.value || !uid.value) return
   try { await updateUserPreferences(familyId.value, uid.value, { show_category_hints: !showCategoryHints.value }) } catch { /* silent */ }
+}
+
+async function toggleNotifications() {
+  if (!familyId.value || !uid.value) return
+  if (notificationsEnabled.value) {
+    await unsubNotifications(familyId.value)
+  } else {
+    await requestPermissionAndSubscribe(familyId.value, uid.value)
+  }
 }
 
 // --- Display Name ---
@@ -677,6 +692,40 @@ const navBarLabel = computed(() => {
                 :class="showCategoryHints
                   ? 'bg-purple-600 after:translate-x-full after:border-white'
                   : 'bg-gray-300 dark:bg-gray-600 after:border-gray-300'"
+              ></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="border-b border-gray-200 dark:border-gray-700 my-4"></div>
+
+        <h3 class="text-sm font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3">{{ t('settings.notifications') }}</h3>
+
+        <div class="space-y-5">
+          <!-- Push Notifications -->
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.pushNotifications') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                <template v-if="notificationPermission === 'denied'">{{ t('settings.notificationsDenied') }}</template>
+                <template v-else>{{ t('settings.pushNotificationsDesc') }}</template>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                :checked="notificationsEnabled"
+                :disabled="notifLoading || notificationPermission === 'denied'"
+                class="sr-only peer"
+                @change="toggleNotifications"
+              />
+              <div
+                class="w-11 h-6 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
+                :class="notificationsEnabled
+                  ? 'bg-purple-600 after:translate-x-full after:border-white'
+                  : notificationPermission === 'denied'
+                    ? 'bg-gray-200 dark:bg-gray-700 opacity-50 cursor-not-allowed after:border-gray-300'
+                    : 'bg-gray-300 dark:bg-gray-600 after:border-gray-300'"
               ></div>
             </label>
           </div>
