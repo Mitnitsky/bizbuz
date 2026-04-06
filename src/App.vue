@@ -227,11 +227,7 @@ watch(appState, (state) => {
   }
 })
 
-// Pull-to-refresh for standalone PWA (no refresh button in Safari webapp)
-const isStandalone = ref(
-  window.matchMedia('(display-mode: standalone)').matches ||
-  (navigator as any).standalone === true
-)
+// Pull-to-refresh (custom implementation – native overscroll is disabled via CSS)
 const pullDistance = ref(0)
 const isRefreshing = ref(false)
 const PULL_THRESHOLD = 80
@@ -239,7 +235,7 @@ let pullStartY = 0
 let isPulling = false
 
 function onPullStart(e: TouchEvent) {
-  if (!isStandalone.value || isRefreshing.value) return
+  if (isRefreshing.value) return
   const scrollEl = document.querySelector('main .overflow-y-auto') as HTMLElement | null
   if (scrollEl && scrollEl.scrollTop > 0) return
   pullStartY = e.touches[0].clientY
@@ -271,21 +267,17 @@ onMounted(async () => {
   window.addEventListener('resize', onResize)
   mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
   mediaQuery.addEventListener('change', onSystemThemeChange)
-  if (isStandalone.value) {
-    document.addEventListener('touchstart', onPullStart, { passive: true })
-    document.addEventListener('touchmove', onPullMove, { passive: false })
-    document.addEventListener('touchend', onPullEnd, { passive: true })
-  }
+  document.addEventListener('touchstart', onPullStart, { passive: true })
+  document.addEventListener('touchmove', onPullMove, { passive: false })
+  document.addEventListener('touchend', onPullEnd, { passive: true })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', onResize)
   mediaQuery?.removeEventListener('change', onSystemThemeChange)
-  if (isStandalone.value) {
-    document.removeEventListener('touchstart', onPullStart)
-    document.removeEventListener('touchmove', onPullMove)
-    document.removeEventListener('touchend', onPullEnd)
-  }
+  document.removeEventListener('touchstart', onPullStart)
+  document.removeEventListener('touchmove', onPullMove)
+  document.removeEventListener('touchend', onPullEnd)
 })
 
 // --- Particle shatter animation for More icon morph ---
@@ -692,13 +684,21 @@ function onMorphEnter(el: Element, done: () => void) {
 </script>
 
 <template>
-  <!-- Pull-to-refresh indicator (standalone PWA only) -->
+  <!-- Pull-to-refresh indicator -->
   <div
-    v-if="isStandalone && pullDistance > 0"
+    v-if="pullDistance > 0"
     class="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
-    :style="{ transform: `translateY(${pullDistance - 40}px)`, opacity: Math.min(pullDistance / PULL_THRESHOLD, 1) }"
+    :style="{ transform: `translateY(${pullDistance - 40}px)`, opacity: Math.min(pullDistance / 30, 1) }"
   >
-    <div class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center">
+    <div class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center relative">
+      <!-- Progress ring -->
+      <svg v-if="!isRefreshing" class="absolute w-10 h-10 -rotate-90" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" class="text-gray-200 dark:text-gray-600" stroke-width="2.5" />
+        <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" class="text-purple-500"
+          stroke-width="2.5" stroke-linecap="round"
+          :stroke-dasharray="`${Math.min(pullDistance / PULL_THRESHOLD, 1) * 106.8} 106.8`"
+        />
+      </svg>
       <component
         :is="icon('loader')"
         class="w-5 h-5 text-purple-500"
