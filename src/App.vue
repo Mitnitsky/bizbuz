@@ -689,8 +689,8 @@ function onMorphEnter(el: Element, done: () => void) {
   <!-- Pull-to-refresh indicator -->
   <div
     v-if="pullDistance > 0"
-    class="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
-    :style="{ transform: `translateY(${pullDistance - 40}px)`, opacity: Math.min(pullDistance / 30, 1) }"
+    class="fixed left-0 right-0 z-[100] flex justify-center pointer-events-none"
+    :style="{ top: 'env(safe-area-inset-top, 0px)', transform: `translateY(${pullDistance - 40}px)`, opacity: Math.min(pullDistance / 30, 1) }"
   >
     <div class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center relative">
       <!-- Progress ring -->
