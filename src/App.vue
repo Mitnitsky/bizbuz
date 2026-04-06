@@ -238,9 +238,18 @@ let isPulling = false
 
 function onPullStart(e: TouchEvent) {
   if (isRefreshing.value) return
-  const scrollEl = document.querySelector('main .overflow-y-auto') as HTMLElement | null
-  const scrollTop = scrollEl ? scrollEl.scrollTop : (window.scrollY || document.documentElement.scrollTop)
-  if (scrollTop > 0) return
+  // Find the nearest scrollable ancestor from the touch target
+  let el = e.target as HTMLElement | null
+  while (el && el !== document.body) {
+    if (el.scrollHeight > el.clientHeight && el.scrollTop > 0) {
+      const style = getComputedStyle(el)
+      const ov = style.overflowY
+      if (ov === 'auto' || ov === 'scroll') return
+    }
+    el = el.parentElement
+  }
+  // Also check document-level scroll
+  if ((window.scrollY || document.documentElement.scrollTop) > 0) return
   pullStartY = e.touches[0].clientY
   isPulling = true
   isPullingActive.value = true
