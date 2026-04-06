@@ -7,7 +7,9 @@ import { db } from '@/firebase'
 const VAPID_KEY_STORAGE = 'bizbuz:fcm-token'
 
 const notificationsEnabled = ref(false)
-const notificationPermission = ref(Notification.permission)
+const notificationPermission = ref(
+  typeof Notification !== 'undefined' ? Notification.permission : 'default'
+)
 const isLoading = ref(false)
 
 let messaging: ReturnType<typeof getMessaging> | null = null
@@ -25,14 +27,24 @@ export function useNotifications() {
     isLoading.value = true
     try {
       const msg = await initMessaging()
-      if (!msg) { isLoading.value = false; return false }
+      if (!msg) {
+        console.warn('[FCM] Messaging not supported on this device')
+        isLoading.value = false
+        return false
+      }
 
       const permission = await Notification.requestPermission()
       notificationPermission.value = permission
-      if (permission !== 'granted') { isLoading.value = false; return false }
+      if (permission !== 'granted') {
+        console.warn('[FCM] Permission denied:', permission)
+        isLoading.value = false
+        return false
+      }
 
       // Register service worker
       const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      // Wait for SW to be ready
+      await navigator.serviceWorker.ready
 
       const token = await getToken(msg, {
         vapidKey: 'BLTbAbRP7T8MHxeZDKR08UaqEJ0hw4AyPTmaVe-YxCIEjndttswcBJZAlSL4hmkakazbego2b4L391RB1UQUkH0',
@@ -40,13 +52,16 @@ export function useNotifications() {
       })
 
       if (token) {
-        // Store token in Firestore under family's fcm_tokens collection
+        console.log('[FCM] Token obtained, saving to Firestore')
         await setDoc(
           doc(db, 'families', familyId, 'fcm_tokens', token),
           { uid, token, createdAt: new Date(), userAgent: navigator.userAgent }
         )
         localStorage.setItem(VAPID_KEY_STORAGE, token)
         notificationsEnabled.value = true
+        notificationPermission.value = 'granted'
+      } else {
+        console.warn('[FCM] No token received')
       }
 
       // Handle foreground messages
@@ -63,7 +78,7 @@ export function useNotifications() {
 
       return true
     } catch (err) {
-      console.error('[FCM] Error requesting permission:', err)
+      console.error('[FCM] Error:', err)
       return false
     } finally {
       isLoading.value = false
