@@ -4,6 +4,8 @@
 /* Base styles */
 html {
   scroll-behavior: smooth;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -11,6 +13,9 @@ body {
   background-color: #f9fafb;
   color: #111827;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .dark body {
