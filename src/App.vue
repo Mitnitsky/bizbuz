@@ -230,18 +230,21 @@ watch(appState, (state) => {
 // Pull-to-refresh (custom implementation – native overscroll is disabled via CSS)
 const pullDistance = ref(0)
 const isRefreshing = ref(false)
+const isPullingActive = ref(false)
+const pullSnapBack = ref(false)
 const PULL_THRESHOLD = 80
 let pullStartY = 0
 let isPulling = false
 
 function onPullStart(e: TouchEvent) {
   if (isRefreshing.value) return
-  // Check scroll position – inner scroll container on desktop, document on mobile
   const scrollEl = document.querySelector('main .overflow-y-auto') as HTMLElement | null
   const scrollTop = scrollEl ? scrollEl.scrollTop : (window.scrollY || document.documentElement.scrollTop)
   if (scrollTop > 0) return
   pullStartY = e.touches[0].clientY
   isPulling = true
+  isPullingActive.value = true
+  pullSnapBack.value = false
 }
 
 function onPullMove(e: TouchEvent) {
@@ -255,12 +258,15 @@ function onPullMove(e: TouchEvent) {
 function onPullEnd() {
   if (!isPulling) return
   isPulling = false
+  isPullingActive.value = false
   if (pullDistance.value >= PULL_THRESHOLD) {
     isRefreshing.value = true
     pullDistance.value = 50
     setTimeout(() => { window.location.reload() }, 300)
   } else {
+    pullSnapBack.value = true
     pullDistance.value = 0
+    setTimeout(() => { pullSnapBack.value = false }, 300)
   }
 }
 
@@ -690,7 +696,7 @@ function onMorphEnter(el: Element, done: () => void) {
   <div
     v-if="pullDistance > 0"
     class="fixed left-0 right-0 z-[100] flex justify-center pointer-events-none"
-    :style="{ top: 'env(safe-area-inset-top, 0px)', transform: `translateY(${pullDistance - 40}px)`, opacity: Math.min(pullDistance / 30, 1) }"
+    :style="{ top: 'env(safe-area-inset-top, 0px)', transform: `translateY(${pullDistance - 10}px)`, opacity: Math.min(pullDistance / 30, 1) }"
   >
     <div class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center relative">
       <!-- Progress ring -->
@@ -726,6 +732,7 @@ function onMorphEnter(el: Element, done: () => void) {
   <!-- Main App Shell -->
   <div v-else class="flex bg-gray-50 dark:bg-gray-900 pt-[env(safe-area-inset-top)]"
     :class="isWide ? 'h-screen overflow-hidden' : 'flex-col min-h-[100dvh]'"
+    :style="pullDistance > 0 && !isWide ? { transform: `translateY(${pullDistance}px)`, transition: isPullingActive ? 'none' : 'transform 0.3s ease' } : (!isWide && pullSnapBack ? { transform: 'translateY(0)', transition: 'transform 0.3s ease' } : {})"
   >
     <!-- Sidebar (wide screens) -->
     <aside
