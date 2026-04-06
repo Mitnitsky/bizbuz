@@ -236,8 +236,10 @@ let isPulling = false
 
 function onPullStart(e: TouchEvent) {
   if (isRefreshing.value) return
+  // Check scroll position – inner scroll container on desktop, document on mobile
   const scrollEl = document.querySelector('main .overflow-y-auto') as HTMLElement | null
-  if (scrollEl && scrollEl.scrollTop > 0) return
+  const scrollTop = scrollEl ? scrollEl.scrollTop : (window.scrollY || document.documentElement.scrollTop)
+  if (scrollTop > 0) return
   pullStartY = e.touches[0].clientY
   isPulling = true
 }
@@ -722,7 +724,9 @@ function onMorphEnter(el: Element, done: () => void) {
   <router-view v-else-if="appState === 'login' || appState === 'onboarding'" />
 
   <!-- Main App Shell -->
-  <div v-else class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 pt-[env(safe-area-inset-top)]">
+  <div v-else class="flex bg-gray-50 dark:bg-gray-900 pt-[env(safe-area-inset-top)]"
+    :class="isWide ? 'h-screen overflow-hidden' : 'flex-col min-h-[100dvh]'"
+  >
     <!-- Sidebar (wide screens) -->
     <aside
       v-if="isWide"
@@ -759,8 +763,8 @@ function onMorphEnter(el: Element, done: () => void) {
     </aside>
 
     <!-- Main content -->
-    <main class="flex flex-col flex-1 min-w-0 min-h-0" :class="{ 'pb-20': !isWide }">
-      <router-view class="flex-1 min-h-0 overflow-y-auto" />
+    <main class="flex flex-col flex-1 min-w-0" :class="isWide ? 'min-h-0' : 'pb-20'">
+      <router-view :class="isWide ? 'flex-1 min-h-0 overflow-y-auto' : 'flex-1'" />
     </main>
 
     <!-- Bottom tab bar (narrow screens) -->
