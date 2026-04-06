@@ -722,7 +722,7 @@ function onMorphEnter(el: Element, done: () => void) {
   <router-view v-else-if="appState === 'login' || appState === 'onboarding'" />
 
   <!-- Main App Shell -->
-  <div v-else class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+  <div v-else class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 pt-[env(safe-area-inset-top)]">
     <!-- Sidebar (wide screens) -->
     <aside
       v-if="isWide"
