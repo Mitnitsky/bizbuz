@@ -29,9 +29,9 @@ const dateRange = computed(() => {
 </script>
 
 <template>
-  <div class="bg-purple-50 dark:bg-purple-900/30 rounded-xl shadow p-5">
+  <router-link to="/spendings" class="block bg-purple-50 dark:bg-purple-900/30 rounded-xl shadow p-5 hover:shadow-md transition-shadow cursor-pointer">
     <h3 class="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">{{ t('home.cycleSpending') }}</h3>
     <div class="text-3xl font-bold text-purple-900 dark:text-purple-100">{{ formatCurrency(txnStore.cycleSpend) }}</div>
     <p class="text-sm text-purple-600 dark:text-purple-400 mt-1">{{ dateRange }}</p>
-  </div>
+  </router-link>
 </template>

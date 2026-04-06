@@ -6,7 +6,8 @@ import { useI18n } from 'vue-i18n'
 import { onRules, autoCategorizeTransaction, uncategorizeTransaction, deleteTransaction } from '@/services/firestore'
 import { useIcons } from '@/composables/useIcons'
 import { useFamilyStore } from '@/stores/family'
-import type { Rule, Transaction } from '@/types'
+import { matchRule } from '@/composables/useRuleMatcher'
+import type { Rule } from '@/types'
 import TransactionListItem from './TransactionListItem.vue'
 
 type InboxSort = 'date' | 'name' | 'amount'
@@ -150,34 +151,6 @@ onMounted(() => {
 })
 onUnmounted(() => { unsubRules?.() })
 
-function evaluateCondition(txn: Transaction, cond: { field: string; operator: string; value: string }): boolean {
-  const fieldValue = (txn as unknown as Record<string, unknown>)[cond.field]
-  switch (cond.operator) {
-    case 'contains':
-      return typeof fieldValue === 'string' && fieldValue.toLowerCase().includes(cond.value.toLowerCase())
-    case 'equals':
-      return fieldValue === cond.value || (typeof fieldValue === 'number' && fieldValue === Number(cond.value))
-    case 'starts_with':
-      return typeof fieldValue === 'string' && fieldValue.toLowerCase().startsWith(cond.value.toLowerCase())
-    case 'not_in':
-      return typeof fieldValue === 'string' && !cond.value.split(',').map(v => v.trim()).includes(fieldValue)
-    case 'greater_than':
-      return typeof fieldValue === 'number' && fieldValue > Number(cond.value)
-    case 'less_than':
-      return typeof fieldValue === 'number' && fieldValue < Number(cond.value)
-    default:
-      return false
-  }
-}
-
-function matchRule(txn: Transaction): Rule | null {
-  for (const rule of rules.value) {
-    if (!rule.conditions.length || !rule.actionCategory) continue
-    if (rule.conditions.every(c => evaluateCondition(txn, c))) return rule
-  }
-  return null
-}
-
 async function rerunRules() {
   if (!authStore.familyId || rerunning.value) return
   rerunning.value = true
@@ -185,7 +158,7 @@ async function rerunRules() {
   let matched = 0
   const inbox = txnStore.inboxTransactions
   for (const txn of inbox) {
-    const rule = matchRule(txn)
+    const rule = matchRule(txn, rules.value)
     if (rule) {
       await autoCategorizeTransaction(
         authStore.familyId,

@@ -328,7 +328,7 @@ const pillInactive = 'border-gray-300 dark:border-gray-600 text-gray-700 dark:te
                 @click="track.expanded = !track.expanded"
               >
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-gray-400">{{ track.expanded ? '▼' : '▶' }}</span>
+                  <span class="text-xs text-gray-400 rtl:-scale-x-100">{{ track.expanded ? '▼' : '▶' }}</span>
                   <span class="text-sm font-medium text-gray-800 dark:text-gray-300">{{ track.name || `מסלול ${idx + 1}` }}</span>
                   <span v-if="track.amount" class="text-xs text-gray-500 dark:text-gray-400">₪{{ track.amount }}</span>
                 </div>

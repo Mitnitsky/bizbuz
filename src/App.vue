@@ -739,7 +739,7 @@ function onMorphEnter(el: Element, done: () => void) {
         @click="sidebarExpanded = !sidebarExpanded"
         class="p-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 self-end"
       >
-        <component :is="sidebarExpanded ? icon('chevronLeft') : icon('chevronRight')" class="h-5 w-5" />
+        <component :is="sidebarExpanded ? icon('chevronLeft') : icon('chevronRight')" class="h-5 w-5 rtl:-scale-x-100" />
       </button>
 
       <nav class="flex-1 flex flex-col gap-1 px-2">
@@ -789,7 +789,13 @@ function onMorphEnter(el: Element, done: () => void) {
         @click="moreMenuOpen = false"
       >
         <span :ref="(el: any) => { if (el) navTabRefs[item.path] = el }" class="relative flex flex-col items-center">
-          <component :is="icon(item.iconName)" class="w-6 h-6" />
+          <span class="relative">
+            <component :is="icon(item.iconName)" class="w-6 h-6" />
+            <span
+              v-if="item.name === 'spendings' && txnStore.inboxCount > 0"
+              class="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold leading-none text-white bg-red-500 rounded-full shadow-sm"
+            >{{ txnStore.inboxCount > 99 ? '99+' : txnStore.inboxCount }}</span>
+          </span>
           <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
         </span>
       </router-link>

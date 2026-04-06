@@ -5,9 +5,11 @@ import type { OwnerTag } from '@/types'
 export const useUiStore = defineStore('ui', () => {
   const ownerFilter = ref<'all' | OwnerTag>('all')
   const cycleOffset = ref(0)
+  const highlightedCategory = ref<string | null>(null)
 
   return {
     ownerFilter,
     cycleOffset,
+    highlightedCategory,
   }
 })

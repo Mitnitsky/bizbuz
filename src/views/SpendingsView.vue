@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, provide, onMounted, onUnmounted, watchEffect } from 'vue'
+import { ref, computed, provide, onMounted, onUnmounted, watchEffect, nextTick } from 'vue'
 import type { Transaction, CategorySortMode } from '@/types'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useFamilyStore } from '@/stores/family'
@@ -9,7 +9,7 @@ import { useUiStore } from '@/stores/ui'
 import { useI18n } from 'vue-i18n'
 import { TRANSFER_CATEGORY, INCOME_CATEGORY, categoryDisplayName, NON_BUDGET_CATEGORY, DEFAULT_CATEGORY, getEffectiveCategories, isSharedCategory } from '@/composables/useCategories'
 import { formatCurrency } from '@/composables/useFormatters'
-import { updateCategoryOrder, updateUserPreferences } from '@/services/firestore'
+import { updateCategoryOrder, updateUserPreferences, onRules, autoCategorizeTransaction } from '@/services/firestore'
 import draggable from 'vuedraggable'
 import CycleSelector from '@/components/spendings/CycleSelector.vue'
 import OwnerFilterChip from '@/components/OwnerFilterChip.vue'
@@ -97,10 +97,48 @@ onMounted(() => {
 })
 
 // --- Tabs (narrow layout) ---
-const activeTab = ref<'inbox' | 'category'>('inbox')
+const activeTab = ref<'inbox' | 'category'>(
+  uiStore.highlightedCategory ? 'category' :
+  txnStore.inboxCount > 0 ? 'inbox' : 'category'
+)
 
 // --- Inbox collapse (wide layout) ---
-const inboxCollapsed = ref(false)
+const inboxCollapsed = ref(txnStore.inboxCount === 0)
+
+// --- Highlighted category (from pie chart navigation) ---
+const highlightedCategory = ref<string | null>(uiStore.highlightedCategory)
+
+function clearHighlight() {
+  highlightedCategory.value = null
+  uiStore.highlightedCategory = null
+}
+
+onMounted(() => {
+  if (highlightedCategory.value) {
+    activeTab.value = 'category'
+    nextTick(() => {
+      setTimeout(() => {
+        const el = document.querySelector(`[data-category="${highlightedCategory.value}"]`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 300)
+    })
+    const clear = () => {
+      clearHighlight()
+      window.removeEventListener('scroll', clear, true)
+      window.removeEventListener('click', clear, true)
+      window.removeEventListener('touchstart', clear, true)
+    }
+    // Auto-clear after 3 seconds
+    const timer = setTimeout(clear, 3000)
+    // Also clear on interaction (after short grace period for scroll-into-view)
+    setTimeout(() => {
+      const earlyDismiss = () => { clearTimeout(timer); clear() }
+      window.addEventListener('scroll', earlyDismiss, { capture: true, once: true })
+      window.addEventListener('click', earlyDismiss, { capture: true, once: true })
+      window.addEventListener('touchstart', earlyDismiss, { capture: true, once: true })
+    }, 800)
+  }
+})
 
 // --- Expand/collapse all categories ---
 const EXPAND_KEY = 'bizbuz:categoriesExpanded'
@@ -158,6 +196,103 @@ const newTransactionCount = computed(() =>
   categorizedTransactions.value.filter(t => t.isNew).length
 )
 
+// --- Search filter ---
+const searchQuery = ref('')
+provide('searchQuery', searchQuery)
+
+// --- Re-run rules on all transactions ---
+import { matchRule } from '@/composables/useRuleMatcher'
+import type { Rule } from '@/types'
+
+const rerunningRules = ref(false)
+const rerunRulesResult = ref<{ moved: number; total: number } | null>(null)
+const movedTxnIds = ref<Set<string>>(new Set())
+const movedTxnDetails = ref<Map<string, { from: string; to: string; ruleDesc: string }>>(new Map())
+const showMovedOnly = ref(false)
+const allRules = ref<Rule[]>([])
+let unsubAllRules: (() => void) | null = null
+
+onMounted(() => {
+  if (authStore.familyId) {
+    unsubAllRules = onRules(authStore.familyId, (r) => { allRules.value = r })
+  }
+})
+onUnmounted(() => { unsubAllRules?.() })
+
+async function rerunRulesOnAll() {
+  if (!authStore.familyId || rerunningRules.value) return
+  rerunningRules.value = true
+  rerunRulesResult.value = null
+  const moved = new Set<string>()
+  const details = new Map<string, { from: string; to: string; ruleDesc: string }>()
+  const allTxns = txnStore.cycleTransactions
+  for (const txn of allTxns) {
+    const rule = matchRule(txn, allRules.value)
+    if (rule && rule.actionCategory !== txn.category) {
+      const fromCat = txn.category || DEFAULT_CATEGORY
+      details.set(txn.id, {
+        from: fromCat,
+        to: rule.actionCategory,
+        ruleDesc: rule.conditions.map(c => `${c.field} ${c.operator} ${c.value}`).join(', '),
+      })
+      await autoCategorizeTransaction(
+        authStore.familyId,
+        txn.id,
+        rule.actionCategory,
+        rule.id!,
+        rule.actionOverrideDescription,
+      )
+      moved.add(txn.id)
+    }
+  }
+  movedTxnIds.value = moved
+  movedTxnDetails.value = details
+  rerunRulesResult.value = { moved: moved.size, total: allTxns.length }
+  rerunningRules.value = false
+  if (moved.size > 0) showMovedOnly.value = true
+  else setTimeout(() => { rerunRulesResult.value = null }, 3000)
+}
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length
+  if (m === 0) return n
+  if (n === 0) return m
+  let prev = Array.from({ length: n + 1 }, (_, i) => i)
+  for (let i = 1; i <= m; i++) {
+    const curr = [i]
+    for (let j = 1; j <= n; j++) {
+      curr[j] = a[i - 1] === b[j - 1]
+        ? prev[j - 1]
+        : 1 + Math.min(prev[j - 1], prev[j], curr[j - 1])
+    }
+    prev = curr
+  }
+  return prev[n]
+}
+
+function fuzzyMatch(text: string, query: string): boolean {
+  const t = text.toLowerCase()
+  const q = query.toLowerCase()
+  if (q.length < 3) return t.includes(q)
+  if (t.includes(q)) return true
+  // Sliding window over full text (preserving spaces) with edit distance ≤ 2
+  const lo = Math.max(1, q.length - 1)
+  const hi = q.length + 1
+  for (let len = lo; len <= Math.min(hi, t.length); len++) {
+    for (let start = 0; start <= t.length - len; start++) {
+      if (levenshtein(t.slice(start, start + len), q) <= 1) return true
+    }
+  }
+  return false
+}
+
+function txnMatchesSearch(txn: Transaction): boolean {
+  const q = searchQuery.value.trim()
+  if (!q) return true
+  const name = txn.overrideDescription || txn.description
+  return fuzzyMatch(name, q)
+}
+
 const filteredCategorizedTransactions = computed(() => {
   if (!showNewOnly.value) return categorizedTransactions.value
   return categorizedTransactions.value.filter(t => t.isNew)
@@ -182,6 +317,51 @@ const transactionsByCategory = computed(() => {
 
 // Ordered list of category items for vuedraggable (wrapped as objects)
 const categoryItems = ref<Array<{ key: string }>>([])
+
+// Search-filtered views
+const displayTransactionsByCategory = computed(() => {
+  if (!searchQuery.value.trim()) return transactionsByCategory.value
+  const map = new Map<string, Transaction[]>()
+  for (const [cat, txns] of transactionsByCategory.value) {
+    const filtered = txns.filter(txnMatchesSearch)
+    if (filtered.length > 0) map.set(cat, filtered)
+  }
+  return map
+})
+
+const displayCategoryItems = computed(() => {
+  if (!searchQuery.value.trim()) return categoryItems.value
+  const matchingCats = displayTransactionsByCategory.value
+  return categoryItems.value.filter(item => matchingCats.has(item.key))
+})
+
+// When search or "new" filter is active, show a flat list instead of cards/list
+const isFilterActive = computed(() => !!searchQuery.value.trim() || showNewOnly.value || showMovedOnly.value)
+
+const filteredFlatList = computed(() => {
+  if (!isFilterActive.value) return []
+  const results: Array<{ txn: Transaction; category: string }> = []
+  const seen = new Set<string>()
+  for (const [cat, txns] of displayTransactionsByCategory.value) {
+    for (const txn of txns) {
+      if (seen.has(txn.id)) continue
+      if (showMovedOnly.value) {
+        if (movedTxnIds.value.has(txn.id)) {
+          seen.add(txn.id)
+          // Use the "to" category from move details (the transaction's new home)
+          const detail = movedTxnDetails.value.get(txn.id)
+          results.push({ txn, category: detail?.to || cat })
+        }
+      } else if (showNewOnly.value) {
+        if (txn.isNew) { seen.add(txn.id); results.push({ txn, category: cat }) }
+      } else if (txnMatchesSearch(txn)) {
+        seen.add(txn.id)
+        results.push({ txn, category: cat })
+      }
+    }
+  }
+  return results
+})
 
 function collectAllCategories(): string[] {
   const effective = getEffectiveCategories(familyStore.familySettings.categories)
@@ -356,7 +536,39 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50'"
         @click="showNewOnly = !showNewOnly"
       >{{ t('common.new') }} {{ newTransactionCount }}</button>
+      <!-- Re-run rules button -->
+      <button
+        class="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors disabled:opacity-50"
+        :class="rerunRulesResult && rerunRulesResult.moved === 0
+          ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+          : 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800/50'"
+        :disabled="rerunningRules"
+        @click="rerunRulesOnAll"
+      >
+        <span v-if="rerunningRules" class="animate-spin inline-block w-3 h-3 border-2 border-purple-500 border-t-transparent rounded-full" />
+        <span v-else-if="rerunRulesResult && rerunRulesResult.moved === 0">✓ {{ t('spendings.noChanges') }}</span>
+        <span v-else>{{ t('spendings.rerunRules') }}</span>
+      </button>
+      <!-- Moved filter chip -->
+      <button
+        v-if="movedTxnIds.size > 0"
+        class="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+        :class="showMovedOnly
+          ? 'bg-amber-600 text-white'
+          : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50'"
+        @click="showMovedOnly = !showMovedOnly"
+      >{{ t('spendings.moved') }} {{ movedTxnIds.size }}</button>
       <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ formatCurrency(filteredTotalSpending) }}</span>
+      <div class="relative">
+        <input
+          v-model="searchQuery"
+          type="text"
+          :placeholder="t('spendings.searchPlaceholder')"
+          class="w-40 lg:w-56 px-3 py-1.5 ps-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+        />
+        <svg class="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3" stroke-linecap="round" stroke-width="2"/></svg>
+        <button v-if="searchQuery" class="absolute end-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click="searchQuery = ''">✕</button>
+      </div>
       <div class="flex-1" />
       <!-- Sort mode toggle -->
       <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-xs font-medium">
@@ -414,7 +626,40 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
         @add-transaction="openAddTransaction"
       />
       <div class="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900">
-        <div v-if="categoryItems.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+        <div v-if="isFilterActive && filteredFlatList.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+          <p v-if="searchQuery.trim()" class="text-lg">{{ t('spendings.noSearchResults') }}</p>
+          <p v-else class="text-lg">{{ t('spendings.noTransactionsYet') }}</p>
+        </div>
+
+        <!-- Flat filtered list (search or "new" active) -->
+        <div v-else-if="isFilterActive" class="space-y-1 max-w-3xl mx-auto">
+          <div
+            v-for="item in filteredFlatList"
+            :key="item.txn.id"
+            class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
+          >
+            <div class="flex items-center gap-2 px-3 pt-1.5 pb-0 flex-wrap">
+              <span class="text-[11px] text-purple-600 dark:text-purple-400 font-medium truncate">{{ categoryDisplayName(item.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}</span>
+              <template v-if="showMovedOnly && movedTxnDetails.has(item.txn.id)">
+                <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                  {{ categoryDisplayName(movedTxnDetails.get(item.txn.id)!.from, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
+                  <span class="rtl:-scale-x-100 inline-block">→</span>
+                  {{ categoryDisplayName(movedTxnDetails.get(item.txn.id)!.to, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
+                </span>
+                <span class="text-[9px] text-gray-400 dark:text-gray-500 truncate max-w-[200px]" :title="movedTxnDetails.get(item.txn.id)!.ruleDesc">
+                  {{ movedTxnDetails.get(item.txn.id)!.ruleDesc }}
+                </span>
+              </template>
+            </div>
+            <TransactionListItem
+              :transaction="item.txn"
+              :draggable="false"
+              :muted-amount="item.category === NON_BUDGET_CATEGORY"
+            />
+          </div>
+        </div>
+
+        <div v-else-if="displayCategoryItems.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
           <p class="text-lg">{{ t('spendings.noTransactionsYet') }}</p>
         </div>
 
@@ -434,21 +679,30 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           @end="onCategoryReorder"
         >
           <template #item="{ element }">
-            <CategoryCard
-              :category="element.key"
-              :transactions="transactionsByCategory.get(element.key) ?? []"
-              :pinned="pinnedCategories.includes(element.key)"
-              @toggle-pin="togglePin"
-            />
+            <div
+              v-if="displayTransactionsByCategory.has(element.key)"
+              :data-category="element.key"
+              class="transition-all duration-500"
+              :class="{ 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-900 rounded-xl': highlightedCategory === element.key }"
+            >
+              <CategoryCard
+                :category="element.key"
+                :transactions="displayTransactionsByCategory.get(element.key) ?? []"
+                :pinned="pinnedCategories.includes(element.key)"
+                @toggle-pin="togglePin"
+              />
+            </div>
           </template>
         </draggable>
 
         <!-- List view -->
         <div v-else class="space-y-1">
-          <template v-for="item in categoryItems" :key="item.key">
+          <template v-for="item in displayCategoryItems" :key="item.key">
             <div
-              v-if="(transactionsByCategory.get(item.key)?.length ?? 0) > 0 || expandedGroups.has(item.key)"
-              class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
+              v-if="(displayTransactionsByCategory.get(item.key)?.length ?? 0) > 0 || expandedGroups.has(item.key)"
+              :data-category="item.key"
+              class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden transition-all duration-500"
+              :class="{ 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-900': highlightedCategory === item.key }"
             >
               <!-- Group header -->
               <button
@@ -482,16 +736,16 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
                   {{ categoryDisplayName(item.key, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
                 </span>
                 <span class="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
-                  {{ transactionsByCategory.get(item.key)?.length ?? 0 }}
+                  {{ displayTransactionsByCategory.get(item.key)?.length ?? 0 }}
                 </span>
                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 tabular-nums min-w-[5rem] text-end">
-                  {{ formatCurrency((transactionsByCategory.get(item.key) ?? []).reduce((s, t) => s + Math.abs(t.chargedAmount), 0)) }}
+                  {{ formatCurrency((displayTransactionsByCategory.get(item.key) ?? []).reduce((s, t) => s + Math.abs(t.chargedAmount), 0)) }}
                 </span>
               </button>
               <!-- Expanded transactions -->
               <div v-if="expandedGroups.has(item.key)" class="border-t border-gray-100 dark:border-gray-700">
                 <TransactionListItem
-                  v-for="txn in transactionsByCategory.get(item.key) ?? []"
+                  v-for="txn in displayTransactionsByCategory.get(item.key) ?? []"
                   :key="txn.id"
                   :transaction="txn"
                   :draggable="true"
@@ -534,18 +788,68 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
           />
         </div>
         <div v-else class="p-4 bg-gray-50 dark:bg-gray-900 min-h-full">
-          <div v-if="categoryItems.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+          <!-- Mobile search -->
+          <div class="relative mb-3">
+            <input
+              v-model="searchQuery"
+              type="text"
+              :placeholder="t('spendings.searchPlaceholder')"
+              class="w-full px-3 py-2 ps-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <svg class="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3" stroke-linecap="round" stroke-width="2"/></svg>
+            <button v-if="searchQuery" class="absolute end-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click="searchQuery = ''">✕</button>
+          </div>
+          <div v-if="isFilterActive && filteredFlatList.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+            <p v-if="searchQuery.trim()" class="text-lg">{{ t('spendings.noSearchResults') }}</p>
+            <p v-else class="text-lg">{{ t('spendings.noTransactionsYet') }}</p>
+          </div>
+
+          <!-- Flat filtered list (search or "new" active) -->
+          <div v-else-if="isFilterActive" class="space-y-2">
+            <div
+              v-for="item in filteredFlatList"
+              :key="item.txn.id"
+              class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
+            >
+              <div class="flex items-center gap-2 px-3 pt-1.5 pb-0 flex-wrap">
+                <span class="text-[11px] text-purple-600 dark:text-purple-400 font-medium truncate">{{ categoryDisplayName(item.category, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}</span>
+                <template v-if="showMovedOnly && movedTxnDetails.has(item.txn.id)">
+                  <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                    {{ categoryDisplayName(movedTxnDetails.get(item.txn.id)!.from, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
+                    <span class="rtl:-scale-x-100 inline-block">→</span>
+                    {{ categoryDisplayName(movedTxnDetails.get(item.txn.id)!.to, prefsStore.locale, getEffectiveCategories(familyStore.familySettings.categories), familyStore.familySettings.categoryNameOverrides) }}
+                  </span>
+                  <span class="text-[9px] text-gray-400 dark:text-gray-500 truncate max-w-[200px]" :title="movedTxnDetails.get(item.txn.id)!.ruleDesc">
+                    {{ movedTxnDetails.get(item.txn.id)!.ruleDesc }}
+                  </span>
+                </template>
+              </div>
+              <TransactionListItem
+                :transaction="item.txn"
+                :draggable="false"
+                :muted-amount="item.category === NON_BUDGET_CATEGORY"
+              />
+            </div>
+          </div>
+
+          <div v-else-if="displayCategoryItems.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
             <p class="text-lg">{{ t('spendings.noTransactionsYet') }}</p>
           </div>
           <div v-else class="grid grid-cols-1 gap-4 items-start">
-            <CategoryCard
-              v-for="item in categoryItems"
+            <div
+              v-for="item in displayCategoryItems"
               :key="item.key"
-              :category="item.key"
-              :transactions="transactionsByCategory.get(item.key) ?? []"
-              :pinned="pinnedCategories.includes(item.key)"
-              @toggle-pin="togglePin"
-            />
+              :data-category="item.key"
+              class="transition-all duration-500"
+              :class="{ 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-900 rounded-xl': highlightedCategory === item.key }"
+            >
+              <CategoryCard
+                :category="item.key"
+                :transactions="displayTransactionsByCategory.get(item.key) ?? []"
+                :pinned="pinnedCategories.includes(item.key)"
+                @toggle-pin="togglePin"
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -101,6 +101,15 @@ function daysLabel(days: number | null): string {
   if (days < 0) return t('tracker.updateOverdue')
   return t('tracker.updateIn', { n: days })
 }
+
+function typeRoute(type: string): string {
+  switch (type) {
+    case 'savings': return '/savings'
+    case 'investment': return '/investments'
+    case 'loan': return '/loans'
+    default: return '/'
+  }
+}
 </script>
 
 <template>
@@ -110,10 +119,11 @@ function daysLabel(days: number | null): string {
     <div v-if="!hasTrackers" class="text-gray-400 dark:text-gray-500 text-sm">{{ t('home.noTrackers') }}</div>
 
     <div v-else class="space-y-2.5">
-      <div
+      <router-link
         v-for="(item, idx) in trackerItems"
         :key="`${item.type}-${item.name}-${idx}`"
-        class="flex items-center gap-2"
+        :to="typeRoute(item.type)"
+        class="flex items-center gap-2 rounded-md px-1 py-0.5 -mx-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
       >
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{{ item.name }}</span>
         <span
@@ -128,7 +138,7 @@ function daysLabel(days: number | null): string {
         >
           {{ daysLabel(item.daysRemaining) }}
         </span>
-      </div>
+      </router-link>
     </div>
   </div>
 </template>
