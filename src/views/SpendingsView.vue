@@ -559,7 +559,7 @@ const showOwnerFilter = computed(() => prefsStore.userPreferences?.showOwnerFilt
         @click="showMovedOnly = !showMovedOnly"
       >{{ t('spendings.moved') }} {{ movedTxnIds.size }}</button>
       <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ formatCurrency(filteredTotalSpending) }}</span>
-      <div class="relative">
+      <div v-if="isWide" class="relative">
         <input
           v-model="searchQuery"
           type="text"
