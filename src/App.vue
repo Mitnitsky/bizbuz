@@ -238,6 +238,9 @@ let isPulling = false
 
 function onPullStart(e: TouchEvent) {
   if (isRefreshing.value) return
+  // Don't trigger pull-to-refresh from bottom nav bar
+  const nav = (e.target as HTMLElement)?.closest('nav')
+  if (nav) return
   // Find the nearest scrollable ancestor from the touch target
   let el = e.target as HTMLElement | null
   while (el && el !== document.body) {
