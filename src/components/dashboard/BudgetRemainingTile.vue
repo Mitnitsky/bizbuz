@@ -33,7 +33,7 @@ const progressPct = computed(() => {
 
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
-    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ t('home.budgetRemaining') }}</h3>
+    <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ t('home.budgetRemaining') }}</h2>
 
     <div v-if="!hasBudgets" class="text-gray-400 dark:text-gray-500 text-sm">
       {{ t('home.setBudgetsInSettings') }}

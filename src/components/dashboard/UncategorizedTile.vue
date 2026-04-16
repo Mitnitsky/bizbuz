@@ -22,7 +22,7 @@ const totalAmount = computed(() =>
     class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 cursor-pointer hover:shadow-md transition-shadow"
     @click="router.push('/spendings')"
   >
-    <h3 class="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1">{{ t('home.uncategorized') }}</h3>
+    <h2 class="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1">{{ t('home.uncategorized') }}</h2>
     <div class="text-2xl font-bold text-orange-700 dark:text-orange-300">{{ count }}</div>
     <p class="text-sm text-orange-500 dark:text-orange-400/80 mt-1">{{ formatCurrency(totalAmount) }} {{ t('home.uncategorizedDesc') }}</p>
   </div>

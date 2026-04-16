@@ -34,6 +34,7 @@ function reset() { uiStore.cycleOffset = 0 }
   <div class="flex items-center justify-center gap-2">
     <button
       @click="prev"
+      aria-label="Previous cycle"
       class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition rtl:rotate-180"
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -60,6 +61,7 @@ function reset() { uiStore.cycleOffset = 0 }
 
     <button
       @click="next"
+      aria-label="Next cycle"
       class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition rtl:rotate-180"
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

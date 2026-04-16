@@ -36,7 +36,7 @@ const monthlyTotal = computed(() => {
     class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 cursor-pointer hover:ring-2 hover:ring-blue-400 transition"
     @click="router.push('/installments')"
   >
-    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('home.futurePayments') }}</h3>
+    <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('home.futurePayments') }}</h2>
     <div class="text-2xl font-bold text-gray-900 dark:text-gray-300">{{ formatCurrency(totalRemaining) }}</div>
     <div class="flex items-center justify-between mt-1">
       <span class="text-sm text-gray-500 dark:text-gray-400">{{ count }} {{ t('installments.activeCount').toLowerCase() }} · {{ formatCurrency(monthlyTotal) }}/{{ t('installments.month') }}</span>

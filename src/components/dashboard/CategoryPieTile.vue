@@ -78,7 +78,7 @@ function goToCategory(category: string) {
 
 <template>
   <router-link to="/spendings" class="block bg-white dark:bg-gray-800 rounded-xl shadow p-5 hover:shadow-md transition-shadow cursor-pointer">
-    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ t('home.spendingByCategory') }}</h3>
+    <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ t('home.spendingByCategory') }}</h2>
 
     <div v-if="categoryData.length === 0" class="text-gray-400 dark:text-gray-500 text-sm py-4 text-center">
       {{ t('spendings.noTransactionsYet') }}

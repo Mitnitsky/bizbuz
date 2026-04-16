@@ -21,7 +21,7 @@ const exceptionalCount = computed(() => {
 
 <template>
   <div v-if="exceptionalCount > 0" class="bg-amber-50 dark:bg-amber-900/30 rounded-xl shadow p-5">
-    <h3 class="text-sm font-medium text-amber-700 dark:text-amber-300 mb-1">{{ t('home.exceptionalExpenses') }}</h3>
+    <h2 class="text-sm font-medium text-amber-700 dark:text-amber-300 mb-1">{{ t('home.exceptionalExpenses') }}</h2>
     <div class="text-3xl font-bold text-amber-900 dark:text-amber-100">{{ formatCurrency(exceptionalTotal) }}</div>
     <p class="text-sm text-amber-600 dark:text-amber-400 mt-1">{{ t('home.exceptionalCount', { n: exceptionalCount }) }}</p>
   </div>

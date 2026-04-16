@@ -762,6 +762,7 @@ function onMorphEnter(el: Element, done: () => void) {
 
       <button
         @click="sidebarExpanded = !sidebarExpanded"
+        :aria-label="sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'"
         class="p-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 self-end"
       >
         <component :is="sidebarExpanded ? icon('chevronLeft') : icon('chevronRight')" class="h-5 w-5 rtl:-scale-x-100" />
@@ -821,7 +822,7 @@ function onMorphEnter(el: Element, done: () => void) {
               class="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold leading-none text-white bg-red-500 rounded-full shadow-sm"
             >{{ txnStore.inboxCount > 99 ? '99+' : txnStore.inboxCount }}</span>
           </span>
-          <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
+          <span class="text-[10px] mt-0.5 font-medium text-gray-600 dark:text-gray-300">{{ t(item.labelKey) }}</span>
         </span>
       </router-link>
 
@@ -829,6 +830,7 @@ function onMorphEnter(el: Element, done: () => void) {
       <button
         class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': isMoreActive || moreMenuOpen }"
+        :aria-label="t('nav.more')"
         @click="moreMenuOpen = !moreMenuOpen"
       >
         <span ref="particleContainer" class="relative w-6 h-6">
@@ -846,10 +848,10 @@ function onMorphEnter(el: Element, done: () => void) {
           </Transition>
         </span>
         <Transition name="morph-text" mode="out-in">
-          <span v-if="activeMoreItem" :key="activeMoreItem.name" class="text-[10px] mt-0.5 font-medium leading-tight text-center">
+          <span v-if="activeMoreItem" :key="activeMoreItem.name" class="text-[10px] mt-0.5 font-medium leading-tight text-center text-gray-600 dark:text-gray-300">
             {{ t(activeMoreItem.labelKey) }}
           </span>
-          <span v-else key="more" class="text-[10px] mt-0.5 font-medium">{{ t('nav.more') }}</span>
+          <span v-else key="more" class="text-[10px] mt-0.5 font-medium text-gray-600 dark:text-gray-300">{{ t('nav.more') }}</span>
         </Transition>
         <span v-if="activeMoreItem" class="text-[8px] font-medium text-gray-400 dark:text-gray-500 leading-none">{{ t('nav.more') }}</span>
       </button>
