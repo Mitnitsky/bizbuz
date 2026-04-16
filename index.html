@@ -12,7 +12,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="BizBuz" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="BizBuz (ביזבוז) — Smart family financial tracker for Israeli households. Track expenses, savings, loans, and investments together." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
@@ -28,7 +29,19 @@
     </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Inline loading skeleton — rendered immediately for fast FCP/LCP -->
+      <div id="app-skeleton" style="display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        <div style="text-align:center">
+          <div style="width:48px;height:48px;margin:0 auto 12px;border:3px solid #e5e7eb;border-top-color:#7e22ce;border-radius:50%;animation:sk-spin .8s linear infinite"></div>
+          <div style="color:#9ca3af;font-size:14px">Loading...</div>
+        </div>
+      </div>
+      <style>
+        @keyframes sk-spin{to{transform:rotate(360deg)}}
+        @media(prefers-color-scheme:dark){#app-skeleton{background:#111827!important}#app-skeleton div:last-child{color:#6b7280!important}}
+      </style>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
