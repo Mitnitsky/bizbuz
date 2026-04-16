@@ -112,8 +112,8 @@ const displayName = computed(() => {
 
 <template>
   <div class="max-w-7xl mx-auto w-full px-4 py-6">
-    <!-- App Bar -->
-    <div class="flex items-center justify-between mb-4">
+    <!-- App Bar — always render with consistent height to avoid CLS -->
+    <div class="flex items-center justify-between mb-4 min-h-[52px]">
       <div v-if="dataLoading" class="animate-pulse">
         <div class="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
         <div class="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -124,10 +124,10 @@ const displayName = computed(() => {
       </div>
     </div>
 
-    <!-- Skeleton while loading -->
+    <!-- Skeleton while loading — match real tile structure to prevent CLS -->
     <template v-if="dataLoading">
       <div class="mb-6 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-      <div v-for="i in 4" :key="i" class="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow p-5 animate-pulse">
+      <div v-for="i in 6" :key="i" class="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow p-5 animate-pulse min-h-[88px]">
         <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
         <div class="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
         <div class="h-3 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -148,7 +148,7 @@ const displayName = computed(() => {
       @end="onDragEnd"
     >
       <template #item="{ element }">
-        <div class="mb-4 relative group">
+        <div class="mb-4 relative group min-h-[88px]">
           <div class="drag-handle absolute top-3 z-10 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" style="inset-inline-end: 0.75rem;">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
