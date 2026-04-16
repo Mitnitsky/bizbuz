@@ -30,16 +30,32 @@
   </head>
   <body>
     <div id="app">
-      <!-- Inline loading skeleton — rendered immediately for fast FCP/LCP -->
-      <div id="app-skeleton" style="display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-        <div style="text-align:center">
-          <div style="width:48px;height:48px;margin:0 auto 12px;border:3px solid #e5e7eb;border-top-color:#7e22ce;border-radius:50%;animation:sk-spin .8s linear infinite"></div>
-          <div style="color:#9ca3af;font-size:14px">Loading...</div>
+      <!-- App shell — mirrors login page for instant LCP, replaced when Vue mounts -->
+      <main id="app-shell" style="display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;background:#f9fafb;padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        <div style="width:100%;max-width:384px;text-align:center">
+          <div style="margin-bottom:32px">
+            <img src="/icon.svg" alt="BizBuz" width="48" height="48" style="margin:0 auto 12px;display:block" />
+            <h1 style="font-size:1.875rem;font-weight:700;color:#111827;margin:0">BizBuz</h1>
+            <p style="color:#6b7280;margin-top:4px;font-size:14px">Family financial tracker</p>
+          </div>
+          <div style="background:#fff;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);padding:24px;text-align:left">
+            <div style="margin-bottom:16px">
+              <div style="height:14px;width:40px;background:#e5e7eb;border-radius:4px;margin-bottom:6px"></div>
+              <div style="height:40px;border:1px solid #d1d5db;border-radius:8px;background:#fff"></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="height:14px;width:56px;background:#e5e7eb;border-radius:4px;margin-bottom:6px"></div>
+              <div style="height:40px;border:1px solid #d1d5db;border-radius:8px;background:#fff"></div>
+            </div>
+            <div style="height:42px;border-radius:8px;background:#7e22ce;display:flex;align-items:center;justify-content:center">
+              <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sk-spin .8s linear infinite"></div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
       <style>
         @keyframes sk-spin{to{transform:rotate(360deg)}}
-        @media(prefers-color-scheme:dark){#app-skeleton{background:#111827!important}#app-skeleton div:last-child{color:#6b7280!important}}
+        @media(prefers-color-scheme:dark){#app-shell{background:#111827!important}#app-shell h1{color:#d1d5db!important}#app-shell>div>div:last-child{background:#1f2937!important}#app-shell>div>div:last-child div{border-color:#374151!important;background:#1f2937!important}#app-shell>div>div:last-child>div:last-child{background:#7e22ce!important}}
       </style>
     </div>
     <script type="module" src="/src/main.ts"></script>

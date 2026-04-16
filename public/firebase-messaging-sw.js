@@ -1,4 +1,4 @@
-// Firebase Messaging Service Worker
+// Firebase Messaging Service Worker + Asset Caching
 // This file MUST be at the root of the hosting to receive background push notifications
 
 importScripts('https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js');
@@ -44,4 +44,62 @@ self.addEventListener('notificationclick', (event) => {
       return clients.openWindow(url);
     })
   );
+});
+
+// ─── Asset Caching ───────────────────────────────────────────────
+const CACHE_NAME = 'bizbuz-assets-v1';
+
+// Cache hashed assets (immutable) with cache-first strategy
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Only cache same-origin GET requests
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // Hashed assets in /assets/ — immutable, cache-first
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Static assets (icons, manifest) — stale-while-revalidate
+  if (/\.(svg|png|ico|json|woff2?)(\?|$)/.test(url.pathname)) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // Navigation (HTML) — network-first with offline fallback
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+  }
 });

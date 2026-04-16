@@ -147,7 +147,9 @@ const bubbleStyle = computed(() => {
 })
 
 const appState = computed<'loading' | 'login' | 'onboarding' | 'app'>(() => {
-  if (authStore.loading) return 'loading'
+  // While auth is loading: show login immediately for new users (fast LCP),
+  // show loading spinner only for returning users (to avoid login flash)
+  if (authStore.loading) return authStore.wasLoggedIn ? 'loading' : 'login'
   if (!authStore.isAuthenticated) return 'login'
   if (!authStore.familyId) return 'onboarding'
   return 'app'
@@ -225,7 +227,7 @@ watch(appState, (state) => {
   } else if (state === 'app' && (route.path === '/login' || route.path === '/onboarding')) {
     router.replace('/')
   }
-})
+}, { immediate: true })
 
 // Pull-to-refresh (custom implementation – native overscroll is disabled via CSS)
 const pullDistance = ref(0)
@@ -728,8 +730,11 @@ function onMorphEnter(el: Element, done: () => void) {
     </div>
   </div>
 
-  <!-- Loading spinner -->
-  <div v-if="appState === 'loading'" class="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Login / Onboarding — show immediately (don't wait for auth check) -->
+  <router-view v-if="appState === 'login' || appState === 'onboarding'" />
+
+  <!-- Loading spinner — only while checking auth for potentially logged-in users -->
+  <div v-else-if="appState === 'loading'" class="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="text-center">
       <GlassIcon glass size="xl" class="mx-auto mb-4">
         <template #default="{ iconClass }"><component :is="icon('loader')" :class="[iconClass, 'animate-spin text-purple-500']" /></template>
@@ -737,9 +742,6 @@ function onMorphEnter(el: Element, done: () => void) {
       <div class="animate-pulse text-gray-500 dark:text-gray-400">{{ t('common.loading') }}</div>
     </div>
   </div>
-
-  <!-- Login / Onboarding — no shell -->
-  <router-view v-else-if="appState === 'login' || appState === 'onboarding'" />
 
   <!-- Main App Shell -->
   <div v-else class="flex bg-gray-50 dark:bg-gray-900 pt-[env(safe-area-inset-top)]"

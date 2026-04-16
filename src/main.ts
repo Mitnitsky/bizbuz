@@ -10,3 +10,10 @@ app.use(createPinia())
 app.use(router)
 app.use(i18n)
 app.mount('#app')
+
+// Register service worker for asset caching + FCM
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  })
+}
