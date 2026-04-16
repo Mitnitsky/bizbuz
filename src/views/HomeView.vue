@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, type Component } from 'vue'
-import draggable from 'vuedraggable'
+import { ref, computed, watch, defineAsyncComponent, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFamilyStore } from '@/stores/family'
@@ -9,7 +8,6 @@ import { useTransactionsStore } from '@/stores/transactions'
 import { updateDashboardTileOrder } from '@/services/firestore'
 import CycleSelector from '@/components/CycleSelector.vue'
 import CycleSpendTile from '@/components/dashboard/CycleSpendTile.vue'
-import CategoryPieTile from '@/components/dashboard/CategoryPieTile.vue'
 import BudgetRemainingTile from '@/components/dashboard/BudgetRemainingTile.vue'
 import InstallmentsTile from '@/components/dashboard/InstallmentsTile.vue'
 import BudgetsTile from '@/components/dashboard/BudgetsTile.vue'
@@ -17,6 +15,10 @@ import TrackersTile from '@/components/dashboard/TrackersTile.vue'
 import ExceptionalTile from '@/components/dashboard/ExceptionalTile.vue'
 import IncomeTile from '@/components/dashboard/IncomeTile.vue'
 import UncategorizedTile from '@/components/dashboard/UncategorizedTile.vue'
+
+// Lazy-load heavy deps — chart.js (59KB gz) and vuedraggable (61KB gz)
+const CategoryPieTile = defineAsyncComponent(() => import('@/components/dashboard/CategoryPieTile.vue'))
+const draggable = defineAsyncComponent(() => import('vuedraggable'))
 
 const { t, locale } = useI18n()
 

@@ -285,6 +285,8 @@ function onPullEnd() {
 }
 
 onMounted(async () => {
+  // Prefetch the HomeView chunk while auth is loading (most users land here)
+  import('@/views/HomeView.vue')
   await authStore.initAuth()
   window.addEventListener('resize', onResize)
   mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
