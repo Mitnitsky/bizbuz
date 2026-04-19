@@ -1,11 +1,17 @@
 import { computed } from 'vue'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useFamilyStore } from '@/stores/family'
-import { getEffectiveCategories, categoryDisplayName } from '@/composables/useCategories'
+import { getEffectiveCategories, categoryDisplayName, TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY } from '@/composables/useCategories'
 import { computeCycleRange } from '@/composables/useBillingCycle'
 import { useUiStore } from '@/stores/ui'
 import { startOfDay, format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { he } from 'date-fns/locale'
+
+const EXCLUDED_CATEGORIES = [TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY]
+
+function isBudgetExpense(t: { chargedAmount: number; category: string }): boolean {
+  return t.chargedAmount < 0 && !EXCLUDED_CATEGORIES.includes(t.category)
+}
 
 export function useAiContext() {
   const txnStore = useTransactionsStore()
@@ -24,10 +30,11 @@ export function useAiContext() {
     // Current cycle info
     const range = computeCycleRange(today, familyStore.familySettings.cycleStartDay, uiStore.cycleOffset)
     lines.push(`📅 תקופה נוכחית: ${format(range.start, 'dd/MM/yyyy')} - ${format(range.end, 'dd/MM/yyyy')}`)
-    lines.push(`💰 סה"כ הוצאות בתקופה: ₪${Math.round(txnStore.cycleSpend).toLocaleString('he-IL')}`)
+    lines.push(`💰 סה"כ הוצאות תקציביות בתקופה: ₪${Math.round(txnStore.cycleSpend).toLocaleString('he-IL')}`)
     lines.push(`💵 סה"כ הכנסות בתקופה: ₪${Math.round(txnStore.cycleIncome).toLocaleString('he-IL')}`)
+    lines.push(`ℹ️ הערה: "הוצאות תקציביות" = לא כולל העברות, חריגים, לא-תקציבי והכנסות`)
 
-    // Budget info
+    // Budget info per category
     const catBudgets = familyStore.familySettings.categoryBudgets || {}
     const totalBudget = Object.values(catBudgets).reduce((s, v) => s + v, 0)
     if (totalBudget > 0) {
@@ -38,42 +45,70 @@ export function useAiContext() {
 
     lines.push('')
 
-    // Category breakdown for current cycle
-    const cycleTxns = txnStore.cycleTransactions.filter(t => t.chargedAmount < 0)
+    // Category breakdown for current cycle (budget expenses only)
+    const cycleBudgetTxns = txnStore.cycleTransactions.filter(isBudgetExpense)
     const catTotals = new Map<string, number>()
-    for (const t of cycleTxns) {
+    for (const t of cycleBudgetTxns) {
       const cat = t.category || 'other'
       catTotals.set(cat, (catTotals.get(cat) || 0) + Math.abs(t.chargedAmount))
     }
     const sorted = [...catTotals.entries()].sort((a, b) => b[1] - a[1])
 
-    lines.push('📋 פירוט הוצאות לפי קטגוריה (תקופה נוכחית):')
+    lines.push('📋 פירוט הוצאות תקציביות לפי קטגוריה (תקופה נוכחית):')
     for (const [cat, total] of sorted) {
-      lines.push(`  ${catName(cat)}: ₪${Math.round(total).toLocaleString('he-IL')}`)
+      const budget = catBudgets[cat]
+      const budgetStr = budget ? ` (תקציב: ₪${Math.round(budget).toLocaleString('he-IL')})` : ''
+      lines.push(`  ${catName(cat)}: ₪${Math.round(total).toLocaleString('he-IL')}${budgetStr}`)
+    }
+
+    // Non-budget categories separately
+    const nonBudgetTxns = txnStore.cycleTransactions.filter(t => t.chargedAmount < 0 && EXCLUDED_CATEGORIES.includes(t.category))
+    if (nonBudgetTxns.length > 0) {
+      const nonBudgetTotal = nonBudgetTxns.reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
+      lines.push(`  --- לא תקציבי ---`)
+      const nbCatTotals = new Map<string, number>()
+      for (const t of nonBudgetTxns) {
+        nbCatTotals.set(t.category, (nbCatTotals.get(t.category) || 0) + Math.abs(t.chargedAmount))
+      }
+      for (const [cat, total] of nbCatTotals) {
+        lines.push(`  ${catName(cat)}: ₪${Math.round(total).toLocaleString('he-IL')}`)
+      }
+      lines.push(`  סה"כ לא-תקציבי: ₪${Math.round(nonBudgetTotal).toLocaleString('he-IL')}`)
     }
     lines.push('')
 
-    // Monthly trends (last 3 months)
-    lines.push('📈 מגמות חודשיות (3 חודשים אחרונים):')
+    // Monthly trends with category breakdown (last 3 months)
+    lines.push('📈 השוואה חודשית (3 חודשים אחרונים, הוצאות תקציביות בלבד):')
     for (let i = 0; i < 3; i++) {
       const monthDate = subMonths(today, i)
       const monthStart = startOfMonth(monthDate)
       const monthEnd = endOfMonth(monthDate)
       const monthTxns = txnStore.visibleTransactions.filter(t =>
-        t.chargedAmount < 0 && t.date >= monthStart && t.date <= monthEnd
+        t.date >= monthStart && t.date <= monthEnd && isBudgetExpense(t)
       )
       const monthTotal = monthTxns.reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
       const monthLabel = format(monthDate, 'MMMM yyyy', { locale: he })
       lines.push(`  ${monthLabel}: ₪${Math.round(monthTotal).toLocaleString('he-IL')}`)
+
+      // Category breakdown per month
+      const mCatTotals = new Map<string, number>()
+      for (const t of monthTxns) {
+        const cat = t.category || 'other'
+        mCatTotals.set(cat, (mCatTotals.get(cat) || 0) + Math.abs(t.chargedAmount))
+      }
+      const mSorted = [...mCatTotals.entries()].sort((a, b) => b[1] - a[1])
+      for (const [cat, total] of mSorted) {
+        lines.push(`    ${catName(cat)}: ₪${Math.round(total).toLocaleString('he-IL')}`)
+      }
     }
     lines.push('')
 
-    // Top 10 biggest expenses this cycle
-    const bigExpenses = [...cycleTxns]
+    // Top 10 biggest budget expenses this cycle
+    const bigExpenses = [...cycleBudgetTxns]
       .sort((a, b) => a.chargedAmount - b.chargedAmount)
       .slice(0, 10)
     if (bigExpenses.length > 0) {
-      lines.push('💸 10 ההוצאות הגדולות ביותר בתקופה:')
+      lines.push('💸 10 ההוצאות התקציביות הגדולות ביותר בתקופה:')
       for (const t of bigExpenses) {
         const desc = t.overrideDescription || t.description
         const cat = catName(t.category || 'other')
@@ -83,11 +118,11 @@ export function useAiContext() {
       lines.push('')
     }
 
-    // Recent transactions (last 20)
+    // Recent transactions (last 30, all types)
     const recent = [...txnStore.visibleTransactions]
       .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .slice(0, 20)
-    lines.push('🕐 20 פעולות אחרונות:')
+      .slice(0, 30)
+    lines.push('🕐 30 פעולות אחרונות (כולל לא-תקציבי):')
     for (const t of recent) {
       const desc = t.overrideDescription || t.description
       const cat = catName(t.category || 'other')
@@ -95,7 +130,8 @@ export function useAiContext() {
       const amount = t.chargedAmount < 0
         ? `-₪${Math.round(Math.abs(t.chargedAmount)).toLocaleString('he-IL')}`
         : `+₪${Math.round(t.chargedAmount).toLocaleString('he-IL')}`
-      lines.push(`  ${date} | ${desc} | ${cat} | ${amount}`)
+      const tag = EXCLUDED_CATEGORIES.includes(t.category) ? ' [לא-תקציבי]' : ''
+      lines.push(`  ${date} | ${desc} | ${cat} | ${amount}${tag}`)
     }
 
     return lines.join('\n')

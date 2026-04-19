@@ -168,7 +168,7 @@ onMounted(() => {
           <button
             @click="send()"
             :disabled="!input.trim() || chatStore.loading"
-            class="p-2.5 rounded-full bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0 mb-0.5"
+            class="w-10 h-10 flex items-center justify-center rounded-full bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
             :aria-label="t('ai.send')"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
