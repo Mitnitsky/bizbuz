@@ -4,8 +4,7 @@ import { useFamilyStore } from '@/stores/family'
 import { getEffectiveCategories, categoryDisplayName, TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY } from '@/composables/useCategories'
 import { computeCycleRange } from '@/composables/useBillingCycle'
 import { useUiStore } from '@/stores/ui'
-import { startOfDay, format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
-import { he } from 'date-fns/locale'
+import { startOfDay, format } from 'date-fns'
 
 const EXCLUDED_CATEGORIES = [TRANSFER_CATEGORY, EXCEPTIONAL_CATEGORY, NON_BUDGET_CATEGORY, INCOME_CATEGORY]
 
@@ -77,22 +76,20 @@ export function useAiContext() {
     }
     lines.push('')
 
-    // Monthly trends with category breakdown (last 3 months)
-    lines.push('📈 השוואה חודשית (3 חודשים אחרונים, הוצאות תקציביות בלבד):')
+    // Past cycles comparison (last 3 cycles, using billing cycle periods)
+    lines.push('📈 השוואה לתקופות קודמות (הוצאות תקציביות בלבד):')
     for (let i = 0; i < 3; i++) {
-      const monthDate = subMonths(today, i)
-      const monthStart = startOfMonth(monthDate)
-      const monthEnd = endOfMonth(monthDate)
-      const monthTxns = txnStore.visibleTransactions.filter(t =>
-        t.date >= monthStart && t.date <= monthEnd && isBudgetExpense(t)
+      const cycleRange = computeCycleRange(today, familyStore.familySettings.cycleStartDay, uiStore.cycleOffset - i)
+      const cycleTxns = txnStore.visibleTransactions.filter(t =>
+        t.date >= cycleRange.start && t.date <= cycleRange.end && isBudgetExpense(t)
       )
-      const monthTotal = monthTxns.reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
-      const monthLabel = format(monthDate, 'MMMM yyyy', { locale: he })
-      lines.push(`  ${monthLabel}: ₪${Math.round(monthTotal).toLocaleString('he-IL')}`)
+      const cycleTotal = cycleTxns.reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
+      const label = `${format(cycleRange.start, 'dd/MM')} - ${format(cycleRange.end, 'dd/MM/yyyy')}`
+      lines.push(`  ${label}: ₪${Math.round(cycleTotal).toLocaleString('he-IL')}`)
 
-      // Category breakdown per month
+      // Category breakdown per cycle
       const mCatTotals = new Map<string, number>()
-      for (const t of monthTxns) {
+      for (const t of cycleTxns) {
         const cat = t.category || 'other'
         mCatTotals.set(cat, (mCatTotals.get(cat) || 0) + Math.abs(t.chargedAmount))
       }
