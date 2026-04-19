@@ -9,6 +9,7 @@ export default {
     installments: 'תשלומים',
     settings: 'הגדרות',
     more: 'עוד',
+    ai: 'עוזר AI',
   },
   common: {
     save: 'שמור',
@@ -394,5 +395,14 @@ export default {
     days: 'ימים',
     updateIn: '🔔 עדכן בעוד {n} ימים',
     updateOverdue: '🔔 עדכון באיחור',
+  },
+  ai: {
+    title: 'עוזר AI',
+    welcome: 'שלום! אני העוזר הפיננסי שלך 🤖',
+    welcomeDesc: 'שאל אותי כל שאלה על ההוצאות שלך',
+    placeholder: 'שאל שאלה על ההוצאות...',
+    send: 'שלח',
+    clearChat: 'נקה שיחה',
+    loadingData: 'טוען נתונים...',
   },
 }

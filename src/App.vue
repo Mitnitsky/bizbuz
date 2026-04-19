@@ -34,6 +34,7 @@ const navItems = [
   { path: '/investments', name: 'investments', iconName: 'investments' as const, labelKey: 'nav.investments' },
   { path: '/loans', name: 'loans', iconName: 'loans' as const, labelKey: 'nav.loans' },
   { path: '/statistics', name: 'statistics', iconName: 'statistics' as const, labelKey: 'nav.statistics' },
+  { path: '/ai', name: 'ai', iconName: 'sparkles' as const, labelKey: 'nav.ai' },
   { path: '/settings', name: 'settings', iconName: 'settings' as const, labelKey: 'nav.settings' },
 ]
 

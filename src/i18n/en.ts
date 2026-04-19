@@ -9,6 +9,7 @@ export default {
     installments: 'Installments',
     settings: 'Settings',
     more: 'More',
+    ai: 'AI Chat',
   },
   common: {
     save: 'Save',
@@ -394,5 +395,14 @@ export default {
     days: 'days',
     updateIn: '🔔 Update in {n} days',
     updateOverdue: '🔔 Update overdue',
+  },
+  ai: {
+    title: 'AI Assistant',
+    welcome: 'Hi! I\'m your financial assistant 🤖',
+    welcomeDesc: 'Ask me anything about your spending',
+    placeholder: 'Ask about your expenses...',
+    send: 'Send',
+    clearChat: 'Clear chat',
+    loadingData: 'Loading data...',
   },
 }
