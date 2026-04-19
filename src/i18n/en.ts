@@ -404,5 +404,12 @@ export default {
     send: 'Send',
     clearChat: 'Clear chat',
     loadingData: 'Loading data...',
+    suggestions: {
+      monthTotal: 'How much did I spend this month?',
+      biggestExpense: 'What was my biggest expense?',
+      foodSpend: 'How much did I spend on food?',
+      budgetOverrun: 'Where am I over budget?',
+      compareLastMonth: 'Compare spending to last month',
+    },
   },
 }

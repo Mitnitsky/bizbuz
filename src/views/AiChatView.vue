@@ -17,13 +17,13 @@ const messagesContainer = ref<HTMLElement | null>(null)
 
 const dataLoading = computed(() => !txnStore.loaded || !familyStore.familyLoaded)
 
-const suggestedQuestions = [
-  'כמה הוצאתי החודש?',
-  'מה ההוצאה הגדולה ביותר?',
-  'כמה הוצאתי על אוכל?',
-  'איפה אני חורג מהתקציב?',
-  'השווה הוצאות לחודש שעבר',
-]
+const suggestedQuestions = computed(() => [
+  t('ai.suggestions.monthTotal'),
+  t('ai.suggestions.biggestExpense'),
+  t('ai.suggestions.foodSpend'),
+  t('ai.suggestions.budgetOverrun'),
+  t('ai.suggestions.compareLastMonth'),
+])
 
 async function send(text?: string) {
   const question = (text || input.value).trim()

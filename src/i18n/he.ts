@@ -404,5 +404,12 @@ export default {
     send: 'שלח',
     clearChat: 'נקה שיחה',
     loadingData: 'טוען נתונים...',
+    suggestions: {
+      monthTotal: 'כמה הוצאתי החודש?',
+      biggestExpense: 'מה ההוצאה הגדולה ביותר?',
+      foodSpend: 'כמה הוצאתי על אוכל?',
+      budgetOverrun: 'איפה אני חורג מהתקציב?',
+      compareLastMonth: 'השווה הוצאות לחודש שעבר',
+    },
   },
 }
