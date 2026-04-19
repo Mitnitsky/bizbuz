@@ -13,6 +13,7 @@ const familyStore = useFamilyStore()
 const { context } = useAiContext()
 
 const input = ref('')
+const inputEl = ref<HTMLTextAreaElement | null>(null)
 const messagesContainer = ref<HTMLElement | null>(null)
 
 const dataLoading = computed(() => !txnStore.loaded || !familyStore.familyLoaded)
@@ -29,9 +30,19 @@ async function send(text?: string) {
   const question = (text || input.value).trim()
   if (!question || chatStore.loading) return
   input.value = ''
+  if (inputEl.value) {
+    inputEl.value.style.height = '40px'
+  }
   await chatStore.sendMessage(question, context.value)
   await nextTick()
   scrollToBottom()
+}
+
+function autoResize() {
+  const el = inputEl.value
+  if (!el) return
+  el.style.height = '40px'
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px'
 }
 
 function scrollToBottom() {
@@ -141,22 +152,27 @@ onMounted(() => {
       <!-- Input area -->
       <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
         <div class="flex items-end gap-2">
-          <textarea
-            v-model="input"
-            @keydown="handleKeydown"
-            :placeholder="t('ai.placeholder')"
-            rows="1"
-            class="flex-1 resize-none rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 dark:placeholder-gray-500 max-h-24"
-            :disabled="chatStore.loading"
-          />
+          <div class="flex-1 relative">
+            <textarea
+              ref="inputEl"
+              v-model="input"
+              @keydown="handleKeydown"
+              @input="autoResize"
+              :placeholder="t('ai.placeholder')"
+              rows="1"
+              class="w-full resize-none overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 dark:placeholder-gray-500 leading-relaxed"
+              style="min-height: 40px; max-height: 120px;"
+              :disabled="chatStore.loading"
+            />
+          </div>
           <button
             @click="send()"
             :disabled="!input.trim() || chatStore.loading"
-            class="p-2.5 rounded-xl bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+            class="p-2.5 rounded-full bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0 mb-0.5"
             :aria-label="t('ai.send')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
             </svg>
           </button>
         </div>
