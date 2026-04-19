@@ -6,7 +6,7 @@ import { useTransactionsStore } from '@/stores/transactions'
 import { useFamilyStore } from '@/stores/family'
 import { useAiContext } from '@/composables/useAiContext'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const chatStore = useChatStore()
 const txnStore = useTransactionsStore()
 const familyStore = useFamilyStore()
@@ -33,7 +33,7 @@ async function send(text?: string) {
   if (inputEl.value) {
     inputEl.value.style.height = '40px'
   }
-  await chatStore.sendMessage(question, context.value)
+  await chatStore.sendMessage(question, context.value, locale.value)
   await nextTick()
   scrollToBottom()
 }

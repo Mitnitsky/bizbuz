@@ -13,13 +13,16 @@ interface AskAIRequest {
   question: string;
   context: string;
   history: ChatMessage[];
+  locale: string;
 }
 
-const SYSTEM_PROMPT = `You are a helpful Hebrew-speaking financial assistant for the BizBuz (ביזבוז) family expense tracker app.
-You help users understand their spending patterns, answer questions about their finances, and provide insights.
+function getSystemPrompt(locale: string): string {
+  const lang = locale === "he" ? "Hebrew (עברית)" : "English";
+  return `You are a helpful financial assistant for the BizBuz (ביזבוז) family expense tracker app.
+The user's app language is ${lang}. You MUST always respond in ${lang}, regardless of the language of the data provided to you.
 
 Rules:
-- Always respond in Hebrew unless the user writes in English
+- Always respond in ${lang}
 - Be concise and direct — users are on mobile
 - Format currency amounts as ₪X,XXX (Israeli Shekels)
 - When summarizing, use bullet points or short paragraphs
@@ -27,6 +30,7 @@ Rules:
 - Don't make up numbers — only use data from the provided context
 - You can do math on the provided data (sums, averages, comparisons)
 - Round amounts to whole numbers unless asked for precision`;
+}
 
 export const askAI = onCall<AskAIRequest>(
   { secrets: [geminiApiKey], memory: "256MiB" },
@@ -39,7 +43,7 @@ export const askAI = onCall<AskAIRequest>(
       );
     }
 
-    const { question, context: txnContext, history } = request.data;
+    const { question, context: txnContext, history, locale } = request.data;
 
     if (!question || typeof question !== "string") {
       throw new HttpsError(
@@ -69,7 +73,7 @@ export const askAI = onCall<AskAIRequest>(
       history: chatHistory,
       systemInstruction: {
         role: "user",
-        parts: [{ text: SYSTEM_PROMPT }],
+        parts: [{ text: getSystemPrompt(locale || "he") }],
       },
     });
 

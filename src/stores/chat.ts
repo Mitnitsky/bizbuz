@@ -13,7 +13,7 @@ export const useChatStore = defineStore('chat', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function sendMessage(question: string, context: string) {
+  async function sendMessage(question: string, context: string, locale: string) {
     error.value = null
 
     // Add user message
@@ -28,7 +28,7 @@ export const useChatStore = defineStore('chat', () => {
     try {
       const functions = getFunctions()
       const askAI = httpsCallable<
-        { question: string; context: string; history: { role: string; content: string }[] },
+        { question: string; context: string; history: { role: string; content: string }[]; locale: string },
         { response: string }
       >(functions, 'askAI')
 
@@ -38,7 +38,7 @@ export const useChatStore = defineStore('chat', () => {
         content: m.content,
       }))
 
-      const result = await askAI({ question, context, history })
+      const result = await askAI({ question, context, history, locale })
 
       messages.value.push({
         role: 'model',
