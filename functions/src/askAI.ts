@@ -57,7 +57,7 @@ export const askAI = onCall<AskAIRequest>(
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro-preview-05-06" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
     // Build conversation history for multi-turn
     const chatHistory = (history || []).map((msg) => ({
