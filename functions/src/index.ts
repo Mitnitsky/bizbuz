@@ -243,11 +243,16 @@ export const ingest = functions.https.onRequest(async (req, res) => {
       const tokensSnap = await familyRef.collection("fcm_tokens").get();
       if (!tokensSnap.empty) {
         const tokens = tokensSnap.docs.map((d) => d.data().token as string);
+        const source = payload.metadata?.source as string | undefined;
+        const bodyParts = [`${results.processed} new transactions imported`];
+        if (source) {
+          bodyParts.push(`(${source})`);
+        }
         const message: admin.messaging.MulticastMessage = {
           tokens,
           data: {
             title: "BizBuz – ביזבוז",
-            body: `${results.processed} new transactions imported`,
+            body: bodyParts.join(" "),
             tag: "bizbuz-ingest",
             url: "/spendings",
           },
