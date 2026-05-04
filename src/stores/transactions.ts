@@ -46,72 +46,63 @@ export const useTransactionsStore = defineStore('transactions', () => {
       .reduce((sum, t) => sum + Math.abs(t.chargedAmount), 0)
   })
 
-  const cycleIncome = computed(() => {
+  /**
+   * Compute income transactions for a cycle.
+   * Income window grabs salary/income that arrives just before the cycle start.
+   * In-cycle income counts UNLESS it falls in the NEXT cycle's income window
+   * (which means it's that next cycle's salary, not ours).
+   */
+  function getIncomeForCycle(cycleOffset: number) {
     const familyStore = useFamilyStore()
-    const ui = useUiStore()
     const today = startOfDay(new Date())
     const { incomeAnchorDay, incomeAnchorGraceDays, cycleStartDay } = familyStore.familySettings
-    const range = computeCycleRange(today, cycleStartDay, ui.cycleOffset)
+    const range = computeCycleRange(today, cycleStartDay, cycleOffset)
 
-    let incomeTxns: typeof visibleTransactions.value
-
-    // If no anchor configured and no grace days, use simple in-cycle income
     if (incomeAnchorDay === null && incomeAnchorGraceDays === 0) {
-      incomeTxns = cycleTransactions.value.filter((t) => t.chargedAmount > 0)
-    } else {
-      // Compute extended income window
-      const incomeWin = computeIncomeWindow(range.start, incomeAnchorDay, incomeAnchorGraceDays)
-      incomeTxns = visibleTransactions.value.filter((t) => {
-        if (t.chargedAmount <= 0) return false
-        const d = t.date
-        return (d >= range.start && d <= range.end) || (d >= incomeWin.start && d <= incomeWin.end)
-      })
+      return cycleTransactions.value.filter((t) => t.chargedAmount > 0)
     }
 
-    // Deduplicate: per description keep only the first (earliest) occurrence.
-    // This prevents counting next month's early salary in this cycle.
-    const seen = new Map<string, typeof incomeTxns[0]>()
+    // This cycle's income window (grabs salary arriving before cycle start)
+    const incomeWin = computeIncomeWindow(range.start, incomeAnchorDay, incomeAnchorGraceDays)
+
+    // Next cycle's income window (exclude these from our in-cycle range)
+    const nextRange = computeCycleRange(today, cycleStartDay, cycleOffset + 1)
+    const nextIncomeWin = computeIncomeWindow(nextRange.start, incomeAnchorDay, incomeAnchorGraceDays)
+
+    const incomeTxns = visibleTransactions.value.filter((t) => {
+      if (t.chargedAmount <= 0) return false
+      const d = t.date
+
+      // If this transaction is in the NEXT cycle's income window, it belongs there, not here
+      if (d >= nextIncomeWin.start && d <= nextIncomeWin.end) return false
+
+      // In-cycle income (excluding what belongs to next cycle)
+      if (d >= range.start && d <= range.end) return true
+
+      // Income window: grab transactions before cycle start
+      return d >= incomeWin.start && d < range.start
+    })
+
+    // Deduplicate by transaction ID only (same txn shouldn't appear twice)
+    const seen = new Set<string>()
+    const unique: typeof incomeTxns = []
     for (const t of incomeTxns) {
-      const key = (t.description || '').trim().toLowerCase()
-      const existing = seen.get(key)
-      if (!existing || t.date < existing.date) {
-        seen.set(key, t)
+      if (!seen.has(t.id)) {
+        seen.add(t.id)
+        unique.push(t)
       }
     }
+    return unique
+  }
 
-    return [...seen.values()].reduce((sum, t) => sum + t.chargedAmount, 0)
+  const cycleIncome = computed(() => {
+    const ui = useUiStore()
+    return getIncomeForCycle(ui.cycleOffset).reduce((sum, t) => sum + t.chargedAmount, 0)
   })
 
-  // Deduped income transactions (earliest per description, extended window)
   const cycleIncomeTransactions = computed(() => {
-    const familyStore = useFamilyStore()
     const ui = useUiStore()
-    const today = startOfDay(new Date())
-    const { incomeAnchorDay, incomeAnchorGraceDays, cycleStartDay } = familyStore.familySettings
-    const range = computeCycleRange(today, cycleStartDay, ui.cycleOffset)
-
-    let incomeTxns: typeof visibleTransactions.value
-
-    if (incomeAnchorDay === null && incomeAnchorGraceDays === 0) {
-      incomeTxns = cycleTransactions.value.filter((t) => t.chargedAmount > 0)
-    } else {
-      const incomeWin = computeIncomeWindow(range.start, incomeAnchorDay, incomeAnchorGraceDays)
-      incomeTxns = visibleTransactions.value.filter((t) => {
-        if (t.chargedAmount <= 0) return false
-        const d = t.date
-        return (d >= range.start && d <= range.end) || (d >= incomeWin.start && d <= incomeWin.end)
-      })
-    }
-
-    const seen = new Map<string, typeof incomeTxns[0]>()
-    for (const t of incomeTxns) {
-      const key = (t.description || '').trim().toLowerCase()
-      const existing = seen.get(key)
-      if (!existing || t.date < existing.date) {
-        seen.set(key, t)
-      }
-    }
-    return [...seen.values()]
+    return getIncomeForCycle(ui.cycleOffset)
   })
 
   // Descriptions that appear in already-categorized transactions → "known"
