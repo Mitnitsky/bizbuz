@@ -108,6 +108,7 @@ export default {
     title: 'תובנות חכמות',
     generatedAt: 'עודכן {rel}',
     empty: 'אין תובנות זמינות עדיין',
+    dismiss: 'הסתר תובנה זו',
   },
   loans: {
     loansAndMortgages: 'הלוואות ומשכנתאות',

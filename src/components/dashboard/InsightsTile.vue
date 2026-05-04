@@ -3,15 +3,19 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useInsightsStore } from '@/stores/insights'
 import { useUiStore } from '@/stores/ui'
-import type { Insight, InsightSeverity } from '@/types'
+import { useFamilyStore } from '@/stores/family'
+import type { Insight, InsightSeverity, LocalizedText } from '@/types'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { he, enUS } from 'date-fns/locale'
+import { dismissInsight as dismissInsightFs } from '@/services/firestore'
+import { computeCycleRange, cycleKey } from '@/composables/useBillingCycle'
+import { startOfDay } from 'date-fns'
 
 const { t, locale } = useI18n()
 const insightsStore = useInsightsStore()
 const uiStore = useUiStore()
+const familyStore = useFamilyStore()
 
-// Only show on current cycle (offset === 0). Daily generation targets the active cycle only.
 const onCurrentCycle = computed(() => uiStore.cycleOffset === 0)
 
 const visible = computed(() => onCurrentCycle.value && insightsStore.hasInsights)
@@ -51,8 +55,27 @@ function safeSeverity(s: string): InsightSeverity {
     : 'info'
 }
 
+/** Renders bilingual text picking current locale; falls back to the other language or empty. */
+function localized(text: LocalizedText | string | undefined): string {
+  if (!text) return ''
+  if (typeof text === 'string') return text // legacy doc shape
+  return (text[locale.value as 'he' | 'en']) || text.he || text.en || ''
+}
+
 function trackBy(insight: Insight, idx: number) {
-  return insight.id || `${insight.title}-${idx}`
+  return insight.id || `${localized(insight.title)}-${idx}`
+}
+
+async function onDismiss(insight: Insight) {
+  if (!familyStore.familyId || !insight.id) return
+  const today = startOfDay(new Date())
+  const range = computeCycleRange(today, familyStore.familySettings.cycleStartDay, 0)
+  const key = cycleKey(range.start)
+  try {
+    await dismissInsightFs(familyStore.familyId, key, insight.id)
+  } catch (e) {
+    console.error('[InsightsTile] dismiss failed', e)
+  }
 }
 </script>
 
@@ -68,14 +91,25 @@ function trackBy(insight: Insight, idx: number) {
       <li
         v-for="(insight, idx) in insightsStore.insights"
         :key="trackBy(insight, idx)"
-        :class="['rounded-lg border px-3 py-2.5', severityClass[safeSeverity(insight.severity)]]"
+        :class="['rounded-lg border px-3 py-2.5 relative group', severityClass[safeSeverity(insight.severity)]]"
       >
         <div class="flex items-start gap-2">
           <span class="text-lg leading-tight shrink-0" aria-hidden="true">{{ insight.icon }}</span>
           <div class="flex-1 min-w-0">
-            <div :class="['text-sm font-semibold leading-snug', titleClass[safeSeverity(insight.severity)]]">{{ insight.title }}</div>
-            <div :class="['text-xs leading-snug mt-0.5', bodyClass[safeSeverity(insight.severity)]]">{{ insight.body }}</div>
+            <div :class="['text-sm font-semibold leading-snug pe-6', titleClass[safeSeverity(insight.severity)]]">{{ localized(insight.title) }}</div>
+            <div :class="['text-xs leading-snug mt-0.5', bodyClass[safeSeverity(insight.severity)]]">{{ localized(insight.body) }}</div>
           </div>
+          <button
+            type="button"
+            class="absolute top-1.5 end-1.5 w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            :aria-label="t('insights.dismiss')"
+            :title="t('insights.dismiss')"
+            @click="onDismiss(insight)"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M3.7 3.7a1 1 0 0 1 1.4 0L8 6.6l2.9-2.9a1 1 0 1 1 1.4 1.4L9.4 8l2.9 2.9a1 1 0 0 1-1.4 1.4L8 9.4l-2.9 2.9a1 1 0 0 1-1.4-1.4L6.6 8 3.7 5.1a1 1 0 0 1 0-1.4Z"/>
+            </svg>
+          </button>
         </div>
       </li>
     </ul>

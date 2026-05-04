@@ -167,18 +167,24 @@ export interface LoanEntry {
 
 export type InsightSeverity = 'alert' | 'warn' | 'good' | 'info'
 
+export interface LocalizedText {
+  he: string
+  en: string
+}
+
 export interface Insight {
   id: string
   severity: InsightSeverity
   icon: string
-  title: string
-  body: string
+  title: LocalizedText
+  body: LocalizedText
   categoryId?: string | null
   amount?: number | null
 }
 
 export interface InsightsDoc {
   insights: Insight[]
+  dismissedIds?: string[]
   cycleStart: Date
   cycleEnd: Date
   generatedAt: Date | null

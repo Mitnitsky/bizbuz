@@ -108,6 +108,7 @@ export default {
     title: 'Smart Insights',
     generatedAt: 'updated {rel}',
     empty: 'No insights available yet',
+    dismiss: 'Dismiss this insight',
   },
   loans: {
     loansAndMortgages: 'Loans & Mortgages',

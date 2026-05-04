@@ -16,7 +16,13 @@ export const useInsightsStore = defineStore('insights', () => {
   let currentKey: string | null = null
   let currentFamilyId: string | null = null
 
-  const insights = computed(() => doc.value?.insights ?? [])
+  const dismissedIds = computed(() => doc.value?.dismissedIds ?? [])
+  const insights = computed(() => {
+    const all = doc.value?.insights ?? []
+    if (dismissedIds.value.length === 0) return all
+    const dismissed = new Set(dismissedIds.value)
+    return all.filter((i) => !dismissed.has(i.id))
+  })
   const generatedAt = computed(() => doc.value?.generatedAt ?? null)
   const hasInsights = computed(() => insights.value.length > 0)
 

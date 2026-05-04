@@ -83,6 +83,7 @@ export const useFamilyStore = defineStore('family', () => {
 
   return {
     family,
+    familyId: computed(() => family.value?.id ?? null),
     familyLoaded,
     familySettings,
     memberNames,

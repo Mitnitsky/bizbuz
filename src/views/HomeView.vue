@@ -25,7 +25,46 @@ const draggable = defineAsyncComponent(() => import('vuedraggable'))
 
 const { t, locale } = useI18n()
 
-const ALL_TILES = ['insights', 'uncategorized', 'cycle_spend', 'income', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+const ALL_TILES = ['uncategorized', 'cycle_spend', 'income', 'insights', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+
+/**
+ * Merge a saved tile order with the canonical ALL_TILES list.
+ * - Preserves user's saved ordering for tiles they already have
+ * - Inserts any new tiles at the position dictated by ALL_TILES (after their nearest preceding neighbour from ALL_TILES that exists in saved)
+ */
+function mergeTileOrder(saved: readonly string[], all: readonly string[]): string[] {
+  const savedSet = new Set(saved)
+  const result = [...saved]
+  for (let i = 0; i < all.length; i++) {
+    const id = all[i]
+    if (savedSet.has(id)) continue
+    let insertAfter = -1
+    for (let j = i - 1; j >= 0; j--) {
+      const idx = result.indexOf(all[j])
+      if (idx !== -1) {
+        insertAfter = idx
+        break
+      }
+    }
+    result.splice(insertAfter + 1, 0, id)
+  }
+  return result
+}
+
+/**
+ * One-time repair: a previous version of this code prepended new tiles to the saved
+ * order, causing `insights` to land at position 0 for existing users. If `insights`
+ * is positioned before `income` in the saved order, move it to right after `income`.
+ */
+function repairInsightsPosition(order: string[]): string[] {
+  const insightsIdx = order.indexOf('insights')
+  const incomeIdx = order.indexOf('income')
+  if (insightsIdx === -1 || incomeIdx === -1) return order
+  if (insightsIdx >= incomeIdx) return order
+  const without = order.filter(id => id !== 'insights')
+  const newIncomeIdx = without.indexOf('income')
+  return [...without.slice(0, newIncomeIdx + 1), 'insights', ...without.slice(newIncomeIdx + 1)]
+}
 
 const authStore = useAuthStore()
 const familyStore = useFamilyStore()
@@ -76,11 +115,10 @@ watch(() => prefsStore.userPreferences, (prefs) => {
   const order = prefs?.dashboardTileOrder
   let ids: string[]
   if (order && order.length > 0) {
-    // Prepend any new tiles not in saved order so they appear first
-    const missing = ([...ALL_TILES] as string[]).filter(t => !order.includes(t))
-    ids = [...missing, ...order]
-    // Persist updated order if new tiles were added
-    if (missing.length > 0 && authStore.familyId && authStore.user) {
+    ids = repairInsightsPosition(mergeTileOrder(order, ALL_TILES))
+    // Persist updated order if it changed (new tiles added or repair applied)
+    const changed = ids.length !== order.length || ids.some((id, i) => id !== order[i])
+    if (changed && authStore.familyId && authStore.user) {
       updateDashboardTileOrder(authStore.familyId, authStore.user.uid, ids)
     }
   } else {

@@ -12,6 +12,7 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
+  arrayUnion,
   type Unsubscribe,
   type DocumentData,
   type QueryDocumentSnapshot,
@@ -919,6 +920,7 @@ export function onInsights(
     const d = snap.data()
     callback({
       insights: Array.isArray(d.insights) ? d.insights : [],
+      dismissedIds: Array.isArray(d.dismissedIds) ? d.dismissedIds : [],
       cycleStart: toDate(d.cycleStart),
       cycleEnd: toDate(d.cycleEnd),
       generatedAt: d.generatedAt ? toDate(d.generatedAt) : null,
@@ -929,5 +931,20 @@ export function onInsights(
     })
   }, (error) => {
     console.error('[onInsights] Firestore error:', error.message)
+  })
+}
+
+/**
+ * Mark an insight as dismissed for the current cycle. The insight stays
+ * dismissed until the daily generation overwrites the doc (which resets
+ * dismissedIds to []), at which point new insights replace the old ones.
+ */
+export async function dismissInsight(
+  familyId: string,
+  cycleKey: string,
+  insightId: string,
+): Promise<void> {
+  await updateDoc(doc(db, 'families', familyId, 'insights', cycleKey), {
+    dismissedIds: arrayUnion(insightId),
   })
 }

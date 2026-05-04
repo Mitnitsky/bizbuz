@@ -21,8 +21,8 @@ const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 const MODEL = "gemini-3.1-pro-preview";
 const N_CANDIDATES = 3;
-const PROMPT_VERSION = "v5.1";
-const GENERATOR_VERSION = 1;
+const PROMPT_VERSION = "v6.1";
+const GENERATOR_VERSION = 2;
 
 const EXCLUDED_FROM_SPEND = new Set(["transfer", "exceptional", "non-budget", "income"]);
 
@@ -49,7 +49,24 @@ interface CycleSummary {
   topTxns: Array<{ amt: number; desc: string; cat: string; date: string }>;
 }
 
+interface LocalizedText {
+  he: string;
+  en: string;
+}
+
+/** Final shape stored in Firestore / consumed by the frontend. */
 interface Insight {
+  id: string;
+  severity: "alert" | "warn" | "good" | "info";
+  icon: string;
+  title: LocalizedText;
+  body: LocalizedText;
+  categoryId?: string | null;
+  amount?: number | null;
+}
+
+/** Intermediate shape produced by the English generation step. */
+interface EnglishInsight {
   id: string;
   severity: "alert" | "warn" | "good" | "info";
   icon: string;
@@ -60,18 +77,20 @@ interface Insight {
 }
 
 interface CandidateResult {
-  insights?: Insight[];
+  insights?: EnglishInsight[];
   inputTokens: number;
   outputTokens: number;
   latencyMs: number;
   error?: string;
 }
 
-const SYSTEM_PROMPT = `You are a sharp family financial analyst. Output 5 specific Hebrew insights ranked by importance.
+const SYSTEM_PROMPT = `You are a sharp family financial analyst. Output 5 specific English financial insights ranked by importance. The output will later be translated to Hebrew, so write English a translator can faithfully render.
 
 Rules:
-- Title ≤50 chars, body ≤150 chars (1-2 sentences). Real numbers only.
-- Hebrew only, no exclamation marks, no generic advice.
+- Title ≤60 chars, body ≤180 chars (1-2 sentences). Real numbers only.
+- English only at this stage. No exclamation marks. No generic advice.
+- Preserve Hebrew proper nouns (merchant names like "מופ\\"ת מילואים", "פועלים-משכנתא", "מכבי") AS-IS — do NOT transliterate or translate them. The Hebrew translator will keep them; the English version should use them verbatim too so the user recognises them.
+- Currency symbol ₪ is preferred (works in both languages).
 - Categories transfer/exceptional/non-budget/income are EXCLUDED from spend totals.
 - severity: alert | warn | good | info. icon: single emoji.
 
@@ -82,10 +101,11 @@ Look for (priority order):
 4. Use the DETERMINISTIC FACTS block as authoritative. Do NOT contradict facts there.
 
 CRITICAL anti-hallucination rules:
-- NEVER claim a specific recurring charge (mortgage/rent/utilities/insurance/loan) is "missing" or "delayed" UNLESS that exact merchant appears in facts.recurringMerchants with status="missing_in_current". Categories breakdowns alone are NOT evidence.
-- The facts.recurringMerchants list is COMPLETE — anything not on it is either not recurring or not yet flagged. Do not invent entries.
+- NEVER claim ANY merchant payment is "missing", "delayed", "expected", "should have appeared", "not yet seen", or any synonym — UNLESS that exact merchant appears in facts.recurringMerchants with status="missing_in_current". This rule applies to EVERY merchant including online shopping (IHERB, TEMU, AliExpress, Amazon), drugstores (Super-Pharm, סופר פארם), supermarkets, restaurants, and any retail. These are NOT recurring even if the user buys from them most months.
+- The facts.recurringMerchants list is COMPLETE — anything not on it is either not recurring or not yet flagged. Do not invent entries. Do not infer "recurring" patterns from the cycle summaries — only the facts block is authoritative.
 - If facts.recurringMerchants[i].status="upcoming_in_current", the charge is EXPECTED soon, NOT missed. Frame positively or skip.
 - Do not invent merchant names, amounts, or dates that are not present in the data blocks above.
+- "Recurring" means: fixed monthly bills with a stable amount and date (mortgage, rent, utilities, insurance, gym, subscriptions, salary). Variable retail/shopping is NEVER recurring even if frequent.
 
 Strictly avoid:
 - Contradicting deterministic facts (e.g., if facts say a payment is "upcoming", don't claim it's "missing")
@@ -115,10 +135,40 @@ const INSIGHTS_SCHEMA = {
   required: ["insights"],
 };
 
-const JUDGE_SYSTEM = `You are a strict financial-insight judge. Given multiple candidate sets of 5 Hebrew financial insights generated from the same data, pick the BEST one.
+const TRANSLATE_SYSTEM = `You are a professional translator specialised in financial Hebrew. Translate the given English financial insights to natural, idiomatic Hebrew suitable for a personal-finance app UI.
+
+Rules:
+- Match the source's factual content EXACTLY (numbers, ₪ symbol, dates, merchant names).
+- Preserve any Hebrew text in the English source AS-IS (merchant names like "פועלים-משכנתא", "מופ\\"ת מילואים", "מכבי" are already in Hebrew — keep them verbatim).
+- Hebrew title ≤60 chars, body ≤200 chars (Hebrew is more compact than English; keep it concise).
+- No exclamation marks. No generic advice.
+- Preserve the same id mapping so each Hebrew translation lines up with its English source.
+
+Output JSON: { translations: [{ id: string, title: string, body: string }] }`;
+
+const TRANSLATE_SCHEMA = {
+  type: "object",
+  properties: {
+    translations: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          body: { type: "string" },
+        },
+        required: ["id", "title", "body"],
+      },
+    },
+  },
+  required: ["translations"],
+};
+
+const JUDGE_SYSTEM = `You are a strict financial-insight judge. Given multiple candidate sets of 5 English financial insights generated from the same data, pick the BEST one. (The winner will be translated to Hebrew downstream — judge purely on content quality.)
 
 Scoring criteria (0-10 each):
-- accuracy: factually correct, no hallucinations, respects deterministic facts
+- accuracy: factually correct, no hallucinations, respects deterministic facts. HEAVILY PENALIZE any insight claiming a merchant payment is "missing", "delayed", "expected", or hasn't appeared yet UNLESS that merchant is explicitly flagged status="missing_in_current" in facts.recurringMerchants. Online shopping, retail, drugstores, restaurants are NEVER recurring — calling out their absence is a hallucination.
 - specificity: real numbers, merchants, dates (not vague)
 - actionability: each insight tells user something concrete they can use
 - prioritization: most important insights first, no redundancy
@@ -151,7 +201,7 @@ const JUDGE_SCHEMA = {
   required: ["winnerIndex", "scores"],
 };
 
-function validateInsight(obj: unknown): obj is Insight {
+function validateEnglishInsight(obj: unknown): obj is EnglishInsight {
   if (!obj || typeof obj !== "object") return false;
   const o = obj as Record<string, unknown>;
   return (
@@ -161,17 +211,32 @@ function validateInsight(obj: unknown): obj is Insight {
     typeof o.icon === "string" &&
     typeof o.title === "string" &&
     typeof o.body === "string" &&
-    o.title.length > 0 && o.title.length <= 80 &&
-    o.body.length > 0 && o.body.length <= 250
+    o.title.length > 0 && o.title.length <= 100 &&
+    o.body.length > 0 && o.body.length <= 280
   );
 }
 
-function validateInsightsArray(v: unknown): v is { insights: Insight[] } {
+function validateInsightsArray(v: unknown): v is { insights: EnglishInsight[] } {
   if (!v || typeof v !== "object") return false;
   const obj = v as { insights?: unknown };
   if (!Array.isArray(obj.insights)) return false;
   if (obj.insights.length < 3 || obj.insights.length > 8) return false;
-  return obj.insights.every(validateInsight);
+  return obj.insights.every(validateEnglishInsight);
+}
+
+function validateTranslations(v: unknown): v is { translations: Array<{ id: string; title: string; body: string }> } {
+  if (!v || typeof v !== "object") return false;
+  const obj = v as { translations?: unknown };
+  if (!Array.isArray(obj.translations)) return false;
+  return obj.translations.every((t) => {
+    if (!t || typeof t !== "object") return false;
+    const o = t as Record<string, unknown>;
+    return (
+      typeof o.id === "string" &&
+      typeof o.title === "string" && o.title.length > 0 && o.title.length <= 120 &&
+      typeof o.body === "string" && o.body.length > 0 && o.body.length <= 320
+    );
+  });
 }
 
 /** Compute spend (excluding transfer/exceptional/non-budget/income) for txns in date range. */
@@ -459,7 +524,7 @@ async function judgeCandidates(
   apiKey: string,
   facts: Record<string, unknown>,
   summaries: CycleSummary[],
-  candidates: Insight[][],
+  candidates: EnglishInsight[][],
 ): Promise<JudgeResult | null> {
   if (candidates.length === 1) {
     return {
@@ -510,7 +575,7 @@ Pick the winner. Return JSON.`;
   }
 }
 
-function pickFallbackWinner(candidates: Insight[][]): number {
+function pickFallbackWinner(candidates: EnglishInsight[][]): number {
   // Pick the candidate with the most distinct severities (proxy for coverage)
   let bestIdx = 0;
   let bestScore = -1;
@@ -521,6 +586,84 @@ function pickFallbackWinner(candidates: Insight[][]): number {
     if (score > bestScore) { bestScore = score; bestIdx = i; }
   }
   return bestIdx;
+}
+
+interface TranslationResult {
+  insights: Insight[];
+  inputTokens: number;
+  outputTokens: number;
+  error?: string;
+}
+
+/**
+ * Translate the winning English insights to Hebrew via a single batch call,
+ * then merge into the bilingual Insight[] shape stored in Firestore.
+ *
+ * On failure, falls back to the English text in both fields so the user
+ * still sees something — the doc remains queryable and renderable.
+ */
+async function translateToHebrew(
+  apiKey: string,
+  englishInsights: EnglishInsight[],
+): Promise<TranslationResult> {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const translator = genAI.getGenerativeModel({
+    model: MODEL,
+    systemInstruction: TRANSLATE_SYSTEM,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: TRANSLATE_SCHEMA as never,
+      temperature: 0.1,
+    },
+  });
+  const input = `Translate these ${englishInsights.length} English financial insights to Hebrew.\nPreserve numbers and any Hebrew merchant names verbatim.\n\nSOURCE:\n${JSON.stringify(englishInsights.map((i) => ({ id: i.id, title: i.title, body: i.body })), null, 2)}`;
+
+  try {
+    const result = await translator.generateContent(input);
+    const text = result.response.text();
+    const usage = result.response.usageMetadata;
+    const parsed = JSON.parse(text);
+    if (!validateTranslations(parsed)) {
+      throw new Error("Translation schema validation failed");
+    }
+    const byId = new Map(parsed.translations.map((t) => [t.id, t]));
+    const merged: Insight[] = englishInsights.map((eng, idx) => {
+      const tr = byId.get(eng.id) ?? parsed.translations[idx];
+      const heTitle = tr?.title?.trim() || eng.title;
+      const heBody = tr?.body?.trim() || eng.body;
+      return {
+        id: eng.id,
+        severity: eng.severity,
+        icon: eng.icon,
+        title: { en: eng.title, he: heTitle },
+        body: { en: eng.body, he: heBody },
+        ...(eng.categoryId !== undefined ? { categoryId: eng.categoryId } : {}),
+        ...(eng.amount !== undefined ? { amount: eng.amount } : {}),
+      };
+    });
+    return {
+      insights: merged,
+      inputTokens: usage?.promptTokenCount ?? 0,
+      outputTokens: usage?.candidatesTokenCount ?? 0,
+    };
+  } catch (e) {
+    console.warn("Translation failed, falling back to English-only:", (e as Error).message);
+    const fallback: Insight[] = englishInsights.map((eng) => ({
+      id: eng.id,
+      severity: eng.severity,
+      icon: eng.icon,
+      title: { en: eng.title, he: eng.title },
+      body: { en: eng.body, he: eng.body },
+      ...(eng.categoryId !== undefined ? { categoryId: eng.categoryId } : {}),
+      ...(eng.amount !== undefined ? { amount: eng.amount } : {}),
+    }));
+    return {
+      insights: fallback,
+      inputTokens: 0,
+      outputTokens: 0,
+      error: (e as Error).message,
+    };
+  }
 }
 
 interface GenerateInsightsResult {
@@ -651,8 +794,8 @@ Output 5 insights as JSON.`;
     return { status: "failed", error: "all candidates failed: " + candidates.map((c) => c.error).join("; ") };
   }
 
-  // Judge phase
-  const candidateInsights = validCandidates.map((c) => c.insights as Insight[]);
+  // Judge phase (English)
+  const candidateInsights = validCandidates.map((c) => c.insights as EnglishInsight[]);
   let winnerIdx = 0;
   let winnerScore: JudgeResult["scores"][0] | null = null;
   let judgeIn = 0;
@@ -672,9 +815,19 @@ Output 5 insights as JSON.`;
     }
   }
 
-  const winner = candidateInsights[winnerIdx];
-  const totalIn = validCandidates.reduce((s, c) => s + c.inputTokens, 0) + judgeIn;
-  const totalOut = validCandidates.reduce((s, c) => s + c.outputTokens, 0) + judgeOut;
+  const englishWinner = candidateInsights[winnerIdx];
+
+  // Translate to Hebrew (last step)
+  const translation = await translateToHebrew(apiKey, englishWinner);
+  if (translation.error) {
+    console.warn(`[insights/${familyId}] translation degraded: ${translation.error}`);
+  } else {
+    console.log(`[insights/${familyId}] translated to Hebrew (${translation.inputTokens} in / ${translation.outputTokens} out)`);
+  }
+  const winner = translation.insights;
+
+  const totalIn = validCandidates.reduce((s, c) => s + c.inputTokens, 0) + judgeIn + translation.inputTokens;
+  const totalOut = validCandidates.reduce((s, c) => s + c.outputTokens, 0) + judgeOut + translation.outputTokens;
   const cost = totalIn * 1.25 / 1e6 + totalOut * 10 / 1e6; // gemini-3.1-pro pricing
 
   const currentCycle = cycleDefs[0];
@@ -682,6 +835,7 @@ Output 5 insights as JSON.`;
 
   await familyRef.collection("insights").doc(cycKey).set({
     insights: winner,
+    dismissedIds: [],
     cycleStart: admin.firestore.Timestamp.fromDate(currentCycle.range.start),
     cycleEnd: admin.firestore.Timestamp.fromDate(currentCycle.range.end),
     generatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -690,6 +844,7 @@ Output 5 insights as JSON.`;
     generatorVersion: GENERATOR_VERSION,
     candidatesCount: validCandidates.length,
     winnerScore: winnerScore ?? null,
+    translationDegraded: translation.error ? translation.error : null,
     costUsd: Number(cost.toFixed(5)),
     totalInputTokens: totalIn,
     totalOutputTokens: totalOut,
