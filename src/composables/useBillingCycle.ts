@@ -57,6 +57,17 @@ export function computeCycleRange(today: Date, startDay: number, offset: number)
 }
 
 /**
+ * Timezone-safe cycle doc key. Formats the cycle start as yyyy-MM-dd
+ * using LOCAL date components (matching server-side cycleMath.cycleKey).
+ */
+export function cycleKey(cycleStart: Date): string {
+  const y = cycleStart.getFullYear()
+  const m = String(cycleStart.getMonth() + 1).padStart(2, '0')
+  const d = String(cycleStart.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/**
  * Compute the date window for income attribution to a given cycle.
  *
  * If anchorDay is set: income around that day (±graceDays) in the cycle's

@@ -36,6 +36,7 @@ import type {
   IndexLink,
   RateType,
   PaymentMethod,
+  InsightsDoc,
 } from '@/types'
 import { extractTrackerFields } from '@/composables/useTracker'
 import { LEGACY_NAME_TO_ID } from '@/composables/useCategories'
@@ -899,5 +900,34 @@ export function onLoans(
     callback(entries)
   }, (error) => {
     console.error('[onLoans] Firestore error:', error.message)
+  })
+}
+
+// ---------- AI Insights ----------
+
+export function onInsights(
+  familyId: string,
+  cycleKey: string,
+  callback: (doc: InsightsDoc | null) => void,
+): Unsubscribe {
+  const ref = doc(db, 'families', familyId, 'insights', cycleKey)
+  return onSnapshot(ref, (snap) => {
+    if (!snap.exists()) {
+      callback(null)
+      return
+    }
+    const d = snap.data()
+    callback({
+      insights: Array.isArray(d.insights) ? d.insights : [],
+      cycleStart: toDate(d.cycleStart),
+      cycleEnd: toDate(d.cycleEnd),
+      generatedAt: d.generatedAt ? toDate(d.generatedAt) : null,
+      model: d.model ?? '',
+      promptVersion: d.promptVersion ?? '',
+      generatorVersion: d.generatorVersion ?? 0,
+      source: d.source,
+    })
+  }, (error) => {
+    console.error('[onInsights] Firestore error:', error.message)
   })
 }

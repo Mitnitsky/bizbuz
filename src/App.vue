@@ -6,6 +6,7 @@ import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useSavingsStore } from '@/stores/savings'
+import { useInsightsStore } from '@/stores/insights'
 import { updateDisplayName } from '@/services/firestore'
 import { useI18n } from 'vue-i18n'
 import GlassIcon from '@/components/GlassIcon.vue'
@@ -20,6 +21,7 @@ const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const txnStore = useTransactionsStore()
 const savingsStore = useSavingsStore()
+const insightsStore = useInsightsStore()
 const { t, locale } = useI18n()
 const { icon, activeSet } = useIcons()
 
@@ -34,7 +36,7 @@ const navItems = [
   { path: '/investments', name: 'investments', iconName: 'investments' as const, labelKey: 'nav.investments' },
   { path: '/loans', name: 'loans', iconName: 'loans' as const, labelKey: 'nav.loans' },
   { path: '/statistics', name: 'statistics', iconName: 'statistics' as const, labelKey: 'nav.statistics' },
-  { path: '/ai', name: 'ai', iconName: 'sparkles' as const, labelKey: 'nav.ai' },
+
   { path: '/settings', name: 'settings', iconName: 'settings' as const, labelKey: 'nav.settings' },
 ]
 
@@ -199,6 +201,7 @@ watch(() => authStore.familyId, (familyId) => {
     prefsStore.bindPreferences(familyId, authStore.user.uid)
     txnStore.bindTransactions(familyId)
     savingsStore.bindSavings(familyId)
+    insightsStore.bind(familyId)
 
     // Self-heal: ensure current user's display name is on the family doc
     const uid = authStore.user.uid
@@ -216,6 +219,7 @@ watch(() => authStore.familyId, (familyId) => {
     prefsStore.unbind()
     txnStore.unbind()
     savingsStore.unbind()
+    insightsStore.unbind()
   }
 }, { immediate: true })
 

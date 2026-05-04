@@ -164,3 +164,26 @@ export interface LoanEntry {
   trackerIntervalDays?: number
   tracks?: MortgageTrack[]
 }
+
+export type InsightSeverity = 'alert' | 'warn' | 'good' | 'info'
+
+export interface Insight {
+  id: string
+  severity: InsightSeverity
+  icon: string
+  title: string
+  body: string
+  categoryId?: string | null
+  amount?: number | null
+}
+
+export interface InsightsDoc {
+  insights: Insight[]
+  cycleStart: Date
+  cycleEnd: Date
+  generatedAt: Date | null
+  model: string
+  promptVersion: string
+  generatorVersion: number
+  source?: string
+}

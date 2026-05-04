@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useTransactionsStore } from '@/stores/transactions'
+import { useInsightsStore } from '@/stores/insights'
+import { useUiStore } from '@/stores/ui'
 import { updateDashboardTileOrder } from '@/services/firestore'
 import CycleSelector from '@/components/CycleSelector.vue'
 import CycleSpendTile from '@/components/dashboard/CycleSpendTile.vue'
@@ -15,6 +17,7 @@ import TrackersTile from '@/components/dashboard/TrackersTile.vue'
 import ExceptionalTile from '@/components/dashboard/ExceptionalTile.vue'
 import IncomeTile from '@/components/dashboard/IncomeTile.vue'
 import UncategorizedTile from '@/components/dashboard/UncategorizedTile.vue'
+import InsightsTile from '@/components/dashboard/InsightsTile.vue'
 
 // Lazy-load heavy deps — chart.js (59KB gz) and vuedraggable (61KB gz)
 const CategoryPieTile = defineAsyncComponent(() => import('@/components/dashboard/CategoryPieTile.vue'))
@@ -22,12 +25,14 @@ const draggable = defineAsyncComponent(() => import('vuedraggable'))
 
 const { t, locale } = useI18n()
 
-const ALL_TILES = ['uncategorized', 'cycle_spend', 'income', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+const ALL_TILES = ['insights', 'uncategorized', 'cycle_spend', 'income', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
 
 const authStore = useAuthStore()
 const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const txnStore = useTransactionsStore()
+const insightsStore = useInsightsStore()
+const uiStore = useUiStore()
 
 const tileComponents: Record<string, Component> = {
   cycle_spend: CycleSpendTile,
@@ -39,6 +44,7 @@ const tileComponents: Record<string, Component> = {
   installments: InstallmentsTile,
   budgets: BudgetsTile,
   trackers: TrackersTile,
+  insights: InsightsTile,
 }
 
 const hiddenTiles = ref<Set<string>>(new Set())
@@ -58,6 +64,10 @@ const autoHidden = computed(() => {
   }
   if (txnStore.inboxCount === 0) {
     set.add('uncategorized')
+  }
+  // Insights tile: only on current cycle and only when we have insights
+  if (uiStore.cycleOffset !== 0 || !insightsStore.hasInsights) {
+    set.add('insights')
   }
   return set
 })

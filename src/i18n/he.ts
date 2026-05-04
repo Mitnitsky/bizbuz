@@ -9,7 +9,6 @@ export default {
     installments: 'תשלומים',
     settings: 'הגדרות',
     more: 'עוד',
-    ai: 'עוזר AI',
   },
   common: {
     save: 'שמור',
@@ -104,6 +103,11 @@ export default {
     deleteSelected: 'מחק נבחרים',
     tableView: 'טבלה',
     accordionView: 'קומפקטי',
+  },
+  insights: {
+    title: 'תובנות חכמות',
+    generatedAt: 'עודכן {rel}',
+    empty: 'אין תובנות זמינות עדיין',
   },
   loans: {
     loansAndMortgages: 'הלוואות ומשכנתאות',
@@ -395,21 +399,5 @@ export default {
     days: 'ימים',
     updateIn: '🔔 עדכן בעוד {n} ימים',
     updateOverdue: '🔔 עדכון באיחור',
-  },
-  ai: {
-    title: 'עוזר AI',
-    welcome: 'שלום! אני העוזר הפיננסי שלך 🤖',
-    welcomeDesc: 'שאל אותי כל שאלה על ההוצאות שלך',
-    placeholder: 'שאל שאלה על ההוצאות...',
-    send: 'שלח',
-    clearChat: 'נקה שיחה',
-    loadingData: 'טוען נתונים...',
-    suggestions: {
-      monthTotal: 'כמה הוצאתי החודש?',
-      biggestExpense: 'מה ההוצאה הגדולה ביותר?',
-      foodSpend: 'כמה הוצאתי על אוכל?',
-      budgetOverrun: 'איפה אני חורג מהתקציב?',
-      compareLastMonth: 'השווה הוצאות לחודש שעבר',
-    },
   },
 }

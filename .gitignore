@@ -35,3 +35,13 @@ transactions.txt
 transactions_extra.txt
 transactions_test.txt
 *.495Z.json
+
+# AI insights development artifacts (contain private family data)
+dump.json
+functions/dump.json
+functions/dump-transactions.js
+functions/bench-*.mjs
+functions/bench-*.json
+functions/dry-run-insights.mjs
+functions/seed-insights.js
+functions/read-insights.js

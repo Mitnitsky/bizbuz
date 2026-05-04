@@ -9,7 +9,6 @@ export default {
     installments: 'Installments',
     settings: 'Settings',
     more: 'More',
-    ai: 'AI Chat',
   },
   common: {
     save: 'Save',
@@ -104,6 +103,11 @@ export default {
     deleteSelected: 'Delete Selected',
     tableView: 'Table',
     accordionView: 'Compact',
+  },
+  insights: {
+    title: 'Smart Insights',
+    generatedAt: 'updated {rel}',
+    empty: 'No insights available yet',
   },
   loans: {
     loansAndMortgages: 'Loans & Mortgages',
@@ -395,21 +399,5 @@ export default {
     days: 'days',
     updateIn: '🔔 Update in {n} days',
     updateOverdue: '🔔 Update overdue',
-  },
-  ai: {
-    title: 'AI Assistant',
-    welcome: 'Hi! I\'m your financial assistant 🤖',
-    welcomeDesc: 'Ask me anything about your spending',
-    placeholder: 'Ask about your expenses...',
-    send: 'Send',
-    clearChat: 'Clear chat',
-    loadingData: 'Loading data...',
-    suggestions: {
-      monthTotal: 'How much did I spend this month?',
-      biggestExpense: 'What was my biggest expense?',
-      foodSpend: 'How much did I spend on food?',
-      budgetOverrun: 'Where am I over budget?',
-      compareLastMonth: 'Compare spending to last month',
-    },
   },
 }
