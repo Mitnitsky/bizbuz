@@ -210,14 +210,14 @@ function compareInboxTransactions(a: Transaction, b: Transaction) {
 }
 
 function cardKey(txn: Transaction) {
-  return txn.companyId || txn.account || txn.source || 'other'
+  return txn.account || txn.companyId || txn.source || 'other'
 }
 
 function cardLabel(txn: Transaction) {
   const labels = familyStore.familySettings.paymentMethodLabels
-  if (txn.companyId && labels[txn.companyId]) return labels[txn.companyId]
   if (txn.account && labels[txn.account]) return labels[txn.account]
-  return txn.companyId || txn.account || txn.source || t('common.other')
+  if (txn.companyId && labels[txn.companyId]) return labels[txn.companyId]
+  return txn.account || txn.companyId || txn.source || t('common.other')
 }
 
 const inboxGroups = computed<InboxGroup[]>(() => {
