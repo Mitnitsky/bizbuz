@@ -1,8 +1,11 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+
 admin.initializeApp();
 const db = admin.firestore();
+
+export { generateInsightsDaily, generateInsightsManual } from "./generateInsights";
 
 interface IngestTransaction {
   uniqueId: string;
@@ -233,6 +236,49 @@ export const ingest = functions.https.onRequest(async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
       results.errors++;
+    }
+  }
+
+  // Send push notifications if any transactions were processed
+  if (results.processed > 0) {
+    try {
+      const tokensSnap = await familyRef.collection("fcm_tokens").get();
+      if (!tokensSnap.empty) {
+        const tokens = tokensSnap.docs.map((d) => d.data().token as string);
+        const source = payload.metadata?.source as string | undefined;
+        const bodyParts = [`${results.processed} new transactions imported`];
+        if (source) {
+          bodyParts.push(`(${source})`);
+        }
+        const message: admin.messaging.MulticastMessage = {
+          tokens,
+          data: {
+            title: "BizBuz – ביזבוז",
+            body: bodyParts.join(" "),
+            tag: "bizbuz-ingest",
+            url: "/spendings",
+          },
+          webpush: {
+            headers: {"Urgency": "high"},
+            fcmOptions: {link: "/spendings"},
+          },
+        };
+        const sendResult = await admin.messaging().sendEachForMulticast(message);
+        // Clean up invalid tokens
+        const tokensToDelete: string[] = [];
+        sendResult.responses.forEach((resp, idx) => {
+          if (resp.error &&
+            (resp.error.code === "messaging/invalid-registration-token" ||
+             resp.error.code === "messaging/registration-token-not-registered")) {
+            tokensToDelete.push(tokens[idx]);
+          }
+        });
+        for (const token of tokensToDelete) {
+          await familyRef.collection("fcm_tokens").doc(token).delete();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to send push notifications:", err);
     }
   }
 

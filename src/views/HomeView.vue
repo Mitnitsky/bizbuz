@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, watch, type Component } from 'vue'
-import draggable from 'vuedraggable'
+import { ref, computed, watch, defineAsyncComponent, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useTransactionsStore } from '@/stores/transactions'
+import { useInsightsStore } from '@/stores/insights'
+import { useUiStore } from '@/stores/ui'
 import { updateDashboardTileOrder } from '@/services/firestore'
 import CycleSelector from '@/components/CycleSelector.vue'
 import CycleSpendTile from '@/components/dashboard/CycleSpendTile.vue'
-import CategoryPieTile from '@/components/dashboard/CategoryPieTile.vue'
 import BudgetRemainingTile from '@/components/dashboard/BudgetRemainingTile.vue'
 import InstallmentsTile from '@/components/dashboard/InstallmentsTile.vue'
 import BudgetsTile from '@/components/dashboard/BudgetsTile.vue'
@@ -17,15 +17,61 @@ import TrackersTile from '@/components/dashboard/TrackersTile.vue'
 import ExceptionalTile from '@/components/dashboard/ExceptionalTile.vue'
 import IncomeTile from '@/components/dashboard/IncomeTile.vue'
 import UncategorizedTile from '@/components/dashboard/UncategorizedTile.vue'
+import InsightsTile from '@/components/dashboard/InsightsTile.vue'
+
+// Lazy-load heavy deps — chart.js (59KB gz) and vuedraggable (61KB gz)
+const CategoryPieTile = defineAsyncComponent(() => import('@/components/dashboard/CategoryPieTile.vue'))
+const draggable = defineAsyncComponent(() => import('vuedraggable'))
 
 const { t, locale } = useI18n()
 
-const ALL_TILES = ['uncategorized', 'cycle_spend', 'income', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+const ALL_TILES = ['uncategorized', 'cycle_spend', 'income', 'insights', 'category_pie', 'budget_remaining', 'exceptional', 'installments', 'budgets', 'trackers'] as const
+
+/**
+ * Merge a saved tile order with the canonical ALL_TILES list.
+ * - Preserves user's saved ordering for tiles they already have
+ * - Inserts any new tiles at the position dictated by ALL_TILES (after their nearest preceding neighbour from ALL_TILES that exists in saved)
+ */
+function mergeTileOrder(saved: readonly string[], all: readonly string[]): string[] {
+  const savedSet = new Set(saved)
+  const result = [...saved]
+  for (let i = 0; i < all.length; i++) {
+    const id = all[i]
+    if (savedSet.has(id)) continue
+    let insertAfter = -1
+    for (let j = i - 1; j >= 0; j--) {
+      const idx = result.indexOf(all[j])
+      if (idx !== -1) {
+        insertAfter = idx
+        break
+      }
+    }
+    result.splice(insertAfter + 1, 0, id)
+  }
+  return result
+}
+
+/**
+ * One-time repair: a previous version of this code prepended new tiles to the saved
+ * order, causing `insights` to land at position 0 for existing users. If `insights`
+ * is positioned before `income` in the saved order, move it to right after `income`.
+ */
+function repairInsightsPosition(order: string[]): string[] {
+  const insightsIdx = order.indexOf('insights')
+  const incomeIdx = order.indexOf('income')
+  if (insightsIdx === -1 || incomeIdx === -1) return order
+  if (insightsIdx >= incomeIdx) return order
+  const without = order.filter(id => id !== 'insights')
+  const newIncomeIdx = without.indexOf('income')
+  return [...without.slice(0, newIncomeIdx + 1), 'insights', ...without.slice(newIncomeIdx + 1)]
+}
 
 const authStore = useAuthStore()
 const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const txnStore = useTransactionsStore()
+const insightsStore = useInsightsStore()
+const uiStore = useUiStore()
 
 const tileComponents: Record<string, Component> = {
   cycle_spend: CycleSpendTile,
@@ -37,6 +83,7 @@ const tileComponents: Record<string, Component> = {
   installments: InstallmentsTile,
   budgets: BudgetsTile,
   trackers: TrackersTile,
+  insights: InsightsTile,
 }
 
 const hiddenTiles = ref<Set<string>>(new Set())
@@ -57,6 +104,10 @@ const autoHidden = computed(() => {
   if (txnStore.inboxCount === 0) {
     set.add('uncategorized')
   }
+  // Insights tile: only on current cycle and only when we have insights
+  if (uiStore.cycleOffset !== 0 || !insightsStore.hasInsights) {
+    set.add('insights')
+  }
   return set
 })
 
@@ -64,11 +115,10 @@ watch(() => prefsStore.userPreferences, (prefs) => {
   const order = prefs?.dashboardTileOrder
   let ids: string[]
   if (order && order.length > 0) {
-    // Prepend any new tiles not in saved order so they appear first
-    const missing = ([...ALL_TILES] as string[]).filter(t => !order.includes(t))
-    ids = [...missing, ...order]
-    // Persist updated order if new tiles were added
-    if (missing.length > 0 && authStore.familyId && authStore.user) {
+    ids = repairInsightsPosition(mergeTileOrder(order, ALL_TILES))
+    // Persist updated order if it changed (new tiles added or repair applied)
+    const changed = ids.length !== order.length || ids.some((id, i) => id !== order[i])
+    if (changed && authStore.familyId && authStore.user) {
       updateDashboardTileOrder(authStore.familyId, authStore.user.uid, ids)
     }
   } else {
@@ -110,8 +160,8 @@ const displayName = computed(() => {
 
 <template>
   <div class="max-w-7xl mx-auto w-full px-4 py-6">
-    <!-- App Bar -->
-    <div class="flex items-center justify-between mb-4">
+    <!-- App Bar — always render with consistent height to avoid CLS -->
+    <div class="flex items-center justify-between mb-4 min-h-[52px]">
       <div v-if="dataLoading" class="animate-pulse">
         <div class="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
         <div class="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -122,10 +172,10 @@ const displayName = computed(() => {
       </div>
     </div>
 
-    <!-- Skeleton while loading -->
+    <!-- Skeleton while loading — match real tile structure to prevent CLS -->
     <template v-if="dataLoading">
       <div class="mb-6 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-      <div v-for="i in 4" :key="i" class="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow p-5 animate-pulse">
+      <div v-for="i in 6" :key="i" class="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow p-5 animate-pulse min-h-[88px]">
         <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
         <div class="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
         <div class="h-3 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -146,7 +196,7 @@ const displayName = computed(() => {
       @end="onDragEnd"
     >
       <template #item="{ element }">
-        <div class="mb-4 relative group">
+        <div class="mb-4 relative group min-h-[88px]">
           <div class="drag-handle absolute top-3 z-10 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" style="inset-inline-end: 0.75rem;">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />

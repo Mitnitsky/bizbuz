@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bizbuz-3a473.web.app/sitemap.xml

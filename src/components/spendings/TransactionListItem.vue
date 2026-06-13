@@ -36,6 +36,55 @@ const displayTitle = computed(() => {
   return props.transaction.overrideDescription || props.transaction.description
 })
 
+const searchQuery = inject<Ref<string>>('searchQuery', ref(''))
+
+function findMatchRange(text: string, query: string): [number, number] | null {
+  if (!query || query.length < 2) return null
+  const t = text.toLowerCase()
+  const q = query.toLowerCase()
+  // Exact substring match first
+  const idx = t.indexOf(q)
+  if (idx >= 0) return [idx, idx + q.length]
+  if (q.length < 3) return null
+  // Sliding window fuzzy match — find best (lowest distance) window
+  let best: [number, number, number] | null = null
+  const lo = Math.max(1, q.length - 1)
+  const hi = q.length + 1
+  for (let len = lo; len <= Math.min(hi, t.length); len++) {
+    for (let start = 0; start <= t.length - len; start++) {
+      const sub = t.slice(start, start + len)
+      let dist = 0
+      const m = sub.length, n = q.length
+      let prev = Array.from({ length: n + 1 }, (_, i) => i)
+      for (let i = 1; i <= m; i++) {
+        const curr = [i]
+        for (let j = 1; j <= n; j++) {
+          curr[j] = sub[i - 1] === q[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j - 1], prev[j], curr[j - 1])
+        }
+        prev = curr
+      }
+      dist = prev[n]
+      if (dist <= 1 && (!best || dist < best[2])) {
+        best = [start, start + len, dist]
+      }
+    }
+  }
+  return best ? [best[0], best[1]] : null
+}
+
+const highlightedTitle = computed(() => {
+  const q = searchQuery.value?.trim()
+  const title = displayTitle.value
+  if (!q) return null
+  const range = findMatchRange(title, q)
+  if (!range) return null
+  return {
+    before: title.slice(0, range[0]),
+    match: title.slice(range[0], range[1]),
+    after: title.slice(range[1]),
+  }
+})
+
 const isAutoCategorized = computed(() => {
   return props.transaction.status === 'auto_categorized'
 })
@@ -116,7 +165,8 @@ function onLongPress() {
     </div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-1.5">
-        <span class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ displayTitle }}</span>
+        <span v-if="highlightedTitle" class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ highlightedTitle.before }}<mark class="bg-yellow-200 dark:bg-yellow-700/60 text-inherit rounded-sm px-0.5">{{ highlightedTitle.match }}</mark>{{ highlightedTitle.after }}</span>
+        <span v-else class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ displayTitle }}</span>
         <span v-if="isUnique" class="px-1 py-0.5 rounded text-[10px] leading-none font-bold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 flex-shrink-0" title="First time seen">🦄</span>
         <span v-if="isNew" class="px-1 py-0.5 rounded text-[10px] leading-none font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex-shrink-0">{{ t('common.new') }}</span>
         <component v-if="isAutoCategorized" :is="icon('sparkles')" class="w-3.5 h-3.5 text-purple-400 flex-shrink-0" title="Auto-categorized" />

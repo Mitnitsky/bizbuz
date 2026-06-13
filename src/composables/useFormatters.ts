@@ -20,6 +20,11 @@ export function formatDate(date: Date, locale = 'en'): string {
   return new Intl.DateTimeFormat(loc, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
 
+export function formatDateTime(date: Date, locale = 'en'): string {
+  const loc = locale === 'he' ? 'he-IL' : 'en-GB'
+  return new Intl.DateTimeFormat(loc, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
 export function formatDateShort(date: Date, locale = 'en'): string {
   const loc = locale === 'he' ? 'he-IL' : 'en-GB'
   return new Intl.DateTimeFormat(loc, { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)

@@ -63,15 +63,37 @@ function evaluateCondition(
         typeof condition.value === "string" &&
         !condition.value.split(",").map((v) => v.trim()).includes(fieldValue)
       );
+    case "between": {
+      if (typeof fieldValue !== "number" || typeof condition.value !== "string")
+        return false;
+      const [minStr, maxStr] = condition.value.split(",");
+      const min = Number(minStr);
+      const max = Number(maxStr);
+      if (isNaN(min) || isNaN(max)) return false;
+      return fieldValue >= min && fieldValue <= max;
+    }
     default:
       return false;
   }
+}
+
+function ruleSpecificity(rule: Rule): number {
+  if (!rule.conditions) return 0;
+  let score = rule.conditions.length;
+  for (const c of rule.conditions) {
+    if (c.operator === "equals") score += 0.5;
+    if (c.operator === "between") score += 0.3;
+  }
+  return score;
 }
 
 export function evaluateRules(
   txn: Transaction,
   rules: Rule[]
 ): RuleResult | null {
+  let best: RuleResult | null = null;
+  let bestScore = -1;
+
   for (const rule of rules) {
     if (!rule.conditions || rule.conditions.length === 0) {
       continue;
@@ -82,13 +104,17 @@ export function evaluateRules(
     );
 
     if (allMatch && rule.action_category) {
-      return {
-        ruleId: rule.id,
-        category: rule.action_category,
-        overrideDescription: rule.action_override_description || "",
-      };
+      const score = ruleSpecificity(rule);
+      if (score > bestScore) {
+        best = {
+          ruleId: rule.id,
+          category: rule.action_category,
+          overrideDescription: rule.action_override_description || "",
+        };
+        bestScore = score;
+      }
     }
   }
 
-  return null;
+  return best;
 }

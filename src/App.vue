@@ -6,6 +6,7 @@ import { useFamilyStore } from '@/stores/family'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useSavingsStore } from '@/stores/savings'
+import { useInsightsStore } from '@/stores/insights'
 import { updateDisplayName } from '@/services/firestore'
 import { useI18n } from 'vue-i18n'
 import GlassIcon from '@/components/GlassIcon.vue'
@@ -20,6 +21,7 @@ const familyStore = useFamilyStore()
 const prefsStore = usePreferencesStore()
 const txnStore = useTransactionsStore()
 const savingsStore = useSavingsStore()
+const insightsStore = useInsightsStore()
 const { t, locale } = useI18n()
 const { icon, activeSet } = useIcons()
 
@@ -34,6 +36,7 @@ const navItems = [
   { path: '/investments', name: 'investments', iconName: 'investments' as const, labelKey: 'nav.investments' },
   { path: '/loans', name: 'loans', iconName: 'loans' as const, labelKey: 'nav.loans' },
   { path: '/statistics', name: 'statistics', iconName: 'statistics' as const, labelKey: 'nav.statistics' },
+
   { path: '/settings', name: 'settings', iconName: 'settings' as const, labelKey: 'nav.settings' },
 ]
 
@@ -147,7 +150,9 @@ const bubbleStyle = computed(() => {
 })
 
 const appState = computed<'loading' | 'login' | 'onboarding' | 'app'>(() => {
-  if (authStore.loading) return 'loading'
+  // While auth is loading: show login immediately for new users (fast LCP),
+  // show loading spinner only for returning users (to avoid login flash)
+  if (authStore.loading) return authStore.wasLoggedIn ? 'loading' : 'login'
   if (!authStore.isAuthenticated) return 'login'
   if (!authStore.familyId) return 'onboarding'
   return 'app'
@@ -196,6 +201,7 @@ watch(() => authStore.familyId, (familyId) => {
     prefsStore.bindPreferences(familyId, authStore.user.uid)
     txnStore.bindTransactions(familyId)
     savingsStore.bindSavings(familyId)
+    insightsStore.bind(familyId)
 
     // Self-heal: ensure current user's display name is on the family doc
     const uid = authStore.user.uid
@@ -213,6 +219,7 @@ watch(() => authStore.familyId, (familyId) => {
     prefsStore.unbind()
     txnStore.unbind()
     savingsStore.unbind()
+    insightsStore.unbind()
   }
 }, { immediate: true })
 
@@ -225,25 +232,38 @@ watch(appState, (state) => {
   } else if (state === 'app' && (route.path === '/login' || route.path === '/onboarding')) {
     router.replace('/')
   }
-})
+}, { immediate: true })
 
-// Pull-to-refresh for standalone PWA (no refresh button in Safari webapp)
-const isStandalone = ref(
-  window.matchMedia('(display-mode: standalone)').matches ||
-  (navigator as any).standalone === true
-)
+// Pull-to-refresh (custom implementation – native overscroll is disabled via CSS)
 const pullDistance = ref(0)
 const isRefreshing = ref(false)
+const isPullingActive = ref(false)
+const pullSnapBack = ref(false)
 const PULL_THRESHOLD = 80
 let pullStartY = 0
 let isPulling = false
 
 function onPullStart(e: TouchEvent) {
-  if (!isStandalone.value || isRefreshing.value) return
-  const scrollEl = document.querySelector('main .overflow-y-auto') as HTMLElement | null
-  if (scrollEl && scrollEl.scrollTop > 0) return
+  if (isRefreshing.value) return
+  // Don't trigger pull-to-refresh from bottom nav bar
+  const nav = (e.target as HTMLElement)?.closest('nav')
+  if (nav) return
+  // Find the nearest scrollable ancestor from the touch target
+  let el = e.target as HTMLElement | null
+  while (el && el !== document.body) {
+    if (el.scrollHeight > el.clientHeight && el.scrollTop > 0) {
+      const style = getComputedStyle(el)
+      const ov = style.overflowY
+      if (ov === 'auto' || ov === 'scroll') return
+    }
+    el = el.parentElement
+  }
+  // Also check document-level scroll
+  if ((window.scrollY || document.documentElement.scrollTop) > 0) return
   pullStartY = e.touches[0].clientY
   isPulling = true
+  isPullingActive.value = true
+  pullSnapBack.value = false
 }
 
 function onPullMove(e: TouchEvent) {
@@ -257,35 +277,36 @@ function onPullMove(e: TouchEvent) {
 function onPullEnd() {
   if (!isPulling) return
   isPulling = false
+  isPullingActive.value = false
   if (pullDistance.value >= PULL_THRESHOLD) {
     isRefreshing.value = true
     pullDistance.value = 50
     setTimeout(() => { window.location.reload() }, 300)
   } else {
+    pullSnapBack.value = true
     pullDistance.value = 0
+    setTimeout(() => { pullSnapBack.value = false }, 300)
   }
 }
 
 onMounted(async () => {
+  // Prefetch the HomeView chunk while auth is loading (most users land here)
+  import('@/views/HomeView.vue')
   await authStore.initAuth()
   window.addEventListener('resize', onResize)
   mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
   mediaQuery.addEventListener('change', onSystemThemeChange)
-  if (isStandalone.value) {
-    document.addEventListener('touchstart', onPullStart, { passive: true })
-    document.addEventListener('touchmove', onPullMove, { passive: false })
-    document.addEventListener('touchend', onPullEnd, { passive: true })
-  }
+  document.addEventListener('touchstart', onPullStart, { passive: true })
+  document.addEventListener('touchmove', onPullMove, { passive: false })
+  document.addEventListener('touchend', onPullEnd, { passive: true })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', onResize)
   mediaQuery?.removeEventListener('change', onSystemThemeChange)
-  if (isStandalone.value) {
-    document.removeEventListener('touchstart', onPullStart)
-    document.removeEventListener('touchmove', onPullMove)
-    document.removeEventListener('touchend', onPullEnd)
-  }
+  document.removeEventListener('touchstart', onPullStart)
+  document.removeEventListener('touchmove', onPullMove)
+  document.removeEventListener('touchend', onPullEnd)
 })
 
 // --- Particle shatter animation for More icon morph ---
@@ -692,13 +713,21 @@ function onMorphEnter(el: Element, done: () => void) {
 </script>
 
 <template>
-  <!-- Pull-to-refresh indicator (standalone PWA only) -->
+  <!-- Pull-to-refresh indicator -->
   <div
-    v-if="isStandalone && pullDistance > 0"
-    class="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
-    :style="{ transform: `translateY(${pullDistance - 40}px)`, opacity: Math.min(pullDistance / PULL_THRESHOLD, 1) }"
+    v-if="pullDistance > 0"
+    class="fixed left-0 right-0 z-[100] flex justify-center pointer-events-none"
+    :style="{ top: 'env(safe-area-inset-top, 0px)', transform: `translateY(${pullDistance - 10}px)`, opacity: Math.min(pullDistance / 30, 1) }"
   >
-    <div class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center">
+    <div class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center relative">
+      <!-- Progress ring -->
+      <svg v-if="!isRefreshing" class="absolute w-10 h-10 -rotate-90" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" class="text-gray-200 dark:text-gray-600" stroke-width="2.5" />
+        <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" class="text-purple-500"
+          stroke-width="2.5" stroke-linecap="round"
+          :stroke-dasharray="`${Math.min(pullDistance / PULL_THRESHOLD, 1) * 106.8} 106.8`"
+        />
+      </svg>
       <component
         :is="icon('loader')"
         class="w-5 h-5 text-purple-500"
@@ -708,8 +737,11 @@ function onMorphEnter(el: Element, done: () => void) {
     </div>
   </div>
 
-  <!-- Loading spinner -->
-  <div v-if="appState === 'loading'" class="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Login / Onboarding — show immediately (don't wait for auth check) -->
+  <router-view v-if="appState === 'login' || appState === 'onboarding'" />
+
+  <!-- Loading spinner — only while checking auth for potentially logged-in users -->
+  <div v-else-if="appState === 'loading'" class="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="text-center">
       <GlassIcon glass size="xl" class="mx-auto mb-4">
         <template #default="{ iconClass }"><component :is="icon('loader')" :class="[iconClass, 'animate-spin text-purple-500']" /></template>
@@ -718,11 +750,11 @@ function onMorphEnter(el: Element, done: () => void) {
     </div>
   </div>
 
-  <!-- Login / Onboarding — no shell -->
-  <router-view v-else-if="appState === 'login' || appState === 'onboarding'" />
-
   <!-- Main App Shell -->
-  <div v-else class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+  <div v-else class="flex bg-gray-50 dark:bg-gray-900 pt-[env(safe-area-inset-top)]"
+    :class="isWide ? 'h-screen overflow-hidden' : 'flex-col min-h-[100dvh]'"
+    :style="pullDistance > 0 && !isWide ? { transform: `translateY(${pullDistance}px)`, transition: isPullingActive ? 'none' : 'transform 0.3s ease' } : (!isWide && pullSnapBack ? { transform: 'translateY(0)', transition: 'transform 0.3s ease' } : {})"
+  >
     <!-- Sidebar (wide screens) -->
     <aside
       v-if="isWide"
@@ -737,9 +769,10 @@ function onMorphEnter(el: Element, done: () => void) {
 
       <button
         @click="sidebarExpanded = !sidebarExpanded"
+        :aria-label="sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'"
         class="p-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 self-end"
       >
-        <component :is="sidebarExpanded ? icon('chevronLeft') : icon('chevronRight')" class="h-5 w-5" />
+        <component :is="sidebarExpanded ? icon('chevronLeft') : icon('chevronRight')" class="h-5 w-5 rtl:-scale-x-100" />
       </button>
 
       <nav class="flex-1 flex flex-col gap-1 px-2">
@@ -759,8 +792,8 @@ function onMorphEnter(el: Element, done: () => void) {
     </aside>
 
     <!-- Main content -->
-    <main class="flex flex-col flex-1 min-w-0 min-h-0" :class="{ 'pb-20': !isWide }">
-      <router-view class="flex-1 min-h-0 overflow-y-auto" />
+    <main class="flex flex-col flex-1 min-w-0" :class="isWide ? 'min-h-0' : 'pb-20'">
+      <router-view :class="isWide ? 'flex-1 min-h-0 overflow-y-auto' : 'flex-1'" />
     </main>
 
     <!-- Bottom tab bar (narrow screens) -->
@@ -789,8 +822,14 @@ function onMorphEnter(el: Element, done: () => void) {
         @click="moreMenuOpen = false"
       >
         <span :ref="(el: any) => { if (el) navTabRefs[item.path] = el }" class="relative flex flex-col items-center">
-          <component :is="icon(item.iconName)" class="w-6 h-6" />
-          <span class="text-[10px] mt-0.5 font-medium">{{ t(item.labelKey) }}</span>
+          <span class="relative">
+            <component :is="icon(item.iconName)" class="w-6 h-6" />
+            <span
+              v-if="item.name === 'spendings' && txnStore.inboxCount > 0"
+              class="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold leading-none text-white bg-red-500 rounded-full shadow-sm"
+            >{{ txnStore.inboxCount > 99 ? '99+' : txnStore.inboxCount }}</span>
+          </span>
+          <span class="text-[10px] mt-0.5 font-medium text-gray-600 dark:text-gray-300">{{ t(item.labelKey) }}</span>
         </span>
       </router-link>
 
@@ -798,6 +837,7 @@ function onMorphEnter(el: Element, done: () => void) {
       <button
         class="flex-1 flex flex-col items-center py-2 text-gray-500 dark:text-gray-400 relative z-10"
         :class="{ 'text-purple-600 dark:text-purple-400': isMoreActive || moreMenuOpen }"
+        :aria-label="t('nav.more')"
         @click="moreMenuOpen = !moreMenuOpen"
       >
         <span ref="particleContainer" class="relative w-6 h-6">
@@ -815,10 +855,10 @@ function onMorphEnter(el: Element, done: () => void) {
           </Transition>
         </span>
         <Transition name="morph-text" mode="out-in">
-          <span v-if="activeMoreItem" :key="activeMoreItem.name" class="text-[10px] mt-0.5 font-medium leading-tight text-center">
+          <span v-if="activeMoreItem" :key="activeMoreItem.name" class="text-[10px] mt-0.5 font-medium leading-tight text-center text-gray-600 dark:text-gray-300">
             {{ t(activeMoreItem.labelKey) }}
           </span>
-          <span v-else key="more" class="text-[10px] mt-0.5 font-medium">{{ t('nav.more') }}</span>
+          <span v-else key="more" class="text-[10px] mt-0.5 font-medium text-gray-600 dark:text-gray-300">{{ t('nav.more') }}</span>
         </Transition>
         <span v-if="activeMoreItem" class="text-[8px] font-medium text-gray-400 dark:text-gray-500 leading-none">{{ t('nav.more') }}</span>
       </button>

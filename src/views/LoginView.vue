@@ -41,7 +41,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+  <main class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
     <div class="w-full max-w-sm">
       <!-- Logo -->
       <div class="text-center mb-8">
@@ -55,8 +55,9 @@ async function handleSubmit() {
       <!-- Form -->
       <form @submit.prevent="handleSubmit" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('auth.email') }}</label>
+          <label for="login-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('auth.email') }}</label>
           <input
+            id="login-email"
             v-model="email"
             type="email"
             required
@@ -65,8 +66,9 @@ async function handleSubmit() {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('auth.password') }}</label>
+          <label for="login-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('auth.password') }}</label>
           <input
+            id="login-password"
             v-model="password"
             type="password"
             required
@@ -95,5 +97,5 @@ async function handleSubmit() {
         </button>
       </form>
     </div>
-  </div>
+  </main>
 </template>
