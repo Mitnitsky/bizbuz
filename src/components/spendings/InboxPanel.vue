@@ -7,10 +7,15 @@ import { onRules, autoCategorizeTransaction, uncategorizeTransaction, deleteTran
 import { useIcons } from '@/composables/useIcons'
 import { useFamilyStore } from '@/stores/family'
 import { matchRule } from '@/composables/useRuleMatcher'
-import type { Rule } from '@/types'
+import type { Rule, Transaction } from '@/types'
 import TransactionListItem from './TransactionListItem.vue'
 
 type InboxSort = 'date' | 'name' | 'amount'
+type InboxGroup = {
+  key: string
+  label: string
+  transactions: Transaction[]
+}
 
 defineProps<{
   collapsed: boolean
@@ -177,30 +182,70 @@ async function rerunRules() {
 
 const inboxFilter = ref<'all' | 'unique' | 'new'>('all')
 
-const inboxTransactions = computed(() => {
+function filteredInboxTransactions() {
   let txns = [...txnStore.inboxTransactions]
-
-  // Apply filter
   if (inboxFilter.value === 'unique') {
     txns = txns.filter(t => txnStore.isUniqueTransaction(t))
   } else if (inboxFilter.value === 'new') {
     txns = txns.filter(t => txnStore.isNewTransaction(t))
   }
+  return txns
+}
 
+function compareInboxTransactions(a: Transaction, b: Transaction) {
   const flip = inboxSortDir.value === 'asc' ? 1 : -1
   switch (inboxSort.value) {
     case 'name':
-      return txns.sort((a, b) => flip * a.description.localeCompare(b.description))
+      return flip * a.description.localeCompare(b.description)
     case 'amount':
-      return txns.sort((a, b) => flip * (Math.abs(b.chargedAmount) - Math.abs(a.chargedAmount)))
+      return flip * (Math.abs(b.chargedAmount) - Math.abs(a.chargedAmount))
     case 'date':
     default:
-      return txns.sort((a, b) => {
+      {
         const da = a.date ? new Date(a.date).getTime() : 0
         const db = b.date ? new Date(b.date).getTime() : 0
         return flip * (db - da)
-      })
+      }
   }
+}
+
+function cardKey(txn: Transaction) {
+  return txn.companyId || txn.account || txn.source || 'other'
+}
+
+function cardLabel(txn: Transaction) {
+  const labels = familyStore.familySettings.paymentMethodLabels
+  if (txn.companyId && labels[txn.companyId]) return labels[txn.companyId]
+  if (txn.account && labels[txn.account]) return labels[txn.account]
+  return txn.companyId || txn.account || txn.source || t('common.other')
+}
+
+const inboxGroups = computed<InboxGroup[]>(() => {
+  const groups = new Map<string, InboxGroup>()
+  for (const txn of filteredInboxTransactions()) {
+    const key = cardKey(txn)
+    const existing = groups.get(key)
+    if (existing) {
+      existing.transactions.push(txn)
+    } else {
+      groups.set(key, { key, label: cardLabel(txn), transactions: [txn] })
+    }
+  }
+
+  return [...groups.values()]
+    .sort((a, b) => {
+      if (a.key === 'other') return 1
+      if (b.key === 'other') return -1
+      return a.label.localeCompare(b.label)
+    })
+    .map(group => ({
+      ...group,
+      transactions: [...group.transactions].sort(compareInboxTransactions),
+    }))
+})
+
+const inboxTransactions = computed(() => {
+  return inboxGroups.value.flatMap(group => group.transactions)
 })
 const inboxCount = computed(() => txnStore.inboxCount)
 
@@ -384,12 +429,20 @@ function onLeave(el: Element, done: () => void) {
           @before-leave="onBeforeLeave"
           @leave="onLeave"
         >
-          <TransactionListItem
-            v-for="txn in inboxTransactions"
-            :key="txn.id"
-            :transaction="txn"
-            :draggable="true"
-          />
+          <template v-for="group in inboxGroups" :key="group.key">
+            <div
+              class="sticky top-0 z-[1] mx-2 mt-2 mb-1 px-2.5 py-1.5 rounded-lg bg-gray-100/95 dark:bg-gray-700/95 backdrop-blur text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center justify-between"
+            >
+              <span class="truncate">{{ group.label }}</span>
+              <span class="ms-2 shrink-0 text-[11px] font-medium text-gray-400 dark:text-gray-500">{{ group.transactions.length }}</span>
+            </div>
+            <TransactionListItem
+              v-for="txn in group.transactions"
+              :key="txn.id"
+              :transaction="txn"
+              :draggable="true"
+            />
+          </template>
         </TransitionGroup>
       </div>
     </template>
